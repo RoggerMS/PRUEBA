@@ -385,13 +385,11 @@ export default function AchievementSystem({
               {categories.map(category => (
                 <option key={category} value={category}>
                   {category === 'challenge' && 'Desafíos'}
-                  {category === 'course' && 'Cursos'}
-                  {category === 'forum' && 'Foro'}
-                  {category === 'notes' && 'Notas'}
-                  {category === 'event' && 'Eventos'}
-                  {category === 'club' && 'Clubes'}
+                  {category === 'challenge' && 'Desafíos'}
+                  {category === 'learning' && 'Aprendizaje'}
+                  {category === 'social' && 'Social'}
                   {category === 'streak' && 'Rachas'}
-                  {category === 'achievement' && 'Logros'}
+                  {category === 'milestone' && 'Hitos'}
                 </option>
               ))}
             </select>

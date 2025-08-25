@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,6 +138,8 @@ export default function CruneBotPage() {
     }
   ]);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const handleSendMessage = (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -151,7 +153,7 @@ export default function CruneBotPage() {
     
     // Grant XP for interacting with CruneBot
     try {
-      gamificationService.grantXP(5, 'Interactuar con CruneBot');
+      gamificationService.grantXP("user-id", 5, "manual", "crunebot", 'Interactuar con CruneBot');
     } catch (error) {
       console.error('Error granting XP for CruneBot interaction:', error);
     }
@@ -197,7 +199,7 @@ export default function CruneBotPage() {
     
     // Grant XP for using quick actions
     try {
-      gamificationService.grantXP(8, 'Usar acción rápida de CruneBot');
+      gamificationService.grantXP("user-id", 8, "manual", "crunebot", 'Usar acción rápida de CruneBot');
     } catch (error) {
       console.error('Error granting XP for quick action:', error);
     }
@@ -313,8 +315,8 @@ export default function CruneBotPage() {
             {activeTab === "chat" && (
               <ChatInterface
                 messages={messages}
-                onSendMessage={handleSendMessage}
                 isTyping={false}
+                messagesEndRef={messagesEndRef}
               />
             )}
             

@@ -5,7 +5,7 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
 import { FloatingActionButton } from './FloatingActionButton';
-import { NotificationToast } from '@/components/notifications/NotificationToast';
+import NotificationToast from '@/components/notifications/NotificationToast';
 import { notificationService } from '@/services/notificationService';
 
 interface MainLayoutProps {
@@ -16,9 +16,9 @@ export function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     // Initialize notification service
     notificationService.connect();
-    
+
     // Request notification permissions
-    notificationService.requestPermission();
+    notificationService.requestNotificationPermission();
     
     // Cleanup on unmount
     return () => {

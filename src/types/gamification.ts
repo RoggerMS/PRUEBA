@@ -78,7 +78,7 @@ export interface XPGain {
   id: string
   userId: string
   amount: number
-  source: 'course' | 'challenge' | 'forum' | 'notes' | 'event' | 'club' | 'streak' | 'achievement'
+  source: string
   sourceId: string
   description: string
   timestamp: string

@@ -501,11 +501,11 @@ export default function LeaguePage() {
           </TabsContent>
 
           <TabsContent value="my-competitions">
-            <MyCompetitions onCompetitionClick={handleCompetitionClick} />
+            <MyCompetitions />
           </TabsContent>
 
           <TabsContent value="create">
-            <CreateCompetition onCancel={handleCancelCreate} />
+            <CreateCompetition />
           </TabsContent>
         </Tabs>
       </div>
