@@ -29,10 +29,12 @@ interface LeaderboardProps {
 function LeaderboardEntryItem({ 
   entry, 
   position, 
+  leaderboard,
   isCurrentUser = false 
 }: { 
   entry: LeaderboardEntry
   position: number
+  leaderboard: LeaderboardType
   isCurrentUser?: boolean
 }) {
   const getRankIcon = () => {
@@ -65,18 +67,18 @@ function LeaderboardEntryItem({
     }
   }
 
-  const formatScore = (score: number, type: string) => {
-    switch (type) {
+  const formatScore = (score: number, category: string) => {
+    switch (category) {
       case 'xp':
         return `${score.toLocaleString()} XP`
       case 'level':
         return `Nivel ${score}`
-      case 'badges':
-        return `${score} insignias`
+      case 'achievements':
+        return `${score} logros`
       case 'streak':
         return `${score} días`
-      case 'challenges':
-        return `${score} desafíos`
+      case 'crolars':
+        return `${score.toLocaleString()} Crolars`
       default:
         return score.toLocaleString()
     }
@@ -122,8 +124,6 @@ function LeaderboardEntryItem({
           
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <span>Nivel {entry.user.level}</span>
-            <span>•</span>
-            <span>{entry.user.badges?.length || 0} insignias</span>
           </div>
         </div>
       </div>
@@ -133,7 +133,7 @@ function LeaderboardEntryItem({
         <div className={`font-bold text-lg ${
           isCurrentUser ? 'text-blue-700' : 'text-gray-900'
         }`}>
-          {formatScore(entry.score, entry.leaderboard.type)}
+          {formatScore(entry.value, leaderboard.category)}
         </div>
         
         {entry.change !== undefined && (
@@ -165,16 +165,16 @@ export default function Leaderboard({
   const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly' | 'all'>('weekly')
   
   const getLeaderboardIcon = () => {
-    switch (leaderboard.type) {
+    switch (leaderboard.category) {
       case 'xp':
         return <Zap className="h-5 w-5 text-blue-500" />
       case 'level':
         return <TrendingUp className="h-5 w-5 text-green-500" />
-      case 'badges':
+      case 'achievements':
         return <Award className="h-5 w-5 text-purple-500" />
       case 'streak':
         return <Target className="h-5 w-5 text-orange-500" />
-      case 'challenges':
+      case 'crolars':
         return <Star className="h-5 w-5 text-yellow-500" />
       default:
         return <Trophy className="h-5 w-5 text-gray-500" />
@@ -182,17 +182,17 @@ export default function Leaderboard({
   }
 
   const getLeaderboardTitle = () => {
-    switch (leaderboard.type) {
+    switch (leaderboard.category) {
       case 'xp':
         return 'Ranking de Experiencia'
       case 'level':
         return 'Ranking de Niveles'
-      case 'badges':
-        return 'Coleccionistas de Insignias'
+      case 'achievements':
+        return 'Coleccionistas de Logros'
       case 'streak':
         return 'Rachas más Largas'
-      case 'challenges':
-        return 'Maestros de Desafíos'
+      case 'crolars':
+        return 'Ranking de Crolars'
       default:
         return 'Clasificación General'
     }
@@ -214,13 +214,13 @@ export default function Leaderboard({
   }
 
   // Encontrar la posición del usuario actual
-  const currentUserEntry = leaderboard.entries.find(entry => entry.user.id === currentUserId)
+  const currentUserEntry = leaderboard.users.find(entry => entry.user.id === currentUserId)
   const currentUserPosition = currentUserEntry 
-    ? leaderboard.entries.findIndex(entry => entry.user.id === currentUserId) + 1
+    ? leaderboard.users.findIndex(entry => entry.user.id === currentUserId) + 1
     : null
 
   // Mostrar top 10 + usuario actual si no está en el top 10
-  const topEntries = leaderboard.entries.slice(0, 10)
+  const topEntries = leaderboard.users.slice(0, 10)
   const showCurrentUser = currentUserEntry && currentUserPosition && currentUserPosition > 10
 
   return (
@@ -265,7 +265,7 @@ export default function Leaderboard({
               <Users className="h-4 w-4 text-gray-500" />
               <span className="text-sm text-gray-600">Participantes</span>
             </div>
-            <div className="font-bold text-lg">{leaderboard.entries.length}</div>
+            <div className="font-bold text-lg">{leaderboard.users.length}</div>
           </div>
           
           <div className="text-center">
@@ -294,6 +294,7 @@ export default function Leaderboard({
               key={entry.user.id}
               entry={entry}
               position={index + 1}
+              leaderboard={leaderboard}
               isCurrentUser={entry.user.id === currentUserId}
             />
           ))}
@@ -310,13 +311,14 @@ export default function Leaderboard({
               <LeaderboardEntryItem
                 entry={currentUserEntry}
                 position={currentUserPosition}
+                leaderboard={leaderboard}
                 isCurrentUser={true}
               />
             </>
           )}
         </div>
 
-        {leaderboard.entries.length === 0 && (
+        {leaderboard.users.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <h3 className="font-semibold mb-2">No hay datos disponibles</h3>
