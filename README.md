@@ -31,6 +31,11 @@ export default tseslint.config({
 })
 ```
 
+## Development Notes
+
+- Global navigation now uses a single `MainLayout` from `app/layout.tsx`, ensuring the navbar is available throughout the site.
+- Various TypeScript errors were resolved and notification components were corrected for consistent behavior.
+
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js

@@ -92,6 +92,9 @@ export default function NotesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [selectedNote, setSelectedNote] = useState<typeof mockNote | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCareer, setSelectedCareer] = useState('all');
+  const [sortBy, setSortBy] = useState('recent');
 
   const handleNoteSelect = (noteId: string) => {
     // In a real app, fetch the note data by ID
@@ -155,7 +158,14 @@ export default function NotesPage() {
         {/* Filters */}
         {showFilters && (
           <div className="mb-6">
-            <NotesFilters />
+            <NotesFilters
+              selectedCategory={selectedCategory}
+              selectedCareer={selectedCareer}
+              sortBy={sortBy}
+              onCategoryChange={setSelectedCategory}
+              onCareerChange={setSelectedCareer}
+              onSortChange={setSortBy}
+            />
           </div>
         )}
 

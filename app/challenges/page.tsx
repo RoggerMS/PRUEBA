@@ -30,7 +30,7 @@ import {
   Timer, 
   Brain, 
   Puzzle, 
-  GameController2,
+  Gamepad2,
   Plus
 } from "lucide-react";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
@@ -347,7 +347,7 @@ export default function ChallengesPage() {
 
   if (showCreateChallenge) {
     return (
-      <CreateChallenge onBack={() => setShowCreateChallenge(false)} />
+      <CreateChallenge onClose={() => setShowCreateChallenge(false)} onSubmit={() => {}} />
     );
   }
 

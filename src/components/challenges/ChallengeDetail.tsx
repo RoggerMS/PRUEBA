@@ -139,7 +139,7 @@ export function ChallengeDetail({ challenge, onBack }: ChallengeDetailProps) {
     }
   ];
 
-  const comments = [
+  const [comments, setComments] = useState([
     {
       id: "1",
       user: {
@@ -164,7 +164,7 @@ export function ChallengeDetail({ challenge, onBack }: ChallengeDetailProps) {
       likes: 8,
       replies: 1
     }
-  ];
+  ]);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -198,7 +198,7 @@ export function ChallengeDetail({ challenge, onBack }: ChallengeDetailProps) {
   const handleCompleteChallenge = async () => {
     try {
       // Grant XP for completing a challenge
-      await gamificationService.grantXP(challenge.rewards.xp, `Completar desafío: ${challenge.title}`);
+      await gamificationService.grantXP("user-id", challenge.rewards.xp, "challenge", challenge.id, `Completar desafío: ${challenge.title}`);
       
       // Update challenge status to completed
       // This would normally update the backend

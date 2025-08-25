@@ -225,7 +225,7 @@ export default function PersonalSpacePage() {
                     earned: achievement.earned,
                     progress: achievement.progress,
                     earnedDate: achievement.earnedDate,
-                    requirements: `Completa ${achievement.progress || 0}% del objetivo`
+                    requirements: [`Completa ${achievement.progress || 0}% del objetivo`]
                   }}
                 />
               ))}

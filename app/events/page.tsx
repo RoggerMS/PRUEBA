@@ -155,9 +155,9 @@ export default function EventsPage() {
 
   if (showCreateEvent) {
     return (
-      <CreateEvent 
+      <CreateEvent
         onCancel={() => setShowCreateEvent(false)}
-        onSuccess={() => {
+        onSubmit={() => {
           setShowCreateEvent(false);
           // Refresh events list
         }}
@@ -393,9 +393,9 @@ export default function EventsPage() {
 
           {/* Create Event Tab */}
           <TabsContent value="create">
-            <CreateEvent 
+            <CreateEvent
               onCancel={() => setActiveTab("browse")}
-              onSuccess={() => {
+              onSubmit={() => {
                 setActiveTab("browse");
                 // Refresh events list
               }}
