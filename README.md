@@ -35,6 +35,15 @@ export default tseslint.config({
 
 - Global navigation now uses a single `MainLayout` from `app/layout.tsx`, ensuring the navbar is available throughout the site.
 - Various TypeScript errors were resolved and notification components were corrected for consistent behavior.
+- Gamification notifications are now categorized as `GAMIFICATION`, fixing local build errors.
+
+## Local Deployment
+
+To run the project locally:
+
+1. Install dependencies with `npm install`.
+2. Build the application using `npm run build`.
+3. Start the server with `npm start` or use `npm run dev` for development mode.
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
