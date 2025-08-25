@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* CRUNEVO Light Theme - Purple-Blue Very Light (trending to white) */
+    --background: 0 0% 100%; /* Very light purple-blue background */
+    --foreground: 0 0% 3.9%; /* Dark purple text */
+    --card: 0 0% 100%; /* Card background */
+    --card-foreground: 0 0% 3.9%; /* Card text */
+    --popover: 0 0% 100%; /* Popover background */
+    --popover-foreground: 0 0% 3.9%; /* Popover text */
+    --primary: 0 0% 9%; /* Main CRUNEVO purple-blue */
+    --primary-foreground: 0 0% 98%; /* White text on primary */
+    --secondary: 0 0% 96.1%; /* Light purple-blue */
+    --secondary-foreground: 0 0% 9%; /* Dark text on secondary */
+    --muted: 0 0% 96.1%; /* Muted background */
+    --muted-foreground: 0 0% 45.1%; /* Muted text */
+    --accent: 0 0% 96.1%; /* Accent background */
+    --accent-foreground: 0 0% 9%; /* Accent text */
+    --destructive: 0 84.2% 60.2%; /* Error red */
+    --destructive-foreground: 0 0% 98%; /* White text on error */
+    --border: 0 0% 89.8%; /* Light purple border */
+    --input: 0 0% 89.8%; /* Input background */
+    --ring: 0 0% 3.9%; /* Focus ring color */
+    --radius: 0.5rem; /* Slightly more rounded for modern look */
+    
+    /* CRUNEVO Custom Variables */
+    --crolars: 45 93% 58%; /* Golden yellow for Crolars currency */
+    --fire: 14 100% 60%; /* Fire emoji orange */
+    --success: 142 76% 36%; /* Success green */
+    --warning: 38 92% 50%; /* Warning amber */
+    --info: 217 91% 60%; /* Info blue */ --chart-1: 12 76% 61%; --chart-2: 173 58% 39%; --chart-3: 197 37% 24%; --chart-4: 43 74% 66%; --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    /* CRUNEVO Dark Theme */
+    --background: 0 0% 3.9%; /* Dark purple background */
+    --foreground: 0 0% 98%; /* Light text */
+    --card: 0 0% 3.9%; /* Dark card background */
+    --card-foreground: 0 0% 98%; /* Light card text */
+    --popover: 0 0% 3.9%; /* Dark popover */
+    --popover-foreground: 0 0% 98%; /* Light popover text */
+    --primary: 0 0% 98%; /* Brighter purple in dark mode */
+    --primary-foreground: 0 0% 9%; /* Dark text on primary */
+    --secondary: 0 0% 14.9%; /* Dark secondary */
+    --secondary-foreground: 0 0% 98%; /* Light text on secondary */
+    --muted: 0 0% 14.9%; /* Dark muted */
+    --muted-foreground: 0 0% 63.9%; /* Muted light text */
+    --accent: 0 0% 14.9%; /* Dark accent */
+    --accent-foreground: 0 0% 98%; /* Light accent text */
+    --destructive: 0 62.8% 30.6%; /* Dark mode error */
+    --destructive-foreground: 0 0% 98%; /* White text on error */
+    --border: 0 0% 14.9%; /* Dark border */
+    --input: 0 0% 14.9%; /* Dark input */
+    --ring: 0 0% 83.1%; /* Bright focus ring */ --chart-1: 220 70% 50%; --chart-2: 160 60% 45%; --chart-3: 30 80% 55%; --chart-4: 280 65% 60%; --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* CRUNEVO Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-crunevo-300 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-crunevo-400;
+  }
+  
+  /* CRUNEVO Focus Styles */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+  }
+  
+  /* CRUNEVO Button Variants */
+  .btn-fire {
+    @apply bg-fire hover:bg-fire/90 text-white transition-all duration-200 hover:scale-105;
+  }
+  
+  .btn-crolars {
+    @apply bg-crolars hover:bg-crolars/90 text-white transition-all duration-200;
+  }
+  
+  /* CRUNEVO Card Styles */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-lg hover:shadow-crunevo-200/20 hover:-translate-y-1;
+  }
+  
+  /* CRUNEVO Gradient Backgrounds */
+  .bg-crunevo-gradient {
+    background: linear-gradient(135deg, theme('colors.crunevo.50') 0%, theme('colors.crunevo.100') 100%);
+  }
+  
+  .bg-crunevo-gradient-dark {
+    background: linear-gradient(135deg, theme('colors.crunevo.900') 0%, theme('colors.crunevo.800') 100%);
+  }
+}
+
+@layer components {
+  /* CRUNEVO Typography */
+  .text-gradient {
+    background: linear-gradient(135deg, theme('colors.crunevo.600'), theme('colors.crunevo.400'));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* CRUNEVO Loading States */
+  .loading-pulse {
+    @apply animate-pulse bg-gradient-to-r from-crunevo-100 via-crunevo-200 to-crunevo-100 bg-[length:200%_100%];
+    animation: loading-shimmer 1.5s infinite;
+  }
+  
+  @keyframes loading-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+}
+
+@layer components {
+  /* CRUNEVO Custom Components */
+  .crunevo-card {
+    @apply bg-white rounded-lg shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow;
+  }
+  
+  .crunevo-button {
+    @apply bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium hover:bg-primary/90 transition-colors;
+  }
+  
+  .crolars-badge {
+    @apply bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .streak-widget {
+    @apply bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg p-4;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(241 245 249);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139);
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "/notes/page": "app/notes/page.js",
+  "/forum/page": "app/forum/page.js",
+  "/marketplace/page": "app/marketplace/page.js",
+  "/courses/page": "app/courses/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
+}

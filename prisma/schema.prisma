@@ -1,0 +1,965 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// AUTHENTICATION & USER MANAGEMENT
+// ============================================================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  username      String    @unique
+  firstName     String?
+  lastName      String?
+  birthDate     DateTime?
+  gender        Gender?
+  bio           String?
+  location      String?
+  website       String?
+  verified      Boolean   @default(false)
+  role          UserRole  @default(STUDENT)
+  status        UserStatus @default(ACTIVE)
+  
+  // Academic Info
+  university    String?
+  career        String?
+  semester      Int?
+  graduationYear Int?
+  interests     String[] // Array of interest tags
+  
+  // Gamification
+  level         Int       @default(1)
+  xp            Int       @default(0)
+  crolars       Int       @default(0)
+  streak        Int       @default(0)
+  lastActivity  DateTime  @default(now())
+  
+  // Settings
+  isPrivate     Boolean   @default(false)
+  allowMessages Boolean   @default(true)
+  emailNotifications Boolean @default(true)
+  pushNotifications Boolean @default(true)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  notes         Note[]
+  noteRatings   NoteRating[]
+  questions     Question[]
+  answers       Answer[]
+  votes         Vote[]
+  purchases     Purchase[]
+  orders        Order[]
+  cartItems     CartItem[]
+  notifications Notification[]
+  followers     Follow[] @relation("UserFollowers")
+  following     Follow[] @relation("UserFollowing")
+  clubMemberships ClubMember[]
+  eventAttendances EventAttendance[]
+  courseEnrollments CourseEnrollment[]
+  coursesInstructed Course[]
+  lessonProgress LessonProgress[]
+  eventsOrganized Event[]
+  productsForSale Product[]
+  transactions  Transaction[]
+  reports       Report[]
+  streakClaims  StreakClaim[]
+  referrals     Referral[] @relation("ReferralUser")
+  referredBy    Referral[] @relation("ReferredUser")
+  personalSpace PersonalSpace?
+  
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================================
+// SOCIAL FEATURES
+// ============================================================================
+
+model Post {
+  id          String    @id @default(cuid())
+  content     String
+  type        PostType  @default(TEXT)
+  imageUrl    String?
+  videoUrl    String?
+  attachments String[] // Array of file URLs
+  tags        String[] // Array of hashtags
+  visibility  Visibility @default(PUBLIC)
+  isPinned    Boolean   @default(false)
+  
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  comments    Comment[]
+  likes       Like[]
+  bookmarks   Bookmark[]
+  reports     Report[]
+  
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  noteId    String?
+  note      Note?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  
+  parentId  String?
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  likes     Like[]
+  reports   Report[]
+  
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  answerId  String?
+  answer    Answer?  @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@unique([userId, answerId])
+  @@map("likes")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  noteId    String?
+  note      Note?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  
+  questionId String?
+  question  Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, postId])
+  @@unique([userId, noteId])
+  @@unique([userId, questionId])
+  @@map("bookmarks")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  
+  followerId  String
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  
+  followingId String
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// ============================================================================
+// NOTES SYSTEM
+// ============================================================================
+
+model Note {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  content     String?    // For text notes
+  fileUrl     String?    // For uploaded files
+  fileName    String?
+  fileSize    Int?
+  fileType    String?
+  thumbnailUrl String?
+  
+  tags        String[]   // Array of tags
+  subject     String?
+  career      String?
+  university  String?
+  semester    Int?
+  
+  price       Int?       // Price in Crolars (null = free)
+  downloads   Int        @default(0)
+  views       Int        @default(0)
+  rating      Float      @default(0)
+  ratingCount Int        @default(0)
+  
+  visibility  Visibility @default(PUBLIC)
+  status      NoteStatus @default(PENDING)
+  
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // Relations
+  comments    Comment[]
+  bookmarks   Bookmark[]
+  purchases   Purchase[]
+  reports     Report[]
+  ratings     NoteRating[]
+  
+  @@map("notes")
+}
+
+model NoteRating {
+  id       String @id @default(cuid())
+  rating   Int    // 1-5 stars
+  review   String?
+  
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  noteId   String
+  note     Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, noteId])
+  @@map("note_ratings")
+}
+
+// ============================================================================
+// FORUM SYSTEM
+// ============================================================================
+
+model Question {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  tags        String[] // Array of tags
+  subject     String?
+  career      String?
+  university  String?
+  
+  views       Int      @default(0)
+  votes       Int      @default(0)
+  
+  status      QuestionStatus @default(OPEN)
+  
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  bestAnswerId String?
+  bestAnswer  Answer?  @relation("QuestionBestAnswer", fields: [bestAnswerId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  answers     Answer[] @relation("QuestionAnswers")
+  bookmarks   Bookmark[]
+  votes_rel   Vote[]
+  reports     Report[]
+  
+  @@map("questions")
+}
+
+model Answer {
+  id        String   @id @default(cuid())
+  content   String
+  votes     Int      @default(0)
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  questionId String
+  question  Question @relation("QuestionAnswers", fields: [questionId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  bestAnswerFor Question[] @relation("QuestionBestAnswer")
+  likes     Like[]
+  votes_rel Vote[]
+  reports   Report[]
+  
+  @@map("answers")
+}
+
+model Vote {
+  id       String   @id @default(cuid())
+  type     VoteType // UP or DOWN
+  
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  questionId String?
+  question Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  answerId String?
+  answer   Answer?  @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, questionId])
+  @@unique([userId, answerId])
+  @@map("votes")
+}
+
+// ============================================================================
+// MARKETPLACE
+// ============================================================================
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  description String
+  price       Int           // Price in Crolars
+  images      String[]      // Array of image URLs
+  category    String
+  tags        String[]
+  
+  stock       Int           @default(0)
+  sold        Int           @default(0)
+  rating      Float         @default(0)
+  ratingCount Int           @default(0)
+  
+  isOfficial  Boolean       @default(false)
+  status      ProductStatus @default(ACTIVE)
+  
+  sellerId    String?
+  seller      User?         @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relations
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
+  
+  @@map("products")
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  quantity  Int     @default(1)
+  
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  total       Int         // Total in Crolars
+  status      OrderStatus @default(PENDING)
+  
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Relations
+  items       OrderItem[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  price     Int     // Price at time of purchase
+  
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("order_items")
+}
+
+model Purchase {
+  id        String   @id @default(cuid())
+  price     Int      // Price paid in Crolars
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, noteId])
+  @@map("purchases")
+}
+
+// ============================================================================
+// COURSES
+// ============================================================================
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  thumbnail   String?
+  price       Int?     // Price in Crolars (null = free)
+  
+  category    String
+  level       CourseLevel @default(BEGINNER)
+  duration    Int?     // Duration in minutes
+  
+  rating      Float    @default(0)
+  ratingCount Int      @default(0)
+  
+  isPublished Boolean  @default(false)
+  
+  instructorId String?
+  instructor  User?    @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  lessons     Lesson[]
+  enrollments CourseEnrollment[]
+  
+  @@map("courses")
+}
+
+model Lesson {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  content     String?    // Text content
+  videoUrl    String?    // Video URL
+  duration    Int?       // Duration in seconds
+  order       Int        // Order within course
+  
+  courseId    String
+  course      Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // Relations
+  progress    LessonProgress[]
+  
+  @@map("lessons")
+}
+
+model CourseEnrollment {
+  id          String   @id @default(cuid())
+  progress    Float    @default(0) // Progress percentage
+  completed   Boolean  @default(false)
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  enrolledAt  DateTime @default(now())
+  completedAt DateTime?
+  
+  @@unique([userId, courseId])
+  @@map("course_enrollments")
+}
+
+model LessonProgress {
+  id          String  @id @default(cuid())
+  completed   Boolean @default(false)
+  watchTime   Int     @default(0) // Watch time in seconds
+  
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  lessonId    String
+  lesson      Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+// ============================================================================
+// CLUBS
+// ============================================================================
+
+model Club {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  avatar      String?
+  banner      String?
+  
+  category    String
+  tags        String[]
+  
+  isPrivate   Boolean  @default(false)
+  memberCount Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  members     ClubMember[]
+  posts       ClubPost[]
+  events      Event[]
+  
+  @@map("clubs")
+}
+
+model ClubMember {
+  id       String     @id @default(cuid())
+  role     ClubRole   @default(MEMBER)
+  
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  clubId   String
+  club     Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  
+  joinedAt DateTime   @default(now())
+  
+  @@unique([userId, clubId])
+  @@map("club_members")
+}
+
+model ClubPost {
+  id        String   @id @default(cuid())
+  content   String
+  imageUrl  String?
+  
+  authorId  String
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("club_posts")
+}
+
+// ============================================================================
+// EVENTS
+// ============================================================================
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  imageUrl    String?
+  
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  isOnline    Boolean  @default(false)
+  
+  category    String
+  tags        String[]
+  
+  maxAttendees Int?
+  
+  organizerId String?
+  organizer   User?    @relation(fields: [organizerId], references: [id], onDelete: SetNull)
+  
+  clubId      String?
+  club        Club?    @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  attendances EventAttendance[]
+  
+  @@map("events")
+}
+
+model EventAttendance {
+  id       String           @id @default(cuid())
+  status   AttendanceStatus @default(INTERESTED)
+  
+  userId   String
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  eventId  String
+  event    Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime        @default(now())
+  
+  @@unique([userId, eventId])
+  @@map("event_attendances")
+}
+
+// ============================================================================
+// GAMIFICATION
+// ============================================================================
+
+model Transaction {
+  id          String          @id @default(cuid())
+  amount      Int             // Amount in Crolars (positive = earned, negative = spent)
+  type        TransactionType
+  description String
+  reference   String?         // Reference to related entity (postId, noteId, etc.)
+  
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime        @default(now())
+  
+  @@map("transactions")
+}
+
+model StreakClaim {
+  id        String   @id @default(cuid())
+  day       Int      // Day of the week (1-7)
+  amount    Int      // Crolars claimed
+  week      String   // Week identifier (YYYY-WW)
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  claimedAt DateTime @default(now())
+  
+  @@unique([userId, week, day])
+  @@map("streak_claims")
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  reward      Int      @default(100) // Reward in Crolars
+  used        Boolean  @default(false)
+  
+  referrerId  String
+  referrer    User     @relation("ReferralUser", fields: [referrerId], references: [id], onDelete: Cascade)
+  
+  referredId  String?
+  referred    User?    @relation("ReferredUser", fields: [referredId], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime @default(now())
+  usedAt      DateTime?
+  
+  @@map("referrals")
+}
+
+// ============================================================================
+// PERSONAL SPACE
+// ============================================================================
+
+model PersonalSpace {
+  id        String   @id @default(cuid())
+  
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  blocks    SpaceBlock[]
+  
+  @@map("personal_spaces")
+}
+
+model SpaceBlock {
+  id        String    @id @default(cuid())
+  type      BlockType
+  title     String?
+  content   Json?     // Flexible content storage
+  
+  x         Int       @default(0)
+  y         Int       @default(0)
+  width     Int       @default(200)
+  height    Int       @default(150)
+  
+  completed Boolean   @default(false)
+  
+  spaceId   String
+  space     PersonalSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@map("space_blocks")
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?            // Additional data
+  
+  read      Boolean          @default(false)
+  
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime         @default(now())
+  
+  @@map("notifications")
+}
+
+// ============================================================================
+// MODERATION
+// ============================================================================
+
+model Report {
+  id        String     @id @default(cuid())
+  reason    String
+  details   String?
+  status    ReportStatus @default(PENDING)
+  
+  reporterId String
+  reporter  User       @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  
+  postId    String?
+  post      Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  commentId String?
+  comment   Comment?   @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  noteId    String?
+  note      Note?      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  
+  questionId String?
+  question  Question?  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  answerId  String?
+  answer    Answer?    @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  @@map("reports")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserRole {
+  STUDENT
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum PostType {
+  TEXT
+  IMAGE
+  VIDEO
+  POLL
+  QUESTION
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  FRIENDS
+  UNIVERSITY
+}
+
+enum NoteStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum QuestionStatus {
+  OPEN
+  CLOSED
+  SOLVED
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ClubRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum AttendanceStatus {
+  INTERESTED
+  GOING
+  NOT_GOING
+}
+
+enum TransactionType {
+  STREAK_REWARD
+  REFERRAL_BONUS
+  NOTE_PURCHASE
+  PRODUCT_PURCHASE
+  NOTE_SALE
+  PRODUCT_SALE
+  ADMIN_ADJUSTMENT
+}
+
+enum BlockType {
+  NOTE
+  TASK
+  KANBAN
+  GOAL
+  CALENDAR
+  CHART
+  QUOTE
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  FOLLOW
+  MENTION
+  NOTE_APPROVED
+  NOTE_PURCHASED
+  QUESTION_ANSWERED
+  ANSWER_ACCEPTED
+  STREAK_REMINDER
+  CROLARS_EARNED
+  EVENT_REMINDER
+  CLUB_INVITATION
+  SYSTEM
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
