@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-
-// Mapa para mantener las conexiones activas
-const connections = new Map<string, ReadableStreamDefaultController>();
+import { addConnection, removeConnection } from '@/lib/notificationStream';
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +26,7 @@ export async function GET(request: NextRequest) {
     const stream = new ReadableStream({
       start(controller) {
         // Almacenar la conexión
-        connections.set(userId, controller);
+        addConnection(userId, controller);
 
         // Enviar evento inicial de conexión
         const data = JSON.stringify({ type: 'connected', message: 'Connected to notifications stream' });
@@ -40,14 +38,14 @@ export async function GET(request: NextRequest) {
             controller.enqueue(`data: ${JSON.stringify({ type: 'heartbeat', timestamp: Date.now() })}\n\n`);
           } catch (error) {
             clearInterval(heartbeat);
-            connections.delete(userId);
+            removeConnection(userId);
           }
         }, 30000);
 
         // Limpiar cuando se cierre la conexión
         request.signal.addEventListener('abort', () => {
           clearInterval(heartbeat);
-          connections.delete(userId);
+          removeConnection(userId);
           try {
             controller.close();
           } catch (error) {
@@ -56,7 +54,7 @@ export async function GET(request: NextRequest) {
         });
       },
       cancel() {
-        connections.delete(userId);
+        removeConnection(userId);
       }
     });
 
@@ -78,35 +76,5 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Función helper para enviar notificaciones a usuarios específicos
-export function sendNotificationToUser(userId: string, notification: any) {
-  const controller = connections.get(userId);
-  if (controller) {
-    try {
-      const data = JSON.stringify({
-        type: 'notification',
-        data: notification
-      });
-      controller.enqueue(`data: ${data}\n\n`);
-    } catch (error) {
-      console.error('Error sending notification to user:', error);
-      connections.delete(userId);
-    }
-  }
-}
-
-// Función helper para broadcast a todos los usuarios conectados
-export function broadcastNotification(notification: any) {
-  connections.forEach((controller, userId) => {
-    try {
-      const data = JSON.stringify({
-        type: 'broadcast',
-        data: notification
-      });
-      controller.enqueue(`data: ${data}\n\n`);
-    } catch (error) {
-      console.error('Error broadcasting notification:', error);
-      connections.delete(userId);
-    }
-  });
-}
+// sendNotificationToUser y broadcastNotification están disponibles en
+// '@/lib/notificationStream'

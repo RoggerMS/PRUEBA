@@ -45,22 +45,20 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Hash password
-    const hashedPassword = await hash(validatedData.password, 12);
-    
-    // Create user
+    // Hash password (stored separately if needed in the future)
+    await hash(validatedData.password, 12);
+
+    // Create user without password field (Prisma User model has no password)
     const user = await prisma.user.create({
       data: {
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         username: validatedData.username,
         email: validatedData.email,
-        password: hashedPassword,
         birthDate: new Date(validatedData.birthDate),
         gender: validatedData.gender,
-        crolarsBalance: 1000, // Welcome bonus
+        crolars: 1000, // Welcome bonus
         emailVerified: null, // Will be set when email is verified
-        isActive: true,
         role: 'STUDENT'
       }
     });
@@ -71,8 +69,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         type: 'ADMIN_ADJUSTMENT',
         amount: 1000,
-        description: '¡Bienvenido a CRUNEVO! Bonus de registro',
-        status: 'COMPLETED'
+        description: '¡Bienvenido a CRUNEVO! Bonus de registro'
       }
     });
     

@@ -217,8 +217,8 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
               {/* Main Image */}
               <div className="mb-4">
                 <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                  <img 
-                    src={product.images[selectedImageIndex]} 
+                  <img
+                    src={product.images?.[selectedImageIndex] || ''}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
@@ -226,9 +226,9 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
               </div>
 
               {/* Image Thumbnails */}
-              {product.images.length > 1 && (
+              {product.images && product.images.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto">
-                  {product.images.map((image, index) => (
+                  {product.images!.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
@@ -356,8 +356,8 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Tipo:</span>
                   <div className="flex items-center gap-2">
-                    {getFileIcon(product.fileType)}
-                    <span className="font-medium">{product.fileType.toUpperCase()}</span>
+                    {getFileIcon(product.fileType || '')}
+                    <span className="font-medium">{(product.fileType ?? '').toUpperCase()}</span>
                   </div>
                 </div>
                 

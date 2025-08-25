@@ -215,17 +215,22 @@ export default function PersonalSpacePage() {
           <TabsContent value="achievements" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {mockAchievements.map((achievement) => (
-                <AchievementCard 
+                <AchievementCard
                   key={achievement.id}
                   achievement={{
                     id: achievement.id,
                     title: achievement.title,
                     description: achievement.description,
                     icon: achievement.icon,
+                    category: 'learning',
+                    difficulty: 'easy',
+                    points: 0,
                     earned: achievement.earned,
                     progress: achievement.progress,
+                    maxProgress: achievement.maxProgress,
                     earnedDate: achievement.earnedDate,
-                    requirements: [`Completa ${achievement.progress || 0}% del objetivo`]
+                    requirements: [`Completa ${achievement.progress || 0}% del objetivo`],
+                    reward: { xp: 0, crolars: 0 }
                   }}
                 />
               ))}

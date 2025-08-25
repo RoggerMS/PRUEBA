@@ -186,66 +186,65 @@ const mockNotifications: Notification[] = [
 
 // Datos mock del leaderboard
 const mockLeaderboard: LeaderboardType = {
-  name: 'Ranking de Experiencia',
-  type: 'xp',
   period: 'weekly',
-  entries: [
+  category: 'xp',
+  users: [
     {
+      rank: 1,
       user: {
         id: 'user-2',
         name: 'Carlos Mendoza',
         avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20male%20confident%20smile%20modern%20style&image_size=square',
-        level: 12,
-        badges: []
+        level: 12
       },
-      score: 4850,
-      change: 2,
-      leaderboard: { type: 'xp' }
+      value: 4850,
+      change: 2
     },
     {
+      rank: 2,
       user: {
         id: 'user-3',
         name: 'María López',
         avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20female%20smart%20glasses%20modern%20style&image_size=square',
-        level: 10,
-        badges: []
+        level: 10
       },
-      score: 4200,
-      change: -1,
-      leaderboard: { type: 'xp' }
+      value: 4200,
+      change: -1
     },
     {
-      user: mockUser,
-      score: 3250,
-      change: 1,
-      leaderboard: { type: 'xp' }
+      rank: 3,
+      user: {
+        id: mockUser.id,
+        name: mockUser.name,
+        avatar: mockUser.avatar,
+        level: mockUser.level
+      },
+      value: 3250,
+      change: 1
     },
     {
+      rank: 4,
       user: {
         id: 'user-4',
         name: 'Diego Ruiz',
         avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20male%20friendly%20modern%20style&image_size=square',
-        level: 7,
-        badges: []
+        level: 7
       },
-      score: 2980,
-      change: 0,
-      leaderboard: { type: 'xp' }
+      value: 2980,
+      change: 0
     },
     {
+      rank: 5,
       user: {
         id: 'user-5',
         name: 'Sofia Herrera',
         avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20female%20creative%20modern%20style&image_size=square',
-        level: 6,
-        badges: []
+        level: 6
       },
-      score: 2650,
-      change: 3,
-      leaderboard: { type: 'xp' }
+      value: 2650,
+      change: 3
     }
-  ],
-  updatedAt: '2024-01-30T18:00:00Z'
+  ]
 }
 
 export default function GamificationPage() {
