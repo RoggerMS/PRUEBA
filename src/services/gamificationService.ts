@@ -90,12 +90,12 @@ class GamificationService {
     notifications.push({
       id: `xp_${Date.now()}`,
       userId,
-      type: 'GAMIFICATION',
+      type: 'xp_gain',
       title: `¡+${amount} XP ganados!`,
       message: `Has ganado ${amount} XP por ${description}`,
       data: { amount, source, sourceId },
       read: false,
-      createdAt: new Date()
+      createdAt: new Date().toISOString()
     })
     
     // Enviar notificación usando el servicio
@@ -114,12 +114,12 @@ class GamificationService {
       notifications.push({
         id: `level_${Date.now()}`,
         userId,
-        type: 'GAMIFICATION',
+        type: 'level_up',
         title: '¡Subiste de Nivel!',
         message: `¡Felicidades! Ahora eres ${newLevel.name} (Nivel ${newLevel.level})`,
         data: { newLevel, rewards: newLevel.rewards },
         read: false,
-        createdAt: new Date()
+        createdAt: new Date().toISOString()
       })
       
       // Otorgar badges de nivel si los hay
@@ -130,12 +130,12 @@ class GamificationService {
             notifications.push({
               id: `badge_${Date.now()}_${badge.id}`,
               userId,
-              type: 'GAMIFICATION',
+              type: 'badge_earned',
               title: '¡Nueva Insignia!',
               message: `Has desbloqueado la insignia: ${badge.name}`,
               data: { badge },
               read: false,
-              createdAt: new Date()
+              createdAt: new Date().toISOString()
             })
           }
         }
@@ -299,12 +299,12 @@ class GamificationService {
         notifications.push({
           id: `streak_${Date.now()}`,
           userId,
-          type: 'GAMIFICATION',
+          type: 'streak_milestone',
           title: '¡Racha Semanal!',
           message: `¡Increíble! Has mantenido una racha de ${user.streak.current} días`,
           data: { streak: user.streak.current },
           read: false,
-          createdAt: new Date()
+          createdAt: new Date().toISOString()
         })
       }
     } else {

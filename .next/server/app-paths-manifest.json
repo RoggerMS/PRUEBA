@@ -1,11 +1,17 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/auth/login/page": "app/auth/login/page.js",
-  "/auth/register/page": "app/auth/register/page.js",
   "/league/page": "app/league/page.js",
   "/forum/page": "app/forum/page.js",
   "/clubs/page": "app/clubs/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/notifications/route": "app/api/notifications/route.js",
-  "/api/notifications/stream/route": "app/api/notifications/stream/route.js"
+  "/api/notifications/stream/route": "app/api/notifications/stream/route.js",
+  "/page": "app/page.js",
+  "/notes/page": "app/notes/page.js",
+  "/events/page": "app/events/page.js",
+  "/courses/page": "app/courses/page.js",
+  "/marketplace/page": "app/marketplace/page.js",
+  "/gamification/page": "app/gamification/page.js",
+  "/crunebot/page": "app/crunebot/page.js"
 }
