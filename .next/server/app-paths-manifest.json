@@ -1,10 +1,11 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/gamification/page": "app/gamification/page.js",
-  "/auth/register/page": "app/auth/register/page.js",
   "/auth/login/page": "app/auth/login/page.js",
-  "/forum/page": "app/forum/page.js",
+  "/auth/register/page": "app/auth/register/page.js",
   "/league/page": "app/league/page.js",
+  "/forum/page": "app/forum/page.js",
+  "/clubs/page": "app/clubs/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/clubs/page": "app/clubs/page.js"
+  "/api/notifications/route": "app/api/notifications/route.js",
+  "/api/notifications/stream/route": "app/api/notifications/stream/route.js"
 }
