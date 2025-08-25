@@ -334,3 +334,27 @@ class GamificationService {
 }
 
 export const gamificationService = new GamificationService()
+
+// Exportar funciones de utilidad
+export const calculateUserLevel = (totalXp: number): Level => {
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (totalXp >= LEVELS[i].minXp) {
+      return LEVELS[i]
+    }
+  }
+  return LEVELS[0]
+}
+
+export const getXpToNextLevel = (currentXp: number): { needed: number; total: number } => {
+  const currentLevel = calculateUserLevel(currentXp)
+  const nextLevel = LEVELS.find(l => l.level === currentLevel.level + 1)
+  
+  if (!nextLevel) {
+    return { needed: 0, total: 0 }
+  }
+  
+  return {
+    needed: nextLevel.minXp - currentXp,
+    total: nextLevel.minXp - currentLevel.minXp
+  }
+}

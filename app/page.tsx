@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { MainLayout } from '@/src/components/layout/MainLayout';
-import { Feed } from '@/src/components/feed/Feed';
-import { QuickActions } from '@/src/components/feed/QuickActions';
-import WeeklyStreak from '@/src/components/gamification/WeeklyStreak';
-import { TrendingTopics } from '@/src/components/feed/TrendingTopics';
-import { Suggestions } from '@/src/components/feed/Suggestions';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Feed } from '@/components/feed/Feed';
+import { QuickActions } from '@/components/feed/QuickActions';
+import WeeklyStreak from '@/components/gamification/WeeklyStreak';
+import { TrendingTopics } from '@/components/feed/TrendingTopics';
+import { Suggestions } from '@/components/feed/Suggestions';
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);

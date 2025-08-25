@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { gamificationService } from '@/services/gamificationService';
 import { formatCrolars } from '@/lib/utils';
 
 interface Note {
@@ -160,15 +161,28 @@ export function NotesGrid({ searchQuery, onNoteSelect }: NotesGridProps) {
     setFilteredNotes(filtered);
   }, [notes, searchQuery]);
 
-  const handleLike = (noteId: string) => {
+  const handleLike = async (noteId: string) => {
     setNotes(prev => prev.map(note => 
       note.id === noteId 
         ? { ...note, stats: { ...note.stats, likes: note.stats.likes + 1 } }
         : note
     ));
+    
+    // Grant XP for liking a note
+    try {
+      await gamificationService.grantXP(
+        'current-user-id', // This should be the actual user ID
+        5, // XP amount for liking a note
+        'notes_like',
+        noteId,
+        'Le dio like a una nota'
+      );
+    } catch (error) {
+      console.error('Error granting XP for note like:', error);
+    }
   };
 
-  const handleDownload = (note: Note) => {
+  const handleDownload = async (note: Note) => {
     if (note.price && !note.isOwned) {
       // Handle purchase logic
       console.log(`Purchase note ${note.id} for ${note.price} Crolars`);
@@ -180,6 +194,19 @@ export function NotesGrid({ searchQuery, onNoteSelect }: NotesGridProps) {
           ? { ...n, stats: { ...n.stats, downloads: n.stats.downloads + 1 } }
           : n
       ));
+      
+      // Grant XP for downloading a note
+      try {
+        await gamificationService.grantXP(
+          'current-user-id', // This should be the actual user ID
+          10, // XP amount for downloading a note
+          'notes_download',
+          note.id,
+          `Descargó la nota: ${note.title}`
+        );
+      } catch (error) {
+        console.error('Error granting XP for note download:', error);
+      }
     }
   };
 

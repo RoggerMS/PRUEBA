@@ -24,6 +24,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { gamificationService } from '@/services/gamificationService';
 
 interface NotesUploadProps {
   onClose: () => void;
@@ -219,6 +220,19 @@ export function NotesUpload({ onClose, onSuccess }: NotesUploadProps) {
     try {
       // Simulate upload process
       await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Grant XP for uploading notes
+      try {
+        await gamificationService.grantXP(
+          'current-user-id', // This should be the actual user ID
+          50, // XP amount for uploading notes
+          'notes_upload',
+          `note-${Date.now()}`, // Generate a unique note ID
+          `Subió el apunte: ${title}`
+        );
+      } catch (xpError) {
+        console.error('Error granting XP for note upload:', xpError);
+      }
       
       toast.success('Apunte subido exitosamente');
       onSuccess();

@@ -2,19 +2,19 @@
 
 import { useState } from 'react';
 import { Image, FileText, HelpCircle, Send, X } from 'lucide-react';
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Input } from '@/src/components/ui/input';
-import { Badge } from '@/src/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/src/components/ui/select';
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 

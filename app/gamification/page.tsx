@@ -347,7 +347,10 @@ export default function GamificationPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Progreso de nivel */}
             <LevelProgress 
-              user={mockUser}
+              currentXp={mockUser.xp}
+              totalXp={mockUser.xp}
+              level={mockUser.level}
+              crolars={mockUser.crolars}
               className="h-fit"
             />
 

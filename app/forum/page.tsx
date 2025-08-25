@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Badge } from '@/src/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import { QuestionCard } from '@/src/components/forum/QuestionCard';
-import { AskQuestion } from '@/src/components/forum/AskQuestion';
-import { QuestionDetail } from '@/src/components/forum/QuestionDetail';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { QuestionCard } from '@/components/forum/QuestionCard';
+import { AskQuestion } from '@/components/forum/AskQuestion';
+import { QuestionDetail } from '@/components/forum/QuestionDetail';
 import { 
   Search, 
   Filter, 

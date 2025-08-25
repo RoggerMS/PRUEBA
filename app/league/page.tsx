@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Badge } from "@/src/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Trophy, 
   Medal, 
@@ -33,11 +33,11 @@ import {
   Music,
   Dumbbell
 } from "lucide-react";
-import { CompetitionCard } from "@/src/components/league/CompetitionCard";
-import { CompetitionDetail } from "@/src/components/league/CompetitionDetail";
-import { Leaderboard } from "@/src/components/league/Leaderboard";
-import { MyCompetitions } from "@/src/components/league/MyCompetitions";
-import { CreateCompetition } from "@/src/components/league/CreateCompetition";
+import { CompetitionCard } from "@/components/league/CompetitionCard";
+import { CompetitionDetail } from "@/components/league/CompetitionDetail";
+import { Leaderboard } from "@/components/league/Leaderboard";
+import { MyCompetitions } from "@/components/league/MyCompetitions";
+import { CreateCompetition } from "@/components/league/CreateCompetition";
 
 // Mock data for competitions
 const mockCompetitions = [

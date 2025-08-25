@@ -2,21 +2,22 @@
 
 import { useState } from 'react';
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Flag, Link as LinkIcon, EyeOff } from 'lucide-react';
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Badge } from '@/src/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { CreatePost } from './CreatePost';
+import { gamificationService } from '@/services/gamificationService';
 
 interface Post {
   id: string;
@@ -133,11 +134,28 @@ const getPostTypeLabel = (type: string) => {
 export function Feed() {
   const [posts, setPosts] = useState(mockPosts);
 
-  const handlePostCreated = (newPost: Post) => {
+  const handlePostCreated = async (newPost: Post) => {
     setPosts(prev => [newPost, ...prev]);
+    // Otorgar XP por crear post
+    try {
+      await gamificationService.grantXP(
+        'current-user-id', // En producción, obtener del contexto de autenticación
+        15,
+        'post',
+        newPost.id,
+        'Crear nuevo post'
+      );
+      
+      toast.success('¡Post creado! +15 XP ganados', {
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error al otorgar XP:', error);
+    }
   };
 
-  const handleLike = (postId: string) => {
+  const handleLike = async (postId: string) => {
+    // Primero actualizar el estado
     setPosts(prev => prev.map(post => {
       if (post.id === postId) {
         const newIsLiked = !post.isLiked;
@@ -149,6 +167,26 @@ export function Feed() {
       }
       return post;
     }));
+    
+    // Luego otorgar XP si es un like (no unlike)
+    const post = posts.find(p => p.id === postId);
+    if (post && !post.isLiked) {
+      try {
+        await gamificationService.grantXP(
+          'current-user-id',
+          5,
+          'like',
+          postId,
+          'Dar like a un post'
+        );
+        
+        toast.success('¡Like dado! +5 XP ganados', {
+          duration: 2000,
+        });
+      } catch (error) {
+        console.error('Error al otorgar XP:', error);
+      }
+    }
   };
 
   const handleBookmark = (postId: string) => {
@@ -165,9 +203,47 @@ export function Feed() {
     }));
   };
 
-  const handleShare = (post: Post) => {
+  const handleShare = async (post: Post) => {
     navigator.clipboard.writeText(`https://crunevo.com/posts/${post.id}`);
-    toast.success('Enlace copiado al portapapeles');
+    // Otorgar XP por compartir
+    try {
+      await gamificationService.grantXP(
+        'current-user-id',
+        3,
+        'share',
+        postId,
+        'Compartir post'
+      );
+      
+      toast.success('¡Post compartido! +3 XP ganados', {
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error al otorgar XP:', error);
+    }
+    
+    navigator.clipboard.writeText(`https://crunevo.com/posts/${post.id}`);
+  };
+
+  const handleComment = async (postId: string) => {
+    // Otorgar XP por comentar
+    try {
+      await gamificationService.grantXP(
+        'current-user-id',
+        8,
+        'comment',
+        postId,
+        'Comentar en un post'
+      );
+      
+      toast.success('¡Comentario agregado! +8 XP ganados', {
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error al otorgar XP:', error);
+    }
+    
+    // Aquí se abriría el modal de comentarios
   };
 
   if (posts.length === 0) {
@@ -304,7 +380,12 @@ export function Feed() {
                   {post.likes}
                 </Button>
                 
-                <Button variant="ghost" size="sm" className="text-gray-500 hover:text-crunevo-600">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleComment(post.id)}
+                  className="text-gray-500 hover:text-crunevo-600"
+                >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   {post.comments}
                 </Button>

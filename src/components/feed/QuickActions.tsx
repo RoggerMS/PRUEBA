@@ -1,8 +1,8 @@
 'use client';
 
 import { FileText, MessageSquare, Users, Calendar, Upload, HelpCircle } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 
 interface QuickAction {

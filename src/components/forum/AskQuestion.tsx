@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Badge } from '@/src/components/ui/badge';
+import { gamificationService } from '@/services/gamificationService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
   Plus, 
@@ -85,10 +86,24 @@ export function AskQuestion({ onSubmit, onCancel }: AskQuestionProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      try {
+        onSubmit(formData);
+        
+        // Grant XP for asking a question
+        await gamificationService.grantXP(
+          'current-user', // In real app, get from auth context
+          20,
+          'forum_question',
+          Date.now().toString(),
+          'Pregunta publicada en el foro'
+        );
+      } catch (error) {
+        console.error('Error granting XP for question:', error);
+        // Still proceed with question submission even if XP fails
+      }
     }
   };
 

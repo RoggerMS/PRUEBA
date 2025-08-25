@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Progress } from "@/src/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import { gamificationService } from "@/src/services/gamificationService";
 
 interface Course {
   id: string;
@@ -181,10 +182,49 @@ export function CourseDetail({ course, onBack }: CourseDetailProps) {
     // Simulate enrollment process
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsEnrolling(false);
+    
+    try {
+      // Grant XP for enrolling in a course
+      await gamificationService.grantXP(30, 'Inscripción en curso');
+    } catch (error) {
+      console.error('Error granting XP for course enrollment:', error);
+    }
   };
 
   const handleLessonSelect = (lessonId: string) => {
     setSelectedLesson(lessonId);
+  };
+
+  const handleCompleteLesson = async (lessonId: string) => {
+    try {
+      // Find and mark lesson as completed
+      const updatedModules = mockModules.map(module => ({
+        ...module,
+        lessons: module.lessons.map(lesson => 
+          lesson.id === lessonId 
+            ? { ...lesson, completed: true }
+            : lesson
+        )
+      }));
+      
+      // Grant XP for completing a lesson
+      await gamificationService.grantXP(15, 'Lección completada');
+      
+      // Here you would normally update the state or make an API call
+      console.log('Lesson completed:', lessonId);
+    } catch (error) {
+      console.error('Error completing lesson:', error);
+    }
+  };
+
+  const handleCompleteCourse = async () => {
+    try {
+      // Grant XP for completing entire course
+      await gamificationService.grantXP(100, 'Curso completado');
+      console.log('Course completed!');
+    } catch (error) {
+      console.error('Error completing course:', error);
+    }
   };
 
   const getLessonIcon = (type: string) => {
@@ -331,16 +371,18 @@ export function CourseDetail({ course, onBack }: CourseDetailProps) {
                         {module.lessons.map((lesson, lessonIndex) => (
                           <div
                             key={lesson.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                            className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
                               lesson.locked 
-                                ? 'bg-gray-50 cursor-not-allowed' 
+                                ? 'bg-gray-50' 
                                 : 'hover:bg-purple-50 border-gray-200'
                             } ${
                               selectedLesson === lesson.id ? 'bg-purple-100 border-purple-300' : ''
                             }`}
-                            onClick={() => !lesson.locked && handleLessonSelect(lesson.id)}
                           >
-                            <div className="flex items-center gap-3">
+                            <div 
+                              className="flex items-center gap-3 flex-1 cursor-pointer"
+                              onClick={() => !lesson.locked && handleLessonSelect(lesson.id)}
+                            >
                               <div className={`p-2 rounded-full ${
                                 lesson.completed 
                                   ? 'bg-green-100 text-green-600' 
@@ -376,6 +418,18 @@ export function CourseDetail({ course, onBack }: CourseDetailProps) {
                               <Badge variant="outline" className="text-xs">
                                 {lesson.type}
                               </Badge>
+                              {!lesson.locked && !lesson.completed && course.enrolled && (
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCompleteLesson(lesson.id);
+                                  }}
+                                  className="ml-2 bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                  Completar
+                                </Button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -473,6 +527,14 @@ export function CourseDetail({ course, onBack }: CourseDetailProps) {
                       <p className="text-sm text-gray-600">
                         {completedLessons} de {totalLessons} lecciones completadas
                       </p>
+                      {course.enrolled && progressPercentage === 100 && (
+                        <Button
+                          onClick={handleCompleteCourse}
+                          className="mt-3 w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                        >
+                          🎉 Completar Curso
+                        </Button>
+                      )}
                     </div>
                     <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600">
                       Continuar Aprendiendo

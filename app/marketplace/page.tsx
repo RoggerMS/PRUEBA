@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
-import { Input } from '@/src/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, 
   Filter, 
@@ -20,10 +20,10 @@ import {
   Gift,
   Zap
 } from 'lucide-react';
-import { ProductCard } from '@/src/components/marketplace/ProductCard';
-import { CrolarsWallet } from '@/src/components/marketplace/CrolarsWallet';
-import { PurchaseHistory } from '@/src/components/marketplace/PurchaseHistory';
-import { ProductDetail } from '@/src/components/marketplace/ProductDetail';
+import { ProductCard } from '@/components/marketplace/ProductCard';
+import { CrolarsWallet } from '@/components/marketplace/CrolarsWallet';
+import { PurchaseHistory } from '@/components/marketplace/PurchaseHistory';
+import { ProductDetail } from '@/components/marketplace/ProductDetail';
 
 // Mock data para productos del marketplace
 const mockProducts = [

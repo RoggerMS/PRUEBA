@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Input } from "@/src/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Trophy, 
   Calendar, 
@@ -33,11 +33,11 @@ import {
   GameController2,
   Plus
 } from "lucide-react";
-import { ChallengeCard } from "@/src/components/challenges/ChallengeCard";
-import { ChallengeDetail } from "@/src/components/challenges/ChallengeDetail";
-import { ChallengeLeaderboard } from "@/src/components/challenges/ChallengeLeaderboard";
-import { MyChallenges } from "@/src/components/challenges/MyChallenges";
-import { CreateChallenge } from "@/src/components/challenges/CreateChallenge";
+import { ChallengeCard } from "@/components/challenges/ChallengeCard";
+import { ChallengeDetail } from "@/components/challenges/ChallengeDetail";
+import { ChallengeLeaderboard } from "@/components/challenges/ChallengeLeaderboard";
+import { MyChallenges } from "@/components/challenges/MyChallenges";
+import { CreateChallenge } from "@/components/challenges/CreateChallenge";
 
 interface Challenge {
   id: string;

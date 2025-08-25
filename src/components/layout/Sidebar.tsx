@@ -25,8 +25,8 @@ import {
   Grid3X3,
   Zap,
 } from 'lucide-react';
-import { Button } from '@/src/components/ui/button';
-import { Badge } from '@/src/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface SidebarItem {

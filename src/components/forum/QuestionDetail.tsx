@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Button } from '@/src/components/ui/button';
-import { Textarea } from '@/src/components/ui/textarea';
-import { Badge } from '@/src/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
+import { gamificationService } from '@/services/gamificationService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   ArrowLeft, 
   ArrowUp, 
@@ -193,7 +194,7 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
   const [questionVotes, setQuestionVotes] = useState(question.votes);
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
 
-  const handleVote = (type: 'up' | 'down', answerId?: string) => {
+  const handleVote = async (type: 'up' | 'down', answerId?: string) => {
     if (answerId) {
       // Vote on answer
       setAnswers(prev => prev.map(answer => {
@@ -205,6 +206,19 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
         }
         return answer;
       }));
+      
+      // Grant XP for voting on answer
+      try {
+        await gamificationService.grantXP(
+          'current-user',
+          2,
+          'forum_vote',
+          answerId,
+          `Voto ${type === 'up' ? 'positivo' : 'negativo'} en respuesta`
+        );
+      } catch (error) {
+        console.error('Error granting XP for answer vote:', error);
+      }
     } else {
       // Vote on question
       if (userVote === type) {
@@ -214,18 +228,49 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
         const adjustment = userVote ? (type === 'up' ? 2 : -2) : (type === 'up' ? 1 : -1);
         setUserVote(type);
         setQuestionVotes(prev => prev + adjustment);
+        
+        // Grant XP for voting on question
+        try {
+          await gamificationService.grantXP(
+            'current-user',
+            2,
+            'forum_vote',
+            questionId,
+            `Voto ${type === 'up' ? 'positivo' : 'negativo'} en pregunta`
+          );
+        } catch (error) {
+          console.error('Error granting XP for question vote:', error);
+        }
       }
     }
   };
 
-  const handleAcceptAnswer = (answerId: string) => {
+  const handleAcceptAnswer = async (answerId: string) => {
+    const targetAnswer = answers.find(answer => answer.id === answerId);
+    const wasAccepted = targetAnswer?.isAccepted;
+    
     setAnswers(prev => prev.map(answer => ({
       ...answer,
       isAccepted: answer.id === answerId ? !answer.isAccepted : false
     })));
+    
+    // Grant XP for accepting an answer (only when accepting, not when removing acceptance)
+    if (!wasAccepted && targetAnswer) {
+      try {
+        await gamificationService.grantXP(
+          targetAnswer.author.id,
+          25,
+          'forum_accepted_answer',
+          answerId,
+          'Respuesta aceptada como correcta'
+        );
+      } catch (error) {
+        console.error('Error granting XP for accepted answer:', error);
+      }
+    }
   };
 
-  const handleSubmitAnswer = () => {
+  const handleSubmitAnswer = async () => {
     if (newAnswer.trim()) {
       const answer: Answer = {
         id: Date.now().toString(),
@@ -244,6 +289,19 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
       };
       setAnswers(prev => [...prev, answer]);
       setNewAnswer('');
+      
+      // Grant XP for answering a question
+      try {
+        await gamificationService.grantXP(
+          'current-user',
+          15,
+          'forum_answer',
+          answer.id,
+          'Respuesta publicada en el foro'
+        );
+      } catch (error) {
+        console.error('Error granting XP for answer:', error);
+      }
     }
   };
 
