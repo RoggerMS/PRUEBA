@@ -530,8 +530,8 @@ export function MyCompetitions() {
                 </div>
               )}
               
-              <CompetitionCard 
-                competition={competition} 
+              <CompetitionCard
+                competition={competition as any}
                 onClick={() => console.log('View competition:', competition.id)}
               />
             </div>

@@ -211,7 +211,7 @@ export function Feed() {
         'current-user-id',
         3,
         'share',
-        postId,
+        post.id,
         'Compartir post'
       );
       

@@ -186,7 +186,6 @@ const mockNotifications: Notification[] = [
 
 // Datos mock del leaderboard
 const mockLeaderboard: LeaderboardType = {
-  id: 'leaderboard-xp',
   name: 'Ranking de Experiencia',
   type: 'xp',
   period: 'weekly',
@@ -201,7 +200,7 @@ const mockLeaderboard: LeaderboardType = {
       },
       score: 4850,
       change: 2,
-      leaderboard: { id: 'leaderboard-xp', type: 'xp' }
+      leaderboard: { type: 'xp' }
     },
     {
       user: {
@@ -213,13 +212,13 @@ const mockLeaderboard: LeaderboardType = {
       },
       score: 4200,
       change: -1,
-      leaderboard: { id: 'leaderboard-xp', type: 'xp' }
+      leaderboard: { type: 'xp' }
     },
     {
       user: mockUser,
       score: 3250,
       change: 1,
-      leaderboard: { id: 'leaderboard-xp', type: 'xp' }
+      leaderboard: { type: 'xp' }
     },
     {
       user: {
@@ -231,7 +230,7 @@ const mockLeaderboard: LeaderboardType = {
       },
       score: 2980,
       change: 0,
-      leaderboard: { id: 'leaderboard-xp', type: 'xp' }
+      leaderboard: { type: 'xp' }
     },
     {
       user: {
@@ -243,7 +242,7 @@ const mockLeaderboard: LeaderboardType = {
       },
       score: 2650,
       change: 3,
-      leaderboard: { id: 'leaderboard-xp', type: 'xp' }
+      leaderboard: { type: 'xp' }
     }
   ],
   updatedAt: '2024-01-30T18:00:00Z'
@@ -452,7 +451,7 @@ export default function GamificationPage() {
                       {notification.type === 'GAMIFICATION' && <TrendingUp className="h-5 w-5 text-green-500" />}
                       {notification.type === 'SOCIAL' && <Award className="h-5 w-5 text-purple-500" />}
                       {notification.type === 'SYSTEM' && <Zap className="h-5 w-5 text-blue-500" />}
-                      {notification.type === 'ACHIEVEMENT' && <Target className="h-5 w-5 text-orange-500" />}
+                      {notification.type === 'GAMIFICATION' && <Target className="h-5 w-5 text-orange-500" />}
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold text-sm">{notification.title}</div>
@@ -486,8 +485,8 @@ export default function GamificationPage() {
 
         {/* Tab: Insignias */}
         <TabsContent value="badges">
-          <BadgeCollection 
-            userBadges={mockUser.badges || []}
+          <BadgeCollection
+            badges={mockUser.badges || []}
           />
         </TabsContent>
 

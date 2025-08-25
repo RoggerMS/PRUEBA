@@ -161,7 +161,7 @@ export default function ClubsPage() {
 
   if (showCreateClub) {
     return (
-      <CreateClub onClose={handleCloseCreateClub} />
+      <CreateClub onCancel={handleCloseCreateClub} onSuccess={handleCloseCreateClub} />
     );
   }
 
@@ -323,11 +323,11 @@ export default function ClubsPage() {
           </TabsContent>
 
           <TabsContent value="my-clubs">
-            <MyClubs />
+            <MyClubs onClubSelect={(club) => handleClubSelect(club.id)} />
           </TabsContent>
 
           <TabsContent value="create">
-            <CreateClub onClose={() => setActiveTab("browse")} />
+            <CreateClub onCancel={() => setActiveTab("browse")} onSuccess={() => setActiveTab("browse")} />
           </TabsContent>
         </Tabs>
       </div>

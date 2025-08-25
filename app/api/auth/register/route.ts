@@ -10,7 +10,7 @@ const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
   birthDate: z.string(),
-  gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say'])
+  gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'])
 });
 
 export async function POST(request: NextRequest) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     await prisma.transaction.create({
       data: {
         userId: user.id,
-        type: 'WELCOME_BONUS',
+        type: 'ADMIN_ADJUSTMENT',
         amount: 1000,
         description: '¡Bienvenido a CRUNEVO! Bonus de registro',
         status: 'COMPLETED'
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         type: 'SYSTEM',
         title: '¡Bienvenido a CRUNEVO!',
         message: 'Tu cuenta ha sido creada exitosamente. ¡Comienza a explorar la comunidad educativa!',
-        isRead: false
+        read: false
       }
     });
     
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: error.errors[0].message },
+        { message: error.issues[0].message },
         { status: 400 }
       );
     }

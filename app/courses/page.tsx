@@ -317,11 +317,11 @@ export default function CoursesPage() {
           </TabsContent>
 
           <TabsContent value="my-courses">
-            <MyCourses courses={enrolledCourses} onCourseSelect={handleCourseSelect} />
+            <MyCourses onCourseSelect={handleCourseSelect} />
           </TabsContent>
 
           <TabsContent value="progress">
-            <CourseProgress courses={enrolledCourses} />
+            <CourseProgress />
           </TabsContent>
         </Tabs>
       </div>

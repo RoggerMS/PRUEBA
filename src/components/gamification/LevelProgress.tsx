@@ -47,7 +47,7 @@ export default function LevelProgress({
 
     // Encontrar siguiente nivel
     const next = LEVELS.find(l => l.level === level + 1)
-    setNextLevel(next)
+    setNextLevel(next || null)
 
     if (next) {
       // Calcular progreso hacia el siguiente nivel

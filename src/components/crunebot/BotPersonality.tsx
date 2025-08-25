@@ -377,16 +377,16 @@ export function BotPersonality({ onPersonalityChange }: BotPersonalityProps) {
               <div className="flex-1">
                 <div className="bg-white rounded-lg p-3 shadow-sm">
                   <p className="text-sm text-gray-900">
-                    {traits.find(t => t.id === 'enthusiasm')?.value > 80 && "¡"}
-                    Hola{traits.find(t => t.id === 'humor')?.value > 70 ? " amigo" : ""}! 
-                    {traits.find(t => t.id === 'empathy')?.value > 80 && "Me alegra verte por aquí. "}
-                    {responseStyle === 'concise' 
+                    {(traits.find(t => t.id === 'enthusiasm')?.value ?? 0) > 80 && "¡"}
+                    Hola{(traits.find(t => t.id === 'humor')?.value ?? 0) > 70 ? " amigo" : ""}!
+                    {(traits.find(t => t.id === 'empathy')?.value ?? 0) > 80 && "Me alegra verte por aquí. "}
+                    {responseStyle === 'concise'
                       ? "¿En qué puedo ayudarte?"
                       : responseStyle === 'detailed'
                       ? "Estoy aquí para ayudarte con cualquier pregunta o tema que tengas. Puedo explicarte conceptos, resolver problemas y guiarte en tu aprendizaje."
                       : "¿En qué tema te gustaría que te ayude hoy?"
                     }
-                    {traits.find(t => t.id === 'enthusiasm')?.value > 80 && " ✨"}
+                    {(traits.find(t => t.id === 'enthusiasm')?.value ?? 0) > 80 && " ✨"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">

@@ -34,7 +34,7 @@ interface Product {
   id: string;
   name: string;
   description: string;
-  longDescription: string;
+  longDescription?: string;
   price: number;
   category: string;
   subject: string;
@@ -43,24 +43,24 @@ interface Product {
     name: string;
     avatar: string;
     rating: number;
-    totalSales: number;
-    joinDate: Date;
-    verified: boolean;
+    sales?: number;
+    joinDate?: Date;
+    verified?: boolean;
   };
-  images: string[];
+  images?: string[];
   tags: string[];
   rating: number;
-  reviewCount: number;
-  downloadCount: number;
+  reviewCount?: number;
+  downloadCount?: number;
   createdAt: Date;
-  updatedAt: Date;
-  isFeatured: boolean;
-  isLiked: boolean;
-  fileType: string;
-  fileSize: string;
+  updatedAt?: Date;
+  isFeatured?: boolean;
+  isLiked?: boolean;
+  fileType?: string;
+  fileSize?: string;
   pageCount?: number;
-  language: string;
-  level: string;
+  language?: string;
+  level?: string;
   preview?: string;
 }
 
@@ -424,11 +424,13 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
                   <div className="text-sm text-gray-600 space-y-1">
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4" />
-                      <span>{product.seller.totalSales} ventas</span>
+                      <span>{product.seller.sales ?? 0} ventas</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      <span>Desde {formatDistanceToNow(product.seller.joinDate, { locale: es })}</span>
+                      {product.seller.joinDate && (
+                        <span>Desde {formatDistanceToNow(product.seller.joinDate, { locale: es })}</span>
+                      )}
                     </div>
                   </div>
                 </div>
