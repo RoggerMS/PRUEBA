@@ -37,6 +37,7 @@ const mockUser: User = {
   avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20female%20friendly%20smile%20modern%20style&image_size=square',
   level: 8,
   xp: 3250,
+  totalXp: 3250,
   crolars: 1850,
   badges: [
     {
@@ -45,6 +46,7 @@ const mockUser: User = {
       description: 'Completaste tu primer desafío',
       icon: 'star',
       rarity: 'common',
+      category: 'challenge',
       earnedAt: '2024-01-15T10:00:00Z'
     },
     {
@@ -52,7 +54,8 @@ const mockUser: User = {
       name: 'Estudiante Dedicado',
       description: 'Mantuviste una racha de 7 días',
       icon: 'calendar',
-      rarity: 'uncommon',
+      rarity: 'rare',
+      category: 'streak',
       earnedAt: '2024-01-20T15:30:00Z'
     },
     {
@@ -61,33 +64,75 @@ const mockUser: User = {
       description: 'Ayudaste a 10 estudiantes',
       icon: 'users',
       rarity: 'rare',
+      category: 'social',
       earnedAt: '2024-01-25T09:15:00Z'
     }
   ],
-  achievements: ['1', '2', '6'],
-  stats: {
-    totalXP: 3250,
-    currentStreak: 12,
-    longestStreak: 18,
-    challengesCompleted: 45,
-    coursesCompleted: 8,
-    forumAnswers: 23,
-    badgesEarned: 3,
-    achievementsUnlocked: 3
+  achievements: [
+    {
+      id: '1',
+      title: 'Primer Logro',
+      description: 'Completaste tu primera actividad',
+      icon: 'star',
+      category: 'learning',
+      difficulty: 'easy',
+      points: 100,
+      earned: true,
+      earnedDate: '2024-01-15T10:00:00Z',
+      reward: { xp: 100, crolars: 50 }
+    },
+    {
+      id: '2',
+      title: 'Estudiante Constante',
+      description: 'Mantén una racha de 7 días',
+      icon: 'calendar',
+      category: 'streak',
+      difficulty: 'medium',
+      points: 200,
+      earned: true,
+      earnedDate: '2024-01-20T15:30:00Z',
+      reward: { xp: 200, crolars: 100 }
+    },
+    {
+      id: '6',
+      title: 'Mentor Experto',
+      description: 'Ayuda a 10 estudiantes',
+      icon: 'users',
+      category: 'social',
+      difficulty: 'hard',
+      points: 500,
+      earned: true,
+      earnedDate: '2024-01-25T09:15:00Z',
+      reward: { xp: 500, crolars: 250 }
+    }
+  ],
+  streak: {
+    current: 12,
+    longest: 18,
+    lastActivity: '2024-01-30T18:45:00Z'
   },
-  createdAt: '2024-01-01T00:00:00Z',
-  lastActive: '2024-01-30T18:45:00Z'
+  stats: {
+    coursesCompleted: 8,
+    challengesCompleted: 45,
+    forumAnswers: 23,
+    notesUploaded: 15,
+    eventsAttended: 5,
+    clubsJoined: 3,
+    friendsCount: 28,
+    totalStudyTime: 1250
+  }
 }
 
 // Datos mock de notificaciones
 const mockNotifications: Notification[] = [
   {
     id: 'notif-1',
-    type: 'level_up',
+    userId: 'user-1',
+    type: 'GAMIFICATION',
     title: '¡Subiste de nivel!',
     message: 'Has alcanzado el nivel 8. ¡Sigue así!',
     read: false,
-    createdAt: '2024-01-30T16:30:00Z',
+    createdAt: new Date('2024-01-30T16:30:00Z'),
     data: {
       newLevel: LEVELS[7],
       rewards: { crolars: 100 }
@@ -95,11 +140,12 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-2',
-    type: 'badge_earned',
+    userId: 'user-1',
+    type: 'GAMIFICATION',
     title: 'Nueva insignia desbloqueada',
     message: 'Has ganado la insignia "Mentor Comunitario"',
     read: false,
-    createdAt: '2024-01-30T14:15:00Z',
+    createdAt: new Date('2024-01-30T14:15:00Z'),
     data: {
       badge: {
         id: 'badge-3',
@@ -113,11 +159,12 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-3',
-    type: 'xp_gain',
+    userId: 'user-1',
+    type: 'GAMIFICATION',
     title: 'XP ganada',
     message: 'Completaste un desafío de matemáticas',
     read: true,
-    createdAt: '2024-01-30T12:00:00Z',
+    createdAt: new Date('2024-01-30T12:00:00Z'),
     data: {
       amount: 150,
       source: 'challenge_completed'
@@ -125,11 +172,12 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif-4',
-    type: 'streak_milestone',
+    userId: 'user-1',
+    type: 'GAMIFICATION',
     title: 'Racha impresionante',
     message: 'Has mantenido una racha de 12 días consecutivos',
     read: true,
-    createdAt: '2024-01-29T20:00:00Z',
+    createdAt: new Date('2024-01-29T20:00:00Z'),
     data: {
       streak: 12
     }
@@ -209,7 +257,7 @@ export default function GamificationPage() {
   const userLevel = calculateUserLevel(mockUser.xp)
   const nextLevel = LEVELS[userLevel.level] || null
   const progressToNext = nextLevel 
-    ? ((mockUser.xp - userLevel.minXP) / (nextLevel.minXP - userLevel.minXP)) * 100
+    ? ((mockUser.xp - userLevel.minXp) / (nextLevel.minXp - userLevel.minXp)) * 100
     : 100
 
   // Handlers para notificaciones
@@ -306,7 +354,7 @@ export default function GamificationPage() {
             <div className="flex items-center justify-center mb-2">
               <Target className="h-6 w-6 text-orange-500" />
             </div>
-            <div className="text-2xl font-bold text-orange-600">{mockUser.stats?.currentStreak || 0}</div>
+            <div className="text-2xl font-bold text-orange-600">{mockUser.streak?.current || 0}</div>
             <div className="text-sm text-gray-600">Racha actual</div>
           </CardContent>
         </Card>
@@ -380,7 +428,7 @@ export default function GamificationPage() {
                   </div>
                   
                   <div className="text-center p-3 bg-orange-50 rounded-lg">
-                    <div className="text-xl font-bold text-orange-600">{mockUser.stats?.longestStreak || 0}</div>
+                    <div className="text-xl font-bold text-orange-600">{mockUser.streak?.longest || 0}</div>
                     <div className="text-sm text-orange-800">Racha más larga</div>
                   </div>
                 </div>
@@ -401,10 +449,10 @@ export default function GamificationPage() {
                 {notifications.slice(0, 3).map((notification) => (
                   <div key={notification.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <div className="flex-shrink-0">
-                      {notification.type === 'level_up' && <TrendingUp className="h-5 w-5 text-green-500" />}
-                      {notification.type === 'badge_earned' && <Award className="h-5 w-5 text-purple-500" />}
-                      {notification.type === 'xp_gain' && <Zap className="h-5 w-5 text-blue-500" />}
-                      {notification.type === 'streak_milestone' && <Target className="h-5 w-5 text-orange-500" />}
+                      {notification.type === 'GAMIFICATION' && <TrendingUp className="h-5 w-5 text-green-500" />}
+                      {notification.type === 'SOCIAL' && <Award className="h-5 w-5 text-purple-500" />}
+                      {notification.type === 'SYSTEM' && <Zap className="h-5 w-5 text-blue-500" />}
+                      {notification.type === 'ACHIEVEMENT' && <Target className="h-5 w-5 text-orange-500" />}
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold text-sm">{notification.title}</div>
@@ -432,7 +480,7 @@ export default function GamificationPage() {
         <TabsContent value="achievements">
           <AchievementSystem 
             achievements={[]} // Se usarán los datos mock del componente
-            userAchievements={mockUser.achievements || []}
+            userAchievements={mockUser.achievements?.map(a => a.id) || []}
           />
         </TabsContent>
 

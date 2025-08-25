@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Users, 
   Heart, 
@@ -16,6 +16,7 @@ import {
   UserCheck,
   Eye
 } from "lucide-react";
+import { gamificationService } from "@/services/gamificationService";
 
 interface Club {
   id: string;
@@ -54,7 +55,17 @@ export function ClubCard({ club, onClick }: ClubCardProps) {
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const wasLiked = isLiked;
     setIsLiked(!isLiked);
+    
+    // Grant XP for liking a club (only when liking, not unliking)
+    if (!wasLiked) {
+      try {
+        gamificationService.grantXP("user-id", 2, "manual", "settings", 'Dar like a club');
+      } catch (error) {
+        console.error('Error granting XP for club like:', error);
+      }
+    }
   };
 
   const handleJoin = async (e: React.MouseEvent) => {
@@ -63,6 +74,13 @@ export function ClubCard({ club, onClick }: ClubCardProps) {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     setIsJoining(false);
+    
+    // Grant XP for joining a club
+    try {
+      await gamificationService.grantXP("user-id", 10, "club", club.id, 'Unirse a club');
+    } catch (error) {
+      console.error('Error granting XP for joining club:', error);
+    }
   };
 
   const getCategoryColor = (category: string) => {

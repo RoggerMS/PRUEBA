@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { ChatInterface } from "@/src/components/crunebot/ChatInterface";
-import { ChatHistory } from "@/src/components/crunebot/ChatHistory";
-import { BotPersonality } from "@/src/components/crunebot/BotPersonality";
-import { QuickActions } from "@/src/components/crunebot/QuickActions";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ChatInterface } from "@/components/crunebot/ChatInterface";
+import { ChatHistory } from "@/components/crunebot/ChatHistory";
+import { BotPersonality } from "@/components/crunebot/BotPersonality";
+import { QuickActions } from "@/components/crunebot/QuickActions";
+import { gamificationService } from "@/services/gamificationService";
 import { 
   Bot, 
   MessageSquare, 
@@ -148,6 +149,13 @@ export default function CruneBotPage() {
     
     setMessages(prev => [...prev, userMessage]);
     
+    // Grant XP for interacting with CruneBot
+    try {
+      gamificationService.grantXP(5, 'Interactuar con CruneBot');
+    } catch (error) {
+      console.error('Error granting XP for CruneBot interaction:', error);
+    }
+    
     // Simulate bot response
     setTimeout(() => {
       const botMessage: Message = {
@@ -186,6 +194,13 @@ export default function CruneBotPage() {
     
     setMessages(prev => [...prev, userMessage]);
     setActiveTab("chat");
+    
+    // Grant XP for using quick actions
+    try {
+      gamificationService.grantXP(8, 'Usar acción rápida de CruneBot');
+    } catch (error) {
+      console.error('Error granting XP for quick action:', error);
+    }
     
     // Simulate bot response
     setTimeout(() => {

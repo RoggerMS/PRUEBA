@@ -37,15 +37,15 @@ function NotificationItem({
 }) {
   const getNotificationIcon = () => {
     switch (notification.type) {
-      case 'xp_gain':
-        return <Zap className="h-5 w-5 text-blue-500" />
-      case 'level_up':
-        return <TrendingUp className="h-5 w-5 text-green-500" />
-      case 'badge_earned':
-        return <Award className="h-5 w-5 text-purple-500" />
-      case 'achievement_unlocked':
+      case 'GAMIFICATION':
         return <Trophy className="h-5 w-5 text-yellow-500" />
-      case 'streak_milestone':
+      case 'CROLARS_EARNED':
+        return <Zap className="h-5 w-5 text-blue-500" />
+      case 'ACADEMIC':
+        return <Award className="h-5 w-5 text-purple-500" />
+      case 'SOCIAL':
+        return <TrendingUp className="h-5 w-5 text-green-500" />
+      case 'SYSTEM':
         return <Flame className="h-5 w-5 text-orange-500" />
       default:
         return <Star className="h-5 w-5 text-gray-500" />
@@ -54,24 +54,26 @@ function NotificationItem({
 
   const getNotificationColor = () => {
     switch (notification.type) {
-      case 'xp_gain':
-        return 'border-l-blue-500 bg-blue-50'
-      case 'level_up':
-        return 'border-l-green-500 bg-green-50'
-      case 'badge_earned':
-        return 'border-l-purple-500 bg-purple-50'
-      case 'achievement_unlocked':
+      case 'GAMIFICATION':
         return 'border-l-yellow-500 bg-yellow-50'
-      case 'streak_milestone':
+      case 'CROLARS_EARNED':
+        return 'border-l-blue-500 bg-blue-50'
+      case 'ACADEMIC':
+        return 'border-l-purple-500 bg-purple-50'
+      case 'SOCIAL':
+        return 'border-l-green-500 bg-green-50'
+      case 'SYSTEM':
         return 'border-l-orange-500 bg-orange-50'
+      case 'MARKETPLACE':
+        return 'border-l-indigo-500 bg-indigo-50'
       default:
         return 'border-l-gray-500 bg-gray-50'
     }
   }
 
-  const formatTimeAgo = (dateString: string) => {
+  const formatTimeAgo = (date: Date) => {
     const now = new Date()
-    const notificationDate = new Date(dateString)
+    const notificationDate = new Date(date)
     const diffInMinutes = Math.floor((now.getTime() - notificationDate.getTime()) / (1000 * 60))
 
     if (diffInMinutes < 1) return 'Ahora'
@@ -101,38 +103,42 @@ function NotificationItem({
                 </p>
 
                 {/* Datos adicionales según el tipo */}
-                {notification.type === 'xp_gain' && notification.data && (
+                {notification.type === 'CROLARS_EARNED' && notification.data && (
                   <div className="flex items-center gap-2 mt-2">
                     <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                      +{notification.data.amount} XP
+                      +{notification.data.amount} Crolars
                     </Badge>
                   </div>
                 )}
 
-                {notification.type === 'level_up' && notification.data && (
+                {notification.type === 'GAMIFICATION' && notification.data && (
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Nivel {notification.data.newLevel?.level}
-                    </Badge>
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                      +{notification.data.rewards?.crolars} Crolars
-                    </Badge>
+                    {notification.data.xp && (
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                        +{notification.data.xp} XP
+                      </Badge>
+                    )}
+                    {notification.data.level && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        Nivel {notification.data.level}
+                      </Badge>
+                    )}
                   </div>
                 )}
 
-                {notification.type === 'badge_earned' && notification.data && (
+                {notification.type === 'ACADEMIC' && notification.data && (
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
                       <Award className="h-3 w-3" />
-                      <span>{notification.data.badge?.name}</span>
+                      <span>{notification.data.achievement || notification.data.course}</span>
                     </div>
                   </div>
                 )}
 
-                {notification.type === 'streak_milestone' && notification.data && (
+                {notification.type === 'SOCIAL' && notification.data && (
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                      {notification.data.streak} días consecutivos
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {notification.data.action || 'Actividad social'}
                     </Badge>
                   </div>
                 )}

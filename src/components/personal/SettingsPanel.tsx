@@ -29,6 +29,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { gamificationService } from '@/services/gamificationService'
 
 interface NotificationSettings {
   emailNotifications: boolean
@@ -129,11 +130,17 @@ export default function SettingsPanel({ className }: SettingsPanelProps) {
     setSecurity(prev => ({ ...prev, [key]: value }))
   }
 
-  const handleSaveSettings = () => {
-    toast.success('Configuración guardada correctamente')
+  const handleSaveSettings = async () => {
+    try {
+      // Otorgar XP por actualizar configuraciones
+      await gamificationService.grantXP("user-id", 5, "achievement", "settings-update", 'Actualizar configuraciones')
+      toast.success('Configuración guardada correctamente')
+    } catch (error) {
+      toast.error('Error al guardar configuración')
+    }
   }
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (passwordForm.new !== passwordForm.confirm) {
       toast.error('Las contraseñas no coinciden')
       return
@@ -142,8 +149,14 @@ export default function SettingsPanel({ className }: SettingsPanelProps) {
       toast.error('La contraseña debe tener al menos 8 caracteres')
       return
     }
-    toast.success('Contraseña actualizada correctamente')
-    setPasswordForm({ current: '', new: '', confirm: '' })
+    try {
+      // Otorgar XP por cambiar contraseña (seguridad)
+      await gamificationService.grantXP("user-id", 15, "achievement", "password-update", 'Actualizar contraseña')
+      toast.success('Contraseña actualizada correctamente')
+      setPasswordForm({ current: '', new: '', confirm: '' })
+    } catch (error) {
+      toast.error('Error al actualizar contraseña')
+    }
   }
 
   const handleExportData = () => {

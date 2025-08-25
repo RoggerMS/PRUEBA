@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { gamificationService } from '@/services/gamificationService';
 import { 
   Star, 
   ShoppingCart, 
@@ -100,11 +101,28 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
     // Simular compra
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsPurchasing(false);
+    
+    // Grant XP for purchasing a product
+    try {
+      gamificationService.grantXP("user-id", 5, "achievement", product.id, 'Comprar producto');
+    } catch (error) {
+      console.error('Error granting XP for marketplace purchase:', error);
+    }
+    
     // Aquí iría la lógica real de compra
   };
 
   const handleLike = () => {
     setIsLiked(!isLiked);
+    
+    // Grant XP for liking a product (only when liking, not unliking)
+    if (!isLiked) {
+      try {
+        gamificationService.grantXP("user-id", 2, "manual", "settings", 'Dar like a producto');
+      } catch (error) {
+        console.error('Error granting XP for product like:', error);
+      }
+    }
   };
 
   return (

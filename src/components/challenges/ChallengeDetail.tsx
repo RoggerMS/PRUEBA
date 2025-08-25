@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Progress } from "@/src/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { Textarea } from "@/src/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { gamificationService } from "@/services/gamificationService";
 import { 
   ArrowLeft, 
   Clock, 
@@ -178,19 +179,72 @@ export function ChallengeDetail({ challenge, onBack }: ChallengeDetailProps) {
   const handleJoin = async () => {
     setIsJoining(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsJoining(false);
-    setIsJoined(true);
-    toast.success("¡Te has unido al desafío! Puedes comenzar cuando estés listo.");
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setIsJoining(false);
+      setIsJoined(true);
+      toast.success("¡Te has unido al desafío! Puedes comenzar cuando estés listo.");
+      
+      // Grant XP for joining a challenge
+      await gamificationService.grantXP("user-id", 5, "challenge", challenge.id, 'Unirse a desafío');
+    } catch (error) {
+      console.error('Error joining challenge:', error);
+      setIsJoining(false);
+    }
   };
 
-  const handleSubmitComment = () => {
+  const handleCompleteChallenge = async () => {
+    try {
+      // Grant XP for completing a challenge
+      await gamificationService.grantXP(challenge.rewards.xp, `Completar desafío: ${challenge.title}`);
+      
+      // Update challenge status to completed
+      // This would normally update the backend
+      console.log('Challenge completed successfully!');
+    } catch (error) {
+      console.error('Error completing challenge:', error);
+    }
+  };
+
+  const handleSubmitSolution = async () => {
+    try {
+      // Grant XP for submitting a solution
+      await gamificationService.grantXP("user-id", 10, "challenge", challenge.id, 'Enviar solución de desafío');
+      
+      console.log('Solution submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting solution:', error);
+    }
+  };
+
+  const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
     
-    toast.success("Comentario publicado");
-    setNewComment("");
+    try {
+      const comment = {
+        id: Date.now().toString(),
+        content: newComment,
+        user: {
+          id: "current-user",
+          name: "Usuario Actual",
+          avatar: "/avatars/user.png",
+          level: 15
+        },
+        timestamp: new Date().toISOString(),
+        likes: 0,
+        replies: 0
+      };
+      
+      setComments(prev => [comment, ...prev]);
+      setNewComment("");
+      
+      // Grant XP for commenting on a challenge
+      await gamificationService.grantXP("user-id", 3, "challenge", challenge.id, 'Comentar en desafío');
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -666,6 +720,22 @@ export function ChallengeDetail({ challenge, onBack }: ChallengeDetailProps) {
                     >
                       <Play className="h-4 w-4 mr-2" />
                       Comenzar Desafío
+                    </Button>
+                    <Button 
+                      onClick={handleSubmitSolution}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+                      size="lg"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Enviar Solución
+                    </Button>
+                    <Button 
+                      onClick={handleCompleteChallenge}
+                      className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                      size="lg"
+                    >
+                      <Trophy className="h-4 w-4 mr-2" />
+                      Completar Desafío
                     </Button>
                   </div>
                 )}

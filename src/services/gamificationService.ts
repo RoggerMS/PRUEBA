@@ -1,4 +1,5 @@
 import { User, Level, XPGain, Badge, Achievement, Notification } from '@/types/gamification'
+import { notificationService } from './notificationService'
 
 // Configuración de niveles
 export const LEVELS: Level[] = [
@@ -89,13 +90,21 @@ class GamificationService {
     notifications.push({
       id: `xp_${Date.now()}`,
       userId,
-      type: 'xp_gain',
-      title: 'XP Ganado',
+      type: 'GAMIFICATION',
+      title: `¡+${amount} XP ganados!`,
       message: `Has ganado ${amount} XP por ${description}`,
       data: { amount, source, sourceId },
       read: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date()
     })
+    
+    // Enviar notificación usando el servicio
+    await notificationService.notifyXPGained(amount, description)
+    
+    // Si subió de nivel, enviar notificación de nivel
+    if (levelUp) {
+      notificationService.notifyLevelUp(newLevel.level)
+    }
     
     // Si subió de nivel
     if (levelUp) {
@@ -105,12 +114,12 @@ class GamificationService {
       notifications.push({
         id: `level_${Date.now()}`,
         userId,
-        type: 'level_up',
+        type: 'GAMIFICATION',
         title: '¡Subiste de Nivel!',
         message: `¡Felicidades! Ahora eres ${newLevel.name} (Nivel ${newLevel.level})`,
         data: { newLevel, rewards: newLevel.rewards },
         read: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date()
       })
       
       // Otorgar badges de nivel si los hay
@@ -121,12 +130,12 @@ class GamificationService {
             notifications.push({
               id: `badge_${Date.now()}_${badge.id}`,
               userId,
-              type: 'badge_earned',
+              type: 'GAMIFICATION',
               title: '¡Nueva Insignia!',
               message: `Has desbloqueado la insignia: ${badge.name}`,
               data: { badge },
               read: false,
-              createdAt: new Date().toISOString()
+              createdAt: new Date()
             })
           }
         }
@@ -168,6 +177,9 @@ class GamificationService {
     
     badge.earnedAt = new Date().toISOString()
     user.badges.push(badge)
+    
+    // Enviar notificación de badge obtenido
+    notificationService.notifyBadgeEarned(badge.name);
     
     await this.updateUser(user)
     
@@ -287,12 +299,12 @@ class GamificationService {
         notifications.push({
           id: `streak_${Date.now()}`,
           userId,
-          type: 'streak_milestone',
+          type: 'GAMIFICATION',
           title: '¡Racha Semanal!',
           message: `¡Increíble! Has mantenido una racha de ${user.streak.current} días`,
           data: { streak: user.streak.current },
           read: false,
-          createdAt: new Date().toISOString()
+          createdAt: new Date()
         })
       }
     } else {

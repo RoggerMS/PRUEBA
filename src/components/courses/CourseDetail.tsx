@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { ArrowLeft, Play, Clock, Users, Star, BookOpen, Download, CheckCircle, Lock, Heart, Share2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Progress } from "@/src/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { gamificationService } from "@/src/services/gamificationService";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { gamificationService } from "@/services/gamificationService";
 
 interface Course {
   id: string;
@@ -185,7 +185,7 @@ export function CourseDetail({ course, onBack }: CourseDetailProps) {
     
     try {
       // Grant XP for enrolling in a course
-      await gamificationService.grantXP(30, 'Inscripción en curso');
+      await gamificationService.grantXP("user-id", 30, "course", course.id, 'Inscripción en curso');
     } catch (error) {
       console.error('Error granting XP for course enrollment:', error);
     }
@@ -208,7 +208,7 @@ export function CourseDetail({ course, onBack }: CourseDetailProps) {
       }));
       
       // Grant XP for completing a lesson
-      await gamificationService.grantXP(15, 'Lección completada');
+      await gamificationService.grantXP("user-id", 15, "course", course.id, 'Lección completada');
       
       // Here you would normally update the state or make an API call
       console.log('Lesson completed:', lessonId);
@@ -220,7 +220,7 @@ export function CourseDetail({ course, onBack }: CourseDetailProps) {
   const handleCompleteCourse = async () => {
     try {
       // Grant XP for completing entire course
-      await gamificationService.grantXP(100, 'Curso completado');
+      await gamificationService.grantXP("user-id", 100, "course", course.id, 'Curso completado');
       console.log('Course completed!');
     } catch (error) {
       console.error('Error completing course:', error);

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { gamificationService } from "@/services/gamificationService";
 import { 
   Trophy, 
   Users, 
@@ -55,7 +56,17 @@ export function CompetitionCard({ competition, onClick }: CompetitionCardProps) 
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const wasLiked = isLiked;
     setIsLiked(!isLiked);
+    
+    // Grant XP for liking a competition (only when liking, not unliking)
+    if (!wasLiked) {
+      try {
+        gamificationService.grantXP("user-id", 3, "manual", "settings", 'Dar like a competencia');
+      } catch (error) {
+        console.error('Error granting XP for competition like:', error);
+      }
+    }
   };
 
   const handleShare = (e: React.MouseEvent) => {
@@ -79,6 +90,14 @@ export function CompetitionCard({ competition, onClick }: CompetitionCardProps) 
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     setIsJoining(false);
+    
+    // Grant XP for joining a competition
+    try {
+      gamificationService.grantXP("user-id", 20, "achievement", competition.id, 'Unirse a competición');
+    } catch (error) {
+      console.error('Error granting XP for joining competition:', error);
+    }
+    
     // Update join status would be handled by parent component
   };
 

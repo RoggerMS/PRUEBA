@@ -34,99 +34,97 @@ interface AchievementSystemProps {
 const mockAchievements: Achievement[] = [
   {
     id: '1',
-    name: 'Primer Paso',
+    title: 'Primer Paso',
     description: 'Completa tu primer desafío',
     icon: 'star',
-    category: 'challenges',
-    rarity: 'common',
-    xpReward: 50,
-    crolarsReward: 10,
-    requirements: {
-      type: 'challenges_completed',
-      target: 1,
-      current: 0
-    },
-    unlockedAt: undefined
+    category: 'challenge',
+    difficulty: 'easy',
+    points: 50,
+    earned: false,
+    reward: {
+      xp: 50,
+      crolars: 10
+    }
   },
   {
     id: '2',
-    name: 'Estudiante Dedicado',
+    title: 'Estudiante Dedicado',
     description: 'Mantén una racha de 7 días consecutivos',
     icon: 'calendar',
-    category: 'streaks',
-    rarity: 'uncommon',
-    xpReward: 200,
-    crolarsReward: 50,
-    requirements: {
-      type: 'daily_streak',
-      target: 7,
-      current: 3
-    },
-    unlockedAt: undefined
+    category: 'streak',
+    difficulty: 'medium',
+    points: 200,
+    earned: false,
+    progress: 3,
+    maxProgress: 7,
+    reward: {
+      xp: 200,
+      crolars: 50
+    }
   },
   {
     id: '3',
-    name: 'Maestro del Conocimiento',
+    title: 'Maestro del Conocimiento',
     description: 'Alcanza el nivel 10',
     icon: 'trophy',
-    category: 'levels',
-    rarity: 'rare',
-    xpReward: 500,
-    crolarsReward: 100,
-    requirements: {
-      type: 'level_reached',
-      target: 10,
-      current: 5
-    },
-    unlockedAt: undefined
+    category: 'milestone',
+    difficulty: 'hard',
+    points: 500,
+    earned: false,
+    progress: 5,
+    maxProgress: 10,
+    reward: {
+      xp: 500,
+      crolars: 100
+    }
   },
   {
     id: '4',
-    name: 'Coleccionista',
+    title: 'Coleccionista',
     description: 'Obtén 25 insignias diferentes',
     icon: 'award',
-    category: 'badges',
-    rarity: 'epic',
-    xpReward: 1000,
-    crolarsReward: 250,
-    requirements: {
-      type: 'badges_collected',
-      target: 25,
-      current: 12
-    },
-    unlockedAt: undefined
+    category: 'milestone',
+    difficulty: 'legendary',
+    points: 1000,
+    earned: false,
+    progress: 12,
+    maxProgress: 25,
+    reward: {
+      xp: 1000,
+      crolars: 250
+    }
   },
   {
     id: '5',
-    name: 'Leyenda Académica',
+    title: 'Leyenda Académica',
     description: 'Completa 100 desafíos',
     icon: 'target',
-    category: 'challenges',
-    rarity: 'legendary',
-    xpReward: 2500,
-    crolarsReward: 500,
-    requirements: {
-      type: 'challenges_completed',
-      target: 100,
-      current: 45
-    },
-    unlockedAt: undefined
+    category: 'challenge',
+    difficulty: 'legendary',
+    points: 2500,
+    earned: false,
+    progress: 45,
+    maxProgress: 100,
+    reward: {
+      xp: 2500,
+      crolars: 500
+    }
   },
   {
     id: '6',
-    name: 'Mentor Comunitario',
+    title: 'Mentor Comunitario',
     description: 'Ayuda a 50 estudiantes en el foro',
     icon: 'users',
-    category: 'community',
-    rarity: 'rare',
-    xpReward: 750,
-    crolarsReward: 150,
-    requirements: {
-      type: 'forum_answers',
-      target: 50,
-      current: 23
-    },
-    unlockedAt: undefined
+    category: 'social',
+    difficulty: 'hard',
+    points: 750,
+    earned: false,
+    progress: 23,
+    maxProgress: 50,
+    reward: {
+      xp: 750,
+      crolars: 150
+    }
   }
 ]
 
@@ -163,16 +161,14 @@ function AchievementCard({
     }
   }
 
-  const getRarityColor = () => {
-    switch (achievement.rarity) {
-      case 'common':
+  const getDifficultyColor = () => {
+    switch (achievement.difficulty) {
+      case 'easy':
         return 'border-gray-300 bg-gray-50'
-      case 'uncommon':
+      case 'medium':
         return 'border-green-300 bg-green-50'
-      case 'rare':
+      case 'hard':
         return 'border-blue-300 bg-blue-50'
-      case 'epic':
-        return 'border-purple-300 bg-purple-50'
       case 'legendary':
         return 'border-yellow-300 bg-yellow-50'
       default:
@@ -180,16 +176,14 @@ function AchievementCard({
     }
   }
 
-  const getRarityBadgeColor = () => {
-    switch (achievement.rarity) {
-      case 'common':
+  const getDifficultyBadgeColor = () => {
+    switch (achievement.difficulty) {
+      case 'easy':
         return 'bg-gray-100 text-gray-800'
-      case 'uncommon':
+      case 'medium':
         return 'bg-green-100 text-green-800'
-      case 'rare':
+      case 'hard':
         return 'bg-blue-100 text-blue-800'
-      case 'epic':
-        return 'bg-purple-100 text-purple-800'
       case 'legendary':
         return 'bg-yellow-100 text-yellow-800'
       default:
@@ -197,13 +191,13 @@ function AchievementCard({
     }
   }
 
-  const progress = achievement.requirements.current / achievement.requirements.target * 100
+  const progress = achievement.progress && achievement.maxProgress ? (achievement.progress / achievement.maxProgress * 100) : 0
   const isCompleted = progress >= 100
 
   return (
     <Card className={`relative transition-all duration-200 hover:shadow-md ${
       isUnlocked 
-        ? `${getRarityColor()} border-2` 
+        ? `${getDifficultyColor()} border-2` 
         : 'border-gray-200 bg-gray-50 opacity-75'
     }`}>
       {/* Indicador de desbloqueado */}
@@ -224,7 +218,7 @@ function AchievementCard({
         <div className="flex items-start gap-3">
           {/* Icono */}
           <div className={`flex-shrink-0 p-2 rounded-lg ${
-            isUnlocked ? getRarityColor() : 'bg-gray-100'
+            isUnlocked ? getDifficultyColor() : 'bg-gray-100'
           }`}>
             {getIcon()}
           </div>
@@ -236,7 +230,7 @@ function AchievementCard({
                 <h4 className={`font-semibold text-sm ${
                   isUnlocked ? 'text-gray-900' : 'text-gray-500'
                 }`}>
-                  {achievement.name}
+                  {achievement.title}
                 </h4>
                 <p className={`text-xs mt-1 ${
                   isUnlocked ? 'text-gray-600' : 'text-gray-400'
@@ -245,12 +239,11 @@ function AchievementCard({
                 </p>
               </div>
               
-              <Badge className={`text-xs ${getRarityBadgeColor()}`}>
-                {achievement.rarity === 'common' && 'Común'}
-                {achievement.rarity === 'uncommon' && 'Poco común'}
-                {achievement.rarity === 'rare' && 'Raro'}
-                {achievement.rarity === 'epic' && 'Épico'}
-                {achievement.rarity === 'legendary' && 'Legendario'}
+              <Badge className={`text-xs ${getDifficultyBadgeColor()}`}>
+                {achievement.difficulty === 'easy' && 'Fácil'}
+                {achievement.difficulty === 'medium' && 'Medio'}
+                {achievement.difficulty === 'hard' && 'Difícil'}
+                {achievement.difficulty === 'legendary' && 'Legendario'}
               </Badge>
             </div>
 
@@ -259,7 +252,7 @@ function AchievementCard({
               <div className="mb-3">
                 <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
                   <span>Progreso</span>
-                  <span>{achievement.requirements.current}/{achievement.requirements.target}</span>
+                  <span>{achievement.progress}/{achievement.maxProgress}</span>
                 </div>
                 <Progress value={progress} className="h-2" />
               </div>
@@ -271,21 +264,21 @@ function AchievementCard({
                 isUnlocked ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
               }`}>
                 <Zap className="h-3 w-3" />
-                <span>+{achievement.xpReward} XP</span>
+                <span>+{achievement.reward.xp} XP</span>
               </div>
               
               <div className={`flex items-center gap-1 px-2 py-1 rounded ${
                 isUnlocked ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'
               }`}>
                 <span className="text-xs">💰</span>
-                <span>+{achievement.crolarsReward} Crolars</span>
+                <span>+{achievement.reward.crolars} Crolars</span>
               </div>
             </div>
 
             {/* Fecha de desbloqueo */}
-            {isUnlocked && achievement.unlockedAt && (
+            {isUnlocked && achievement.earnedDate && (
               <div className="text-xs text-gray-500 mt-2">
-                Desbloqueado el {new Date(achievement.unlockedAt).toLocaleDateString()}
+                Desbloqueado el {new Date(achievement.earnedDate).toLocaleDateString()}
               </div>
             )}
           </div>
@@ -302,23 +295,23 @@ export default function AchievementSystem({
 }: AchievementSystemProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [rarityFilter, setRarityFilter] = useState<string>('all')
+  const [difficultyFilter, setDifficultyFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'unlocked' | 'locked'>('all')
 
   // Filtrar achievements
   const filteredAchievements = achievements.filter(achievement => {
-    const matchesSearch = achievement.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = achievement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          achievement.description.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesCategory = categoryFilter === 'all' || achievement.category === categoryFilter
-    const matchesRarity = rarityFilter === 'all' || achievement.rarity === rarityFilter
+    const matchesDifficulty = difficultyFilter === 'all' || achievement.difficulty === difficultyFilter
     
     const isUnlocked = userAchievements.includes(achievement.id)
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'unlocked' && isUnlocked) ||
                          (statusFilter === 'locked' && !isUnlocked)
     
-    return matchesSearch && matchesCategory && matchesRarity && matchesStatus
+    return matchesSearch && matchesCategory && matchesDifficulty && matchesStatus
   })
 
   // Estadísticas
@@ -327,7 +320,7 @@ export default function AchievementSystem({
   const completionPercentage = (unlockedAchievements / totalAchievements) * 100
 
   const categories = [...new Set(achievements.map(a => a.category))]
-  const rarities = [...new Set(achievements.map(a => a.rarity))]
+  const difficulties = [...new Set(achievements.map(a => a.difficulty))]
 
   return (
     <div className={className}>
@@ -391,29 +384,31 @@ export default function AchievementSystem({
               <option value="all">Todas las categorías</option>
               {categories.map(category => (
                 <option key={category} value={category}>
-                  {category === 'challenges' && 'Desafíos'}
-                  {category === 'streaks' && 'Rachas'}
-                  {category === 'levels' && 'Niveles'}
-                  {category === 'badges' && 'Insignias'}
-                  {category === 'community' && 'Comunidad'}
+                  {category === 'challenge' && 'Desafíos'}
+                  {category === 'course' && 'Cursos'}
+                  {category === 'forum' && 'Foro'}
+                  {category === 'notes' && 'Notas'}
+                  {category === 'event' && 'Eventos'}
+                  {category === 'club' && 'Clubes'}
+                  {category === 'streak' && 'Rachas'}
+                  {category === 'achievement' && 'Logros'}
                 </option>
               ))}
             </select>
 
-            {/* Filtro por rareza */}
+            {/* Filtro por dificultad */}
             <select
-              value={rarityFilter}
-              onChange={(e) => setRarityFilter(e.target.value)}
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
-              <option value="all">Todas las rarezas</option>
-              {rarities.map(rarity => (
-                <option key={rarity} value={rarity}>
-                  {rarity === 'common' && 'Común'}
-                  {rarity === 'uncommon' && 'Poco común'}
-                  {rarity === 'rare' && 'Raro'}
-                  {rarity === 'epic' && 'Épico'}
-                  {rarity === 'legendary' && 'Legendario'}
+              <option value="all">Todas las dificultades</option>
+              {difficulties.map(difficulty => (
+                <option key={difficulty} value={difficulty}>
+                  {difficulty === 'easy' && 'Fácil'}
+                  {difficulty === 'medium' && 'Medio'}
+                  {difficulty === 'hard' && 'Difícil'}
+                  {difficulty === 'legendary' && 'Legendario'}
                 </option>
               ))}
             </select>

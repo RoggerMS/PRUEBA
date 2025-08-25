@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Progress } from "@/src/components/ui/progress";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { gamificationService } from "@/services/gamificationService";
+import { Progress } from "@/components/ui/progress";
 import { 
   Clock, 
   Users, 
@@ -65,27 +67,51 @@ export function ChallengeCard({ challenge, onClick }: ChallengeCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLiked(!isLiked);
-    toast.success(isLiked ? "Desafío removido de favoritos" : "Desafío agregado a favoritos");
+    try {
+      setIsLiked(!isLiked);
+      toast.success(isLiked ? "Desafío removido de favoritos" : "Desafío agregado a favoritos");
+      
+      if (!isLiked) {
+        // Grant XP for liking a challenge
+        await gamificationService.grantXP("user-id", 1, "challenge", challenge.id, 'Dar like a desafío');
+      }
+    } catch (error) {
+      console.error('Error liking challenge:', error);
+    }
   };
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(`${window.location.origin}/challenges/${challenge.id}`);
-    toast.success("Enlace copiado al portapapeles");
+    try {
+      navigator.clipboard.writeText(`${window.location.origin}/challenges/${challenge.id}`);
+      toast.success("Enlace copiado al portapapeles");
+      
+      // Grant XP for sharing a challenge
+      await gamificationService.grantXP("user-id", 3, "challenge", challenge.id, 'Compartir desafío');
+    } catch (error) {
+      console.error('Error sharing challenge:', error);
+    }
   };
 
   const handleJoin = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsJoining(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsJoining(false);
-    toast.success("¡Te has unido al desafío!");
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setIsJoining(false);
+      toast.success("¡Te has unido al desafío!");
+      
+      // Grant XP for joining a challenge
+      await gamificationService.grantXP("user-id", 5, "challenge", challenge.id, 'Unirse a desafío');
+    } catch (error) {
+      console.error('Error joining challenge:', error);
+      setIsJoining(false);
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {

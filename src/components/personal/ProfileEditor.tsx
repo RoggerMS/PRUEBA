@@ -21,6 +21,7 @@ import {
   Trash2
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { gamificationService } from '@/services/gamificationService'
 
 interface UserProfile {
   id: string
@@ -125,6 +126,9 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
 
       // Simular guardado
       await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Otorgar XP por actualizar perfil
+      await gamificationService.grantXP("user-id", 10, "achievement", "profile-update", 'Actualizar perfil')
       
       onSave(formData)
       toast.success('Perfil actualizado correctamente')

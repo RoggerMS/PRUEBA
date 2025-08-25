@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Search, Bell, MessageCircle, User, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Search, MessageCircle, User, Settings, LogOut, Menu, X, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,10 +11,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -68,52 +70,7 @@ export function Navbar() {
           {/* Right Side - Desktop */}
           <div className="hidden md:flex items-center space-x-4">
             {/* Notifications */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="w-5 h-5" />
-                  <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-crunevo-500 text-xs">
-                    3
-                  </Badge>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="max-h-96 overflow-y-auto">
-                  <DropdownMenuItem className="flex items-start space-x-3 p-3">
-                    <div className="w-2 h-2 bg-crunevo-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Nueva respuesta en tu pregunta</p>
-                      <p className="text-xs text-muted-foreground">María respondió tu pregunta sobre cálculo</p>
-                      <p className="text-xs text-muted-foreground mt-1">Hace 5 minutos</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-start space-x-3 p-3">
-                    <div className="w-2 h-2 bg-crolars rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">¡Ganaste 10 Crolars!</p>
-                      <p className="text-xs text-muted-foreground">Por completar tu racha semanal</p>
-                      <p className="text-xs text-muted-foreground mt-1">Hace 1 hora</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-start space-x-3 p-3">
-                    <div className="w-2 h-2 bg-fire rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Tu apunte recibió 🔥</p>
-                      <p className="text-xs text-muted-foreground">A Carlos le gustó tu apunte de física</p>
-                      <p className="text-xs text-muted-foreground mt-1">Hace 2 horas</p>
-                    </div>
-                  </DropdownMenuItem>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/notifications" className="w-full text-center text-crunevo-600 font-medium">
-                    Ver todas las notificaciones
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <NotificationCenter />
 
             {/* Messages */}
             <Button variant="ghost" size="sm" asChild>

@@ -104,11 +104,11 @@ export interface LeaderboardEntry {
 
 export interface Notification {
   id: string
-  userId: string
-  type: 'xp_gain' | 'level_up' | 'badge_earned' | 'achievement_unlocked' | 'streak_milestone'
+  type: 'SOCIAL' | 'ACADEMIC' | 'GAMIFICATION' | 'MARKETPLACE' | 'SYSTEM' | 'CROLARS_EARNED'
   title: string
   message: string
-  data?: any
+  data?: Record<string, any>
   read: boolean
-  createdAt: string
+  createdAt: Date
+  userId?: string
 }

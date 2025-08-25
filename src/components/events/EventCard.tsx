@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { gamificationService } from "@/services/gamificationService";
 import { 
   Calendar, 
   Clock, 
@@ -58,7 +59,17 @@ export function EventCard({ event, onClick }: EventCardProps) {
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const wasLiked = isLiked;
     setIsLiked(!isLiked);
+    
+    // Grant XP for liking an event (only when liking, not unliking)
+    if (!wasLiked) {
+      try {
+        gamificationService.grantXP("user-id", 3, "event", event.id, 'Dar like a evento');
+      } catch (error) {
+        console.error('Error granting XP for event like:', error);
+      }
+    }
   };
 
   const handleRegister = async (e: React.MouseEvent) => {
@@ -68,8 +79,18 @@ export function EventCard({ event, onClick }: EventCardProps) {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    const wasRegistered = isRegistered;
     setIsRegistered(!isRegistered);
     setIsRegistering(false);
+    
+    // Grant XP for event registration (only when registering, not unregistering)
+    if (!wasRegistered) {
+      try {
+        gamificationService.grantXP("user-id", 15, "event", event.id, 'Registrarse a evento');
+      } catch (error) {
+        console.error('Error granting XP for event registration:', error);
+      }
+    }
   };
 
   const handleShare = (e: React.MouseEvent) => {

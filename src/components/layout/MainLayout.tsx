@@ -1,16 +1,31 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
 import { FloatingActionButton } from './FloatingActionButton';
+import { NotificationToast } from '@/components/notifications/NotificationToast';
+import { notificationService } from '@/services/notificationService';
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  useEffect(() => {
+    // Initialize notification service
+    notificationService.connect();
+    
+    // Request notification permissions
+    notificationService.requestPermission();
+    
+    // Cleanup on unmount
+    return () => {
+      notificationService.disconnect();
+    };
+  }, []);
+  
   return (
     <div className="min-h-screen bg-crunevo-gradient">
       {/* Top Navbar */}
@@ -48,6 +63,9 @@ export function MainLayout({ children }: MainLayoutProps) {
       
       {/* Floating Action Button */}
       <FloatingActionButton />
+      
+      {/* Notification Toast */}
+      <NotificationToast />
     </div>
   );
 }

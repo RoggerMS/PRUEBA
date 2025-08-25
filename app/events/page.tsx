@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EventCard } from "@/src/components/events/EventCard";
-import { EventDetail } from "@/src/components/events/EventDetail";
-import { MyEvents } from "@/src/components/events/MyEvents";
-import { CreateEvent } from "@/src/components/events/CreateEvent";
-import { EventCalendar } from "@/src/components/events/EventCalendar";
+import { EventCard } from "@/components/events/EventCard";
+import { EventDetail } from "@/components/events/EventDetail";
+import { MyEvents } from "@/components/events/MyEvents";
+import { CreateEvent } from "@/components/events/CreateEvent";
+import { EventCalendar } from "@/components/events/EventCalendar";
 import { 
   Calendar, 
   Search, 
@@ -379,7 +379,11 @@ export default function EventsPage() {
 
           {/* Calendar Tab */}
           <TabsContent value="calendar">
-            <EventCalendar events={mockEvents} onEventClick={setSelectedEvent} />
+            <EventCalendar 
+              events={mockEvents} 
+              onEventClick={setSelectedEvent}
+              onCreateEvent={() => setShowCreateEvent(true)}
+            />
           </TabsContent>
 
           {/* My Events Tab */}

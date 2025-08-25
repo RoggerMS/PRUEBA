@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Play, Clock, Users, Star, BookOpen, Heart, ShoppingCart } from "lucide-react";
-import { Card, CardContent } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
-import { Progress } from "@/src/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 interface Course {
   id: string;
