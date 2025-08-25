@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { Search, Filter, BookOpen, Play, Clock, Users, Star, Trophy, ChevronRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Badge } from "@/src/components/ui/badge";
-import { Progress } from "@/src/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { CourseCard } from "@/src/components/courses/CourseCard";
-import { CourseDetail } from "@/src/components/courses/CourseDetail";
-import { MyCourses } from "@/src/components/courses/MyCourses";
-import { CourseProgress } from "@/src/components/courses/CourseProgress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CourseCard } from "@/components/courses/CourseCard";
+import { CourseDetail } from "@/components/courses/CourseDetail";
+import { MyCourses } from "@/components/courses/MyCourses";
+import { CourseProgress } from "@/components/courses/CourseProgress";
 
 // Mock data for courses
 const mockCourses = [

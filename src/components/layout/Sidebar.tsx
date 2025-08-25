@@ -23,6 +23,7 @@ import {
   Flame,
   Star,
   Grid3X3,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
@@ -49,6 +50,7 @@ const mainNavItems: SidebarItem[] = [
 ];
 
 const gamificationItems: SidebarItem[] = [
+  { name: 'Gamificación', href: '/gamification', icon: Zap, color: 'text-crunevo-600' },
   { name: 'Misiones', href: '/missions', icon: Target, badge: '3' },
   { name: 'Ranking', href: '/ranking', icon: Trophy },
   { name: 'Liga Académica', href: '/league', icon: Star },

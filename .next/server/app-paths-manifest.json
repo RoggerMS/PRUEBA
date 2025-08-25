@@ -1,8 +1,5 @@
 {
-  "/notes/page": "app/notes/page.js",
-  "/forum/page": "app/forum/page.js",
-  "/marketplace/page": "app/marketplace/page.js",
-  "/courses/page": "app/courses/page.js",
-  "/auth/login/page": "app/auth/login/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/personal/page": "app/personal/page.js",
+  "/courses/page": "app/courses/page.js"
 }
