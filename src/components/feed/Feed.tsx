@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Flag, Link as LinkIcon, EyeOff, CheckCircle, Globe, Users, Lock, FileText, HelpCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Flag, Link as LinkIcon, EyeOff, CheckCircle, Globe, Users, Lock, FileText, HelpCircle, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -142,9 +142,28 @@ const getPostTypeLabel = (type: string) => {
 
 export function Feed() {
   const [posts, setPosts] = useState(mockPosts);
+  const [isLoading, setIsLoading] = useState(false);
+  const [visiblePosts, setVisiblePosts] = useState<string[]>([]);
+
+  // Animate posts on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      posts.forEach((post, index) => {
+        setTimeout(() => {
+          setVisiblePosts(prev => [...prev, post.id]);
+        }, index * 100);
+      });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [posts]);
 
   const handlePostCreated = async (newPost: Post) => {
     setPosts(prev => [newPost, ...prev]);
+    // Animate new post
+    setTimeout(() => {
+      setVisiblePosts(prev => [newPost.id, ...prev]);
+    }, 50);
+    
     // Otorgar XP por crear post
     try {
       await gamificationService.grantXP(
@@ -155,9 +174,15 @@ export function Feed() {
         'Crear nuevo post'
       );
       
-      toast.success('¡Post creado! +15 XP ganados', {
-        duration: 3000,
-      });
+      toast.success(
+        <div className="flex items-center space-x-2">
+          <Sparkles className="w-4 h-4 text-yellow-500" />
+          <span>¡Post creado! +15 XP ganados</span>
+        </div>,
+        {
+          duration: 3000,
+        }
+      );
     } catch (error) {
       console.error('Error al otorgar XP:', error);
     }
@@ -189,9 +214,15 @@ export function Feed() {
           'Dar like a un post'
         );
         
-        toast.success('¡Like dado! +5 XP ganados', {
-          duration: 2000,
-        });
+        toast.success(
+          <div className="flex items-center space-x-2">
+            <Heart className="w-4 h-4 text-red-500 fill-current" />
+            <span>¡Like dado! +5 XP ganados</span>
+          </div>,
+          {
+            duration: 2000,
+          }
+        );
       } catch (error) {
         console.error('Error al otorgar XP:', error);
       }
@@ -277,15 +308,29 @@ export function Feed() {
   return (
     <div className="space-y-6">
       <CreatePost onPostCreated={handlePostCreated} />
-      {posts.map((post) => (
-        <Card key={post.id} className="hover:shadow-md transition-shadow duration-200">
-          <CardContent className="p-6">
+      {posts.map((post, index) => {
+        const isVisible = visiblePosts.includes(post.id);
+        return (
+        <Card 
+          key={post.id} 
+          className={`group hover:shadow-lg hover:shadow-crunevo-100/50 transition-all duration-300 hover:-translate-y-1 border-0 shadow-sm hover:border-crunevo-200/50 ${
+            isVisible 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-4'
+          }`}
+          style={{
+            transitionDelay: isVisible ? '0ms' : `${index * 100}ms`
+          }}
+        >
+          <CardContent className="p-6 relative overflow-hidden">
+            {/* Subtle gradient overlay on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-crunevo-50/0 to-crunevo-100/0 group-hover:from-crunevo-50/30 group-hover:to-crunevo-100/10 transition-all duration-500 pointer-events-none" />
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <Avatar className="w-10 h-10">
+                <Avatar className="w-10 h-10 ring-2 ring-transparent group-hover:ring-crunevo-200 transition-all duration-300">
                   <AvatarImage src={post.author.avatar} alt={post.author.name} />
-                  <AvatarFallback>
+                  <AvatarFallback className="bg-gradient-to-br from-crunevo-100 to-crunevo-200 text-crunevo-700">
                     {post.author.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -294,7 +339,7 @@ export function Feed() {
                   <div className="flex items-center space-x-2">
                     <Link 
                       href={`/profile/${post.author.username}`}
-                      className="font-semibold text-gray-900 hover:text-crunevo-600 transition-colors"
+                      className="font-semibold text-gray-900 hover:text-crunevo-600 transition-all duration-200 hover:scale-105 inline-block"
                     >
                       {post.author.name}
                     </Link>
@@ -303,19 +348,19 @@ export function Feed() {
                     )}
                     {/* Post Type Badge */}
                     {post.type === 'question' && (
-                      <div className="flex items-center space-x-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
+                      <div className="flex items-center space-x-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105">
                         <HelpCircle className="w-3 h-3" />
                         <span>Pregunta</span>
                       </div>
                     )}
                     {post.type === 'note' && (
-                      <div className="flex items-center space-x-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                      <div className="flex items-center space-x-1 bg-gradient-to-r from-green-100 to-green-200 text-green-700 px-3 py-1 rounded-full text-xs font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105">
                         <FileText className="w-3 h-3" />
                         <span>Apunte</span>
                       </div>
                     )}
                     {post.type === 'text' && (
-                      <div className="flex items-center space-x-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+                      <div className="flex items-center space-x-1 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 px-3 py-1 rounded-full text-xs font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105">
                         <span>Post</span>
                       </div>
                     )}
@@ -432,32 +477,35 @@ export function Feed() {
                   size="sm"
                   onClick={() => handleLike(post.id)}
                   className={cn(
-                    'text-gray-500 hover:text-fire transition-colors',
-                    post.isLiked && 'text-fire'
+                    'text-gray-500 hover:text-fire transition-all duration-200 hover:scale-110 hover:bg-red-50',
+                    post.isLiked && 'text-fire bg-red-50'
                   )}
                 >
-                  <Heart className={cn('w-4 h-4 mr-2', post.isLiked && 'fill-current')} />
-                  {post.likes}
+                  <Heart className={cn(
+                    'w-4 h-4 mr-2 transition-all duration-200', 
+                    post.isLiked && 'fill-current scale-110 animate-pulse'
+                  )} />
+                  <span className="font-medium">{post.likes}</span>
                 </Button>
                 
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => handleComment(post.id)}
-                  className="text-gray-500 hover:text-crunevo-600"
+                  className="text-gray-500 hover:text-crunevo-600 transition-all duration-200 hover:scale-110 hover:bg-crunevo-50"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  {post.comments}
+                  <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:rotate-12" />
+                  <span className="font-medium">{post.comments}</span>
                 </Button>
                 
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => handleShare(post)}
-                  className="text-gray-500 hover:text-crunevo-600"
+                  className="text-gray-500 hover:text-crunevo-600 transition-all duration-200 hover:scale-110 hover:bg-crunevo-50"
                 >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  {post.shares}
+                  <Share2 className="w-4 h-4 mr-2 transition-transform duration-200 hover:-rotate-12" />
+                  <span className="font-medium">{post.shares}</span>
                 </Button>
               </div>
               
@@ -466,21 +514,44 @@ export function Feed() {
                 size="sm"
                 onClick={() => handleBookmark(post.id)}
                 className={cn(
-                  'text-gray-500 hover:text-crunevo-600 transition-colors',
-                  post.isBookmarked && 'text-crunevo-600'
+                  'text-gray-500 hover:text-crunevo-600 transition-all duration-200 hover:scale-110 hover:bg-crunevo-50',
+                  post.isBookmarked && 'text-crunevo-600 bg-crunevo-50'
                 )}
               >
-                <Bookmark className={cn('w-4 h-4', post.isBookmarked && 'fill-current')} />
+                <Bookmark className={cn(
+                  'w-4 h-4 transition-all duration-200', 
+                  post.isBookmarked && 'fill-current scale-110'
+                )} />
               </Button>
             </div>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
       
       {/* Load More */}
       <div className="text-center py-6">
-        <Button variant="outline" className="text-crunevo-600 border-crunevo-200 hover:bg-crunevo-50">
-          Cargar más publicaciones
+        <Button 
+          variant="outline" 
+          className="text-crunevo-600 border-crunevo-200 hover:bg-crunevo-50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-crunevo-100/50 group"
+          onClick={() => {
+            setIsLoading(true);
+            // Simulate loading
+            setTimeout(() => setIsLoading(false), 1000);
+          }}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 border-2 border-crunevo-600 border-t-transparent rounded-full animate-spin" />
+              <span>Cargando...</span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+              <span>Cargar más publicaciones</span>
+            </div>
+          )}
         </Button>
       </div>
     </div>

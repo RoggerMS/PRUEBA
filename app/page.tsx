@@ -1,29 +1,13 @@
-import { Feed } from '@/components/feed/Feed';
-import { QuickActions } from '@/components/feed/QuickActions';
-import WeeklyStreak from '@/components/gamification/WeeklyStreak';
-import { TrendingTopics } from '@/components/feed/TrendingTopics';
-import { Suggestions } from '@/components/feed/Suggestions';
+import Hero from '@/components/home/Hero';
+import Features from '@/components/home/Features';
+import CTA from '@/components/home/CTA';
 
 export default function HomePage() {
-  // Temporarily disable authentication requirement
   return (
-    [
-      /* Left Sidebar Content */
-      <div key="left" className="space-y-6">
-        <QuickActions />
-        <WeeklyStreak />
-        <TrendingTopics />
-      </div>,
-
-      /* Main Feed */
-      <div key="main" className="space-y-6">
-        <Feed />
-      </div>,
-
-      /* Right Sidebar Content */
-      <div key="right" className="space-y-6">
-        <Suggestions />
-      </div>
-    ]
+    <div className="min-h-screen">
+      <Hero />
+      <Features />
+      <CTA />
+    </div>
   );
 }

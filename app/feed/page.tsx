@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
+import { useSession } from 'next-auth/react';
 import { Composer } from '@/components/feed/Composer';
 import { PostList } from '@/components/feed/PostList';
 import { FeedSidebar } from '@/components/feed/FeedSidebar';
@@ -69,6 +70,8 @@ function SidebarSkeleton() {
 }
 
 export default function FeedPage() {
+  const { data: session } = useSession();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Main Container */}
@@ -86,10 +89,12 @@ export default function FeedPage() {
           {/* Main Feed Content */}
           <div className="col-span-1 lg:col-span-6">
             <div className="space-y-6">
-              {/* Composer */}
-              <Suspense fallback={<ComposerSkeleton />}>
-                <Composer />
-              </Suspense>
+              {/* Composer (solo si está autenticado) */}
+              {session && (
+                <Suspense fallback={<ComposerSkeleton />}>
+                  <Composer />
+                </Suspense>
+              )}
 
               {/* Post List */}
               <Suspense fallback={<PostListSkeleton />}>

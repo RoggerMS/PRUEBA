@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,10 @@ import {
   Lock, 
   X,
   Upload,
-  Hash
+  Hash,
+  Sparkles,
+  Camera,
+  Film
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -73,16 +76,10 @@ const VISIBILITY_OPTIONS = [
     description: 'Solo tu universidad'
   },
   {
-    value: 'friends' as VisibilityLevel,
-    label: 'Amigos',
+    value: 'followers' as VisibilityLevel,
+    label: 'Seguidores',
     icon: Users,
     description: 'Solo tus seguidores'
-  },
-  {
-    value: 'private' as VisibilityLevel,
-    label: 'Privado',
-    icon: Lock,
-    description: 'Solo tú'
   }
 ];
 
@@ -99,6 +96,7 @@ export function Composer({ className }: ComposerProps) {
   const [hashtagInput, setHashtagInput] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Create post mutation
   const createPostMutation = useMutation({
@@ -106,7 +104,6 @@ export function Composer({ className }: ComposerProps) {
       const formData = new FormData();
       formData.append('kind', data.kind);
       formData.append('text', data.text || '');
-      formData.append('title', data.title || '');
       formData.append('visibility', data.visibility);
       formData.append('hashtags', JSON.stringify(data.hashtags || []));
       
@@ -139,14 +136,26 @@ export function Composer({ className }: ComposerProps) {
       // Invalidate feed queries
       queryClient.invalidateQueries({ queryKey: ['feed'] });
       
-      toast.success('¡Post creado exitosamente! 🔥', {
-        description: 'Tu publicación ya está visible en el feed'
-      });
+      toast.success(
+        <div className="flex items-center space-x-2">
+          <Sparkles className="w-4 h-4 text-green-500" />
+          <span>¡Post creado exitosamente! 🔥</span>
+        </div>,
+        {
+          description: 'Tu publicación ya está visible en el feed'
+        }
+      );
     },
     onError: (error: Error) => {
-      toast.error('Error al crear el post', {
-        description: error.message
-      });
+      toast.error(
+        <div className="flex items-center space-x-2">
+          <X className="w-4 h-4 text-red-500" />
+          <span>Error al crear el post</span>
+        </div>,
+        {
+          description: error.message
+        }
+      );
     }
   });
 
@@ -156,10 +165,15 @@ export function Composer({ className }: ComposerProps) {
       return;
     }
 
+    // For questions and notes, include title in the text content
+    let finalText = text.trim();
+    if ((activeTab === 'question' || activeTab === 'note') && title.trim()) {
+      finalText = title.trim() + (text.trim() ? '\n\n' + text.trim() : '');
+    }
+
     const postData: CreatePostData = {
       kind: activeTab,
-      text: text.trim(),
-      title: title.trim() || undefined,
+      text: finalText,
       visibility,
       hashtags: hashtags.length > 0 ? hashtags : undefined,
       media: selectedFiles.length > 0 ? selectedFiles : undefined
@@ -168,16 +182,26 @@ export function Composer({ className }: ComposerProps) {
     createPostMutation.mutate(postData);
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
+  const addFiles = useCallback((files: File[]) => {
     const validFiles = files.filter(file => {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
       const isDocument = file.type === 'application/pdf' || 
                         file.type.includes('document') ||
                         file.type.includes('text');
+      const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024; // 50MB for video, 10MB for images
       
-      return isImage || isVideo || isDocument;
+      if (!isImage && !isVideo && !isDocument) {
+        toast.error('Solo se permiten archivos de imagen, video y documentos');
+        return false;
+      }
+      
+      if (file.size > maxSize) {
+        toast.error(`El archivo ${file.name} es demasiado grande`);
+        return false;
+      }
+      
+      return true;
     });
     
     if (validFiles.length !== files.length) {
@@ -185,10 +209,38 @@ export function Composer({ className }: ComposerProps) {
     }
     
     setSelectedFiles(prev => [...prev, ...validFiles].slice(0, 5)); // Max 5 files
+    
+    if (validFiles.length > 0) {
+      toast.success(`${validFiles.length} archivo(s) agregado(s)`);
+    }
+  }, []);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    addFiles(files);
   };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
+  }, [addFiles]);
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    toast.success('Archivo eliminado');
   };
 
   const addHashtag = () => {
@@ -218,14 +270,14 @@ export function Composer({ className }: ComposerProps) {
   }
 
   return (
-    <Card className={cn('overflow-hidden transition-all duration-200', className)}>
+    <Card className={cn(`overflow-hidden transition-all duration-300 ${isExpanded ? 'shadow-lg border-orange-200' : 'hover:shadow-md'}`, className)}>
       <CardContent className="p-0">
         {/* Header */}
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center space-x-3">
-            <Avatar className="w-10 h-10">
+            <Avatar className="w-10 h-10 ring-2 ring-transparent hover:ring-orange-200 transition-all duration-300">
               <AvatarImage src={session.user?.image || ''} alt={session.user?.name || ''} />
-              <AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700">
                 {session.user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
               </AvatarFallback>
             </Avatar>
@@ -276,10 +328,15 @@ export function Composer({ className }: ComposerProps) {
                   '¿Qué está pasando?'
                 }
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  if (!isExpanded && e.target.value.length > 0) {
+                    setIsExpanded(true);
+                  }
+                }}
                 onKeyDown={handleKeyPress}
                 onFocus={() => setIsExpanded(true)}
-                className="min-h-[100px] resize-none border-0 px-0 focus-visible:ring-0 placeholder:text-gray-400 text-base"
+                className="min-h-[100px] resize-none border-0 px-0 focus-visible:ring-0 placeholder:text-gray-400 text-base transition-all duration-200"
               />
 
               {/* File upload for photo/video and note types */}
@@ -294,23 +351,62 @@ export function Composer({ className }: ComposerProps) {
                     className="hidden"
                   />
                   
-                  <Button
-                    type="button"
-                    variant="outline"
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full border-dashed border-2 h-20 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    className={`w-full border-dashed border-2 h-20 rounded-lg cursor-pointer transition-all duration-300 flex items-center justify-center ${
+                      isDragOver 
+                        ? 'border-orange-500 bg-orange-50 scale-105' 
+                        : 'border-gray-300 hover:border-orange-400 hover:bg-gray-50'
+                    }`}
                   >
-                    <Upload className="w-5 h-5 mr-2" />
-                    {type.id === 'photo' ? 'Subir fotos o videos' : 'Subir archivos'}
-                  </Button>
+                    {isDragOver ? (
+                      <div className="animate-bounce text-center">
+                        <Upload className="w-5 h-5 mx-auto mb-1 text-orange-500" />
+                        <p className="text-sm text-orange-600 font-medium">¡Suelta los archivos aquí!</p>
+                      </div>
+                    ) : (
+                      <div className="text-center group">
+                        <div className="flex items-center justify-center space-x-2 mb-1">
+                          <Camera className="w-5 h-5 text-gray-500 group-hover:text-orange-500 transition-colors" />
+                          <Film className="w-5 h-5 text-gray-500 group-hover:text-orange-500 transition-colors" />
+                        </div>
+                        <p className="text-sm text-gray-500 group-hover:text-orange-600 transition-colors">
+                          {type.id === 'photo' ? 'Arrastra fotos/videos o haz clic' : 'Arrastra archivos o haz clic'}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Imágenes hasta 10MB, videos hasta 50MB
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Selected files */}
                   {selectedFiles.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 animate-in slide-in-from-bottom-2 duration-300">
                       {selectedFiles.map((file, index) => (
-                        <div key={index} className="relative group">
-                          <div className="bg-gray-100 rounded-lg p-3 text-sm">
-                            <p className="font-medium truncate">{file.name}</p>
+                        <div key={index} className="relative group animate-in zoom-in-50 duration-300" style={{ animationDelay: `${index * 100}ms` }}>
+                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 text-sm shadow-sm group-hover:shadow-md transition-all duration-300">
+                            {file.type.startsWith('image/') ? (
+                              <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden mb-2">
+                                <img
+                                  src={URL.createObjectURL(file)}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              </div>
+                            ) : file.type.startsWith('video/') ? (
+                              <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center mb-2">
+                                <Video className="w-8 h-8 text-orange-500" />
+                              </div>
+                            ) : (
+                              <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center mb-2">
+                                <FileText className="w-8 h-8 text-orange-500" />
+                              </div>
+                            )}
+                            <p className="font-medium truncate text-xs">{file.name}</p>
                             <p className="text-gray-500 text-xs">
                               {(file.size / 1024 / 1024).toFixed(1)} MB
                             </p>
@@ -319,7 +415,7 @@ export function Composer({ className }: ComposerProps) {
                             size="sm"
                             variant="destructive"
                             onClick={() => removeFile(index)}
-                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 shadow-lg"
                           >
                             <X className="w-3 h-3" />
                           </Button>
