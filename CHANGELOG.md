@@ -11,4 +11,5 @@
 - Add Feed page and navigation link in sidebar.
 - Correct footer links for Cookies, Privacy, Terms, and Support pages.
 - Temporarily allow accessing the feed without authentication.
+- Resolve feed API route type mismatches and enum casing errors.
 

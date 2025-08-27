@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { Comment } from '@/types/feed';
+import type { Comment } from '@/types/feed';
 import { z } from 'zod';
 
 const createCommentSchema = z.object({
@@ -36,13 +36,13 @@ export async function GET(
       where: {
         id: postId,
         OR: [
-          { visibility: 'public' },
-          { 
-            visibility: 'university',
-            author: { university: session.user.university }
+          { visibility: 'PUBLIC' },
+          {
+            visibility: 'UNIVERSITY',
+            author: { university: (session.user as any).university }
           },
           {
-            visibility: 'friends',
+            visibility: 'FRIENDS',
             author: {
               followers: {
                 some: { followerId: session.user.id }
@@ -90,7 +90,7 @@ export async function GET(
             id: true,
             name: true,
             username: true,
-            avatar: true,
+            image: true,
             verified: true
           }
         },
@@ -107,7 +107,7 @@ export async function GET(
                 id: true,
                 name: true,
                 username: true,
-                avatar: true,
+                image: true,
                 verified: true
               }
             },
@@ -137,35 +137,47 @@ export async function GET(
     const nextCursor = hasMore ? resultComments[resultComments.length - 1]?.id : undefined;
 
     // Transform to Comment format
-    const transformedComments: Comment[] = resultComments.map(comment => ({
+    const transformedComments: Comment[] = resultComments.map((comment: any) => ({
       id: comment.id,
-      postId: comment.postId,
-      author: comment.author,
-      text: comment.text,
+      postId: comment.postId!,
+      author: {
+        id: comment.author.id,
+        name: comment.author.name || '',
+        username: comment.author.username,
+        avatar: comment.author.image || undefined,
+        verified: comment.author.verified
+      },
+      text: comment.content,
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt?.toISOString(),
       parentId: comment.parentId || undefined,
       stats: {
-        likes: comment._count.likes,
+        fires: comment._count.likes,
         replies: comment._count.replies
       },
       viewerState: {
-        liked: comment.likes.length > 0
+        fired: comment.likes.length > 0
       },
-      replies: comment.replies?.map(reply => ({
+      replies: comment.replies?.map((reply: any) => ({
         id: reply.id,
-        postId: comment.postId,
-        author: reply.author,
-        text: reply.text,
+        postId: comment.postId!,
+        author: {
+        id: reply.author.id,
+        name: reply.author.name || '',
+        username: reply.author.username,
+        avatar: reply.author.image || undefined,
+        verified: reply.author.verified
+        },
+        text: reply.content,
         createdAt: reply.createdAt.toISOString(),
         updatedAt: reply.updatedAt?.toISOString(),
         parentId: comment.id,
         stats: {
-          likes: reply._count.likes,
+          fires: reply._count.likes,
           replies: reply._count.replies
         },
         viewerState: {
-          liked: reply.likes.length > 0
+          fired: reply.likes.length > 0
         }
       }))
     }));
@@ -204,13 +216,13 @@ export async function POST(
       where: {
         id: postId,
         OR: [
-          { visibility: 'public' },
-          { 
-            visibility: 'university',
-            author: { university: session.user.university }
+          { visibility: 'PUBLIC' },
+          {
+            visibility: 'UNIVERSITY',
+            author: { university: (session.user as any).university }
           },
           {
-            visibility: 'friends',
+            visibility: 'FRIENDS',
             author: {
               followers: {
                 some: { followerId: session.user.id }
@@ -250,7 +262,7 @@ export async function POST(
     // Create the comment
     const comment = await prisma.comment.create({
       data: {
-        text: data.text,
+        content: data.text,
         postId,
         authorId: session.user.id,
         parentId: data.parentId
@@ -261,7 +273,7 @@ export async function POST(
             id: true,
             name: true,
             username: true,
-            avatar: true,
+            image: true,
             verified: true
           }
         },
@@ -275,35 +287,40 @@ export async function POST(
     });
 
     // Create notification for post author (if not self-comment)
-    if (post.authorId !== session.user.id) {
-      await prisma.notification.create({
-        data: {
-          type: 'COMMENT',
-          userId: post.authorId,
-          actorId: session.user.id,
-          postId,
-          title: 'New Comment',
-          message: data.parentId ? 'replied to your comment' : 'commented on your post'
-        }
-      }).catch(console.error);
-    }
+      if (post.authorId !== session.user.id) {
+        await prisma.notification.create({
+          data: {
+            type: 'COMMENT',
+            userId: post.authorId,
+            title: 'New Comment',
+            message: data.parentId ? 'replied to your comment' : 'commented on your post',
+            data: { actorId: session.user.id, postId }
+          }
+        }).catch(console.error);
+      }
 
     // Analytics tracking would go here if needed
 
     // Transform to Comment format
     const transformedComment: Comment = {
       id: comment.id,
-      postId: comment.postId,
-      author: comment.author,
-      text: comment.text,
+      postId: comment.postId!,
+      author: {
+        id: comment.author.id,
+        name: comment.author.name || '',
+        username: comment.author.username,
+        avatar: comment.author.image || undefined,
+        verified: comment.author.verified
+      },
+      text: comment.content,
       createdAt: comment.createdAt.toISOString(),
       parentId: comment.parentId || undefined,
       stats: {
-        likes: 0,
+        fires: 0,
         replies: 0
       },
       viewerState: {
-        liked: false
+        fired: false
       }
     };
 
@@ -312,7 +329,7 @@ export async function POST(
     console.error('Comment POST error:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }
