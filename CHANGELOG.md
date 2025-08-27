@@ -14,4 +14,5 @@
 - Resolve feed API route type mismatches and enum casing errors.
 - Skip notification stream setup when unauthenticated to eliminate 401 errors.
 - Gracefully return an empty feed when the database is unavailable.
+- Show mock feed posts and composer in development when the feed service is offline.
 
