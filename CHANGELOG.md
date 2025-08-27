@@ -10,6 +10,6 @@
 - Categorize gamification notifications correctly to allow local builds.
 - Add Feed page and navigation link in sidebar.
 - Correct footer links for Cookies, Privacy, Terms, and Support pages.
- - Allow accessing the feed without authentication by returning public posts when no user session is present.
- - Resolve feed API route type mismatches and enum casing errors.
+- Temporarily allow accessing the feed without authentication.
+- Resolve feed API route type mismatches and enum casing errors.
 
