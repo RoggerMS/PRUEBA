@@ -10,6 +10,7 @@ import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { FeedPost, FeedResponse, FeedRanking } from '@/types/feed';
+import { mockFeedPosts } from './mockData';
 
 interface PostListProps {
   ranking?: FeedRanking;
@@ -30,6 +31,7 @@ export function PostList({
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const isIntersecting = useIntersection(loadMoreRef, { threshold: 0.1 });
+  const isDev = process.env.NODE_ENV !== 'production';
 
   // Build query key
   const queryKey = ['feed', ranking, authorId, hashtag].filter(Boolean);
@@ -183,6 +185,22 @@ export function PostList({
     );
   }
 
+  // Use mock posts in development when the query fails or returns empty
+  const fallbackPosts =
+    isDev && (isError || allPosts.length === 0) ? mockFeedPosts : null;
+
+  if (fallbackPosts) {
+    return (
+      <div className={cn('space-y-6', className)} ref={listRef}>
+        {fallbackPosts.map((post, index) => (
+          <div key={post.id} data-post-id={post.id}>
+            <PostCard post={post} priority={index < 3} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   // Error state
   if (isError) {
     return (
@@ -206,7 +224,7 @@ export function PostList({
     );
   }
 
-  // Empty state
+  // Empty state (production only)
   if (allPosts.length === 0) {
     return (
       <div className={cn('text-center py-12', className)}>

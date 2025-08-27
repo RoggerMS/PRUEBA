@@ -85,6 +85,11 @@ const VISIBILITY_OPTIONS = [
 
 export function Composer({ className }: ComposerProps) {
   const { data: session } = useSession();
+  const isDev = process.env.NODE_ENV !== 'production';
+  const user = session?.user ||
+    (isDev
+      ? { id: 'demo', name: 'Usuario Demo', image: 'https://placehold.co/100x100' }
+      : null);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -261,7 +266,7 @@ export function Composer({ className }: ComposerProps) {
     }
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <Card className={cn('p-6 text-center', className)}>
         <p className="text-gray-600">Inicia sesión para crear publicaciones</p>
@@ -276,13 +281,13 @@ export function Composer({ className }: ComposerProps) {
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10 ring-2 ring-transparent hover:ring-orange-200 transition-all duration-300">
-              <AvatarImage src={session.user?.image || ''} alt={session.user?.name || ''} />
+              <AvatarImage src={user.image || ''} alt={user.name || ''} />
               <AvatarFallback className="bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700">
-                {session.user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                {user.name?.split(' ').map(n => n[0]).join('') || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <p className="font-medium text-gray-900">{session.user?.name}</p>
+              <p className="font-medium text-gray-900">{user.name}</p>
               <p className="text-sm text-gray-500">¿Qué quieres compartir?</p>
             </div>
           </div>
