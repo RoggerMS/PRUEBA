@@ -168,10 +168,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error('Feed GET error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    const empty: FeedResponse = { posts: [], nextCursor: undefined, hasMore: false };
+    return NextResponse.json(empty, { status: 200 });
   }
 }
 
