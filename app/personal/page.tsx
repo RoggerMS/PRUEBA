@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -149,8 +149,8 @@ export default function PersonalSpacePage() {
   const progressToNextLevel = (currentLevelXP / nextLevelXP) * 100
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
@@ -213,7 +213,7 @@ export default function PersonalSpacePage() {
 
           {/* Achievements Tab */}
           <TabsContent value="achievements" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
               {mockAchievements.map((achievement) => (
                 <AchievementCard
                   key={achievement.id}
@@ -239,7 +239,7 @@ export default function PersonalSpacePage() {
 
           {/* Stats Tab */}
           <TabsContent value="stats" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               <Card>
                 <CardContent className="p-6 text-center space-y-2">
                   <BookOpen className="h-8 w-8 text-blue-500 mx-auto" />

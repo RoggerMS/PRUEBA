@@ -166,8 +166,8 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
@@ -323,7 +323,7 @@ export default function EventsPage() {
                   <TrendingUp className="h-5 w-5 text-purple-600" />
                   <h2 className="text-xl font-semibold text-gray-900">Eventos Destacados</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
                   {featuredEvents.map(event => (
                     <EventCard
                       key={event.id}
@@ -346,7 +346,7 @@ export default function EventsPage() {
               </div>
               
               {filteredEvents.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
                   {filteredEvents.map(event => (
                     <EventCard
                       key={event.id}

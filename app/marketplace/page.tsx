@@ -192,7 +192,7 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -231,7 +231,7 @@ export default function MarketplacePage() {
             {/* Filters */}
             <Card className="bg-white/70 backdrop-blur-sm mb-6">
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
@@ -291,7 +291,7 @@ export default function MarketplacePage() {
                   <Star className="w-6 h-6 text-yellow-500" />
                   Productos Destacados
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
                   {filteredProducts.filter(p => p.featured).map(product => (
                     <ProductCard 
                       key={product.id} 
@@ -308,7 +308,7 @@ export default function MarketplacePage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 Todos los Productos ({filteredProducts.length})
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
                 {filteredProducts.map(product => (
                   <ProductCard 
                     key={product.id} 

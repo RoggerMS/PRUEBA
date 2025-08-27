@@ -18,10 +18,13 @@ import {
   BookOpen, 
   Target,
   Plus,
-  Trash2
+  Trash2,
+  Eye,
+  Edit
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { gamificationService } from '@/services/gamificationService'
+import PublicProfileView from './PublicProfileView'
 
 interface UserProfile {
   id: string
@@ -51,6 +54,7 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
   const [newInterest, setNewInterest] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [isPublicView, setIsPublicView] = useState(false)
 
   const handleInputChange = (field: keyof UserProfile, value: string) => {
     setFormData(prev => ({
@@ -139,13 +143,73 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
     }
   }
 
+  // Convertir el perfil al formato requerido por PublicProfileView
+  const getPublicProfileData = () => {
+    return {
+      ...formData,
+      joinDate: 'Enero 2024',
+      level: 5,
+      xp: 1250,
+      nextLevelXP: 2000,
+      achievements: [
+        {
+          id: '1',
+          title: 'Primer Paso',
+          description: 'Completaste tu primer desafío',
+          icon: 'Trophy',
+          unlockedAt: '15 Ene 2024',
+          rarity: 'common' as const
+        },
+        {
+          id: '2',
+          title: 'Estudiante Dedicado',
+          description: 'Completaste 10 lecciones',
+          icon: 'Star',
+          unlockedAt: '20 Ene 2024',
+          rarity: 'rare' as const
+        }
+      ],
+      stats: [
+        { label: 'Desafíos Completados', value: '23', icon: 'Target' },
+        { label: 'Días Activo', value: '45', icon: 'Calendar' },
+        { label: 'Puntos Totales', value: '1,250', icon: 'Zap' }
+      ]
+    }
+  }
+
+  const toggleView = () => {
+    setIsPublicView(!isPublicView)
+  }
+
+  // Si está en vista pública, mostrar el componente PublicProfileView
+  if (isPublicView) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Vista Pública del Perfil</h2>
+          <Button onClick={toggleView} variant="outline">
+            <Edit className="h-4 w-4 mr-2" />
+            Volver a Editar
+          </Button>
+        </div>
+        <PublicProfileView user={getPublicProfileData()} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Editar Perfil
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Editar Perfil
+            </div>
+            <Button onClick={toggleView} variant="outline" size="sm">
+              <Eye className="h-4 w-4 mr-2" />
+              Ver como Público
+            </Button>
           </CardTitle>
           <CardDescription>
             Actualiza tu información personal y preferencias

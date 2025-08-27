@@ -177,8 +177,8 @@ export default function ForumPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -198,7 +198,7 @@ export default function ForumPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
             <Card className="bg-white/70 backdrop-blur-sm border-purple-200">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
@@ -258,14 +258,20 @@ export default function ForumPage() {
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-6 bg-white/70 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
+        <Card className="bg-white/70 backdrop-blur-sm mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Filter className="h-5 w-5 text-purple-600" />
+              Buscar y Filtrar Preguntas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="lg:col-span-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder="Buscar preguntas..."
+                    placeholder="Buscar preguntas, temas o palabras clave..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -273,75 +279,125 @@ export default function ForumPage() {
                 </div>
               </div>
               
-              <div className="flex flex-wrap gap-2">
-                <select 
-                  value={selectedSubject} 
+              <div>
+                <select
+                  value={selectedSubject}
                   onChange={(e) => setSelectedSubject(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
                 >
                   {subjects.map(subject => (
                     <option key={subject} value={subject}>{subject}</option>
                   ))}
                 </select>
-                
-                <select 
-                  value={selectedCareer} 
+              </div>
+              
+              <div>
+                <select
+                  value={selectedCareer}
                   onChange={(e) => setSelectedCareer(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
                 >
                   {careers.map(career => (
                     <option key={career} value={career}>{career}</option>
                   ))}
                 </select>
-                
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md bg-white"
+              </div>
+            </div>
+            
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="text-sm font-medium text-gray-700">Ordenar por:</span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSortBy('recent')}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    sortBy === 'recent'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
                 >
-                  <option value="recent">Más Recientes</option>
-                  <option value="votes">Más Votadas</option>
-                  <option value="answers">Más Respuestas</option>
-                  <option value="views">Más Vistas</option>
-                </select>
+                  Más Recientes
+                </button>
+                <button
+                  onClick={() => setSortBy('votes')}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    sortBy === 'votes'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Más Votadas
+                </button>
+                <button
+                  onClick={() => setSortBy('answers')}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    sortBy === 'answers'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Más Respuestas
+                </button>
+                <button
+                  onClick={() => setSortBy('views')}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    sortBy === 'views'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Más Vistas
+                </button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Questions List */}
-        <div className="space-y-4">
-          {sortedQuestions.map(question => (
-            <QuestionCard
-              key={question.id}
-              question={question}
-              onClick={() => handleQuestionSelect(question.id)}
-            />
-          ))}
-          
-          {sortedQuestions.length === 0 && (
-            <Card className="bg-white/70 backdrop-blur-sm">
-              <CardContent className="p-12 text-center">
-                <div className="text-gray-400 mb-4">
-                  <Search className="w-12 h-12 mx-auto" />
+        {/* Questions Section */}
+        <Card className="bg-white/70 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-purple-600" />
+                Preguntas del Foro ({sortedQuestions.length})
+              </div>
+              <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                {sortedQuestions.filter(q => !q.hasAcceptedAnswer).length} sin responder
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {sortedQuestions.map(question => (
+                <QuestionCard
+                  key={question.id}
+                  question={question}
+                  onClick={() => handleQuestionSelect(question.id)}
+                />
+              ))}
+              
+              {sortedQuestions.length === 0 && (
+                <div className="p-12 text-center">
+                  <div className="text-gray-400 mb-4">
+                    <Search className="w-12 h-12 mx-auto" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                    No se encontraron preguntas
+                  </h3>
+                  <p className="text-gray-500">
+                    Intenta ajustar tus filtros de búsqueda o haz la primera pregunta.
+                  </p>
+                  <Button 
+                    onClick={() => setShowAskQuestion(true)}
+                    className="mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Hacer Pregunta
+                  </Button>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  No se encontraron preguntas
-                </h3>
-                <p className="text-gray-500">
-                  Intenta ajustar tus filtros de búsqueda o haz la primera pregunta.
-                </p>
-                <Button 
-                  onClick={() => setShowAskQuestion(true)}
-                  className="mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Hacer Pregunta
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

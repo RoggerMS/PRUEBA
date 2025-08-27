@@ -35,25 +35,10 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Left Sidebar */}
         <Sidebar />
         
-        {/* Main Content Area */}
-        <main className="flex-1 min-h-screen">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Content (Quick Actions, Streak, Trending) */}
-              <div className="lg:col-span-3 space-y-6">
-                {Array.isArray(children) ? children[0] : null}
-              </div>
-              
-              {/* Main Feed */}
-              <div className="lg:col-span-6 space-y-6">
-                {Array.isArray(children) ? children[1] : children}
-              </div>
-              
-              {/* Right Content (Suggestions, Ads) */}
-              <div className="lg:col-span-3 space-y-6">
-                {Array.isArray(children) ? children[2] : null}
-              </div>
-            </div>
+        {/* Main Content Area - Full Width Responsive */}
+        <main className="flex-1 min-h-screen w-full">
+          <div className="w-full h-full">
+            {children}
           </div>
         </main>
       </div>

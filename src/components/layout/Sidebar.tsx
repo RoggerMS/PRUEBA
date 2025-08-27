@@ -10,21 +10,28 @@ import {
   MessageSquare,
   Users,
   Calendar,
-  GraduationCap,
-  ShoppingBag,
+  BookOpen,
+  ShoppingCart,
+  Gamepad2,
   Target,
   Trophy,
   Bot,
   TrendingUp,
   Bookmark,
-  ChevronLeft,
-  ChevronRight,
   Coins,
   Flame,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+  HelpCircle,
+  UserPlus,
+  Award,
   Star,
   Grid3X3,
-  Zap,
-} from 'lucide-react';
+  GraduationCap,
+  ShoppingBag,
+  Zap
+} from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -39,8 +46,8 @@ interface SidebarItem {
 
 const mainNavItems: SidebarItem[] = [
   { name: 'Inicio', href: '/', icon: Home },
-  { name: 'Perfil', href: '/profile', icon: User },
-  { name: 'Espacio Personal', href: '/personal-space', icon: Grid3X3, color: 'text-crunevo-600' },
+  { name: 'Perfil', href: '/personal', icon: User },
+  { name: 'Espacio Personal', href: '/personal', icon: Grid3X3, color: 'text-crunevo-600' },
   { name: 'Apuntes', href: '/notes', icon: FileText },
   { name: 'Foro', href: '/forum', icon: MessageSquare },
   { name: 'Clubes', href: '/clubs', icon: Users },
@@ -51,15 +58,21 @@ const mainNavItems: SidebarItem[] = [
 
 const gamificationItems: SidebarItem[] = [
   { name: 'Gamificación', href: '/gamification', icon: Zap, color: 'text-crunevo-600' },
-  { name: 'Misiones', href: '/missions', icon: Target, badge: '3' },
+  { name: 'Misiones', href: '/challenges', icon: Target, badge: '3' },
   { name: 'Ranking', href: '/ranking', icon: Trophy },
-  { name: 'Liga Académica', href: '/league', icon: Star },
+  { name: 'Liga Académica', href: '/league', icon: Award },
 ];
 
 const utilityItems: SidebarItem[] = [
   { name: 'CruneBot', href: '/crunebot', icon: Bot, color: 'text-crunevo-600' },
   { name: 'Tendencias', href: '/trending', icon: TrendingUp },
   { name: 'Guardados', href: '/bookmarks', icon: Bookmark },
+];
+
+const quickActionItems: SidebarItem[] = [
+  { name: 'Subir Apunte', href: '/notes/upload', icon: Upload },
+  { name: 'Hacer Pregunta', href: '/forum/ask', icon: HelpCircle },
+  { name: 'Crear Club', href: '/clubs/create', icon: UserPlus },
 ];
 
 export function Sidebar() {
@@ -129,14 +142,25 @@ export function Sidebar() {
           </Button>
         </div>
 
-        {/* User Crolars Balance */}
+        {/* User Crolars Balance - Enhanced Visibility */}
         {!isCollapsed && (
-          <div className="mb-6 p-3 bg-gradient-to-r from-crolars/10 to-crolars/5 rounded-lg border border-crolars/20">
-            <div className="flex items-center space-x-2">
-              <Coins className="w-5 h-5 text-crolars" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">Mis Crolars</p>
-                <p className="text-lg font-bold text-crolars">2,450</p>
+          <div className="mb-6 p-4 bg-gradient-to-r from-yellow-400/20 via-orange-400/15 to-yellow-500/20 rounded-xl border-2 border-yellow-400/30 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-yellow-400 rounded-full shadow-md">
+                  <Coins className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Mis Crolars</p>
+                  <p className="text-2xl font-bold text-yellow-600">2,450</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Saldo</p>
+                <div className="flex items-center space-x-1">
+                  <Star className="w-3 h-3 text-yellow-500" />
+                  <span className="text-xs font-medium text-gray-600">Premium</span>
+                </div>
               </div>
             </div>
           </div>
@@ -183,48 +207,30 @@ export function Sidebar() {
         </div>
 
         {/* Quick Actions */}
-        {!isCollapsed && (
-          <div className="mt-8">
+        <div className="mt-8">
+          {!isCollapsed && (
             <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Accesos Rápidos
             </h3>
-            <div className="space-y-2">
-              <Link
-                href="/notes/upload"
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-crunevo-600 hover:bg-crunevo-50 rounded-lg transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                <span>Subir Apunte</span>
-              </Link>
-              <Link
-                href="/forum/ask"
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-crunevo-600 hover:bg-crunevo-50 rounded-lg transition-colors"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Hacer Pregunta</span>
-              </Link>
-              <Link
-                href="/clubs/create"
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-crunevo-600 hover:bg-crunevo-50 rounded-lg transition-colors"
-              >
-                <Users className="w-4 h-4" />
-                <span>Crear Club</span>
-              </Link>
-            </div>
-          </div>
-        )}
+          )}
+          <nav className="space-y-1">
+            {quickActionItems.map((item) => (
+              <SidebarLink key={item.href} item={item} />
+            ))}
+          </nav>
+        </div>
 
-        {/* Weekly Streak Indicator */}
+        {/* Weekly Streak - Bottom Statistics */}
         {!isCollapsed && (
-          <div className="mt-8 p-3 bg-gradient-to-r from-fire/10 to-fire/5 rounded-lg border border-fire/20">
-            <div className="flex items-center space-x-2">
-              <Flame className="w-5 h-5 text-fire" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">Racha Semanal</p>
-                <p className="text-xs text-gray-600">5 de 7 días completados</p>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                  <div className="bg-fire h-1.5 rounded-full" style={{ width: '71%' }}></div>
+          <div className="mt-auto pt-4 border-t border-gray-200">
+            <div className="p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+              <div className="text-center space-y-1">
+                <div className="flex items-center justify-center space-x-2">
+                  <Flame className="h-5 w-5 text-orange-500" />
+                  <span className="text-sm font-medium text-orange-700">Racha Semanal</span>
                 </div>
+                <div className="text-2xl font-bold text-orange-600">7 días</div>
+                <div className="text-xs text-orange-600">¡Sigue así!</div>
               </div>
             </div>
           </div>

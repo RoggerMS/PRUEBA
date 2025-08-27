@@ -21,7 +21,11 @@ import {
   File,
   AlertCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  Globe,
+  Users,
+  Lock,
+  Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { gamificationService } from '@/services/gamificationService';
@@ -134,6 +138,29 @@ export function NotesUpload({ onClose, onSuccess }: NotesUploadProps) {
   const [tagInput, setTagInput] = useState('');
   const [price, setPrice] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [publishToFeed, setPublishToFeed] = useState(false);
+  const [feedVisibility, setFeedVisibility] = useState<'public' | 'followers' | 'private'>('public');
+
+  const visibilityOptions = [
+    {
+      value: 'public' as const,
+      label: 'Público',
+      icon: <Globe className="w-4 h-4" />,
+      description: 'Visible para todos los usuarios'
+    },
+    {
+      value: 'followers' as const,
+      label: 'Seguidores',
+      icon: <Users className="w-4 h-4" />,
+      description: 'Solo visible para tus seguidores'
+    },
+    {
+      value: 'private' as const,
+      label: 'Privado',
+      icon: <Lock className="w-4 h-4" />,
+      description: 'Solo visible para ti'
+    }
+  ];
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (selectedFiles: FileList | null) => {
@@ -234,7 +261,49 @@ export function NotesUpload({ onClose, onSuccess }: NotesUploadProps) {
         console.error('Error granting XP for note upload:', xpError);
       }
       
-      toast.success('Apunte subido exitosamente');
+      // Si se va a publicar en el feed, crear el post
+      if (publishToFeed) {
+        const feedPost = {
+          id: Date.now().toString(),
+          type: 'note' as const,
+          author: {
+            id: '1',
+            name: 'Usuario Actual',
+            username: '@usuario',
+            avatar: '/avatars/user.jpg',
+            verified: true,
+            career: selectedCareer || 'Carrera no especificada'
+          },
+          title,
+          content: description,
+          tags,
+          createdAt: new Date().toISOString(),
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          isLiked: false,
+          isBookmarked: false,
+          visibility: feedVisibility,
+          publishToFeed: true
+        };
+        
+        // Aquí se enviaría el post al feed
+        // onPostCreated?.(feedPost);
+        
+        try {
+          await gamificationService.grantXP(
+            'current-user-id',
+            25,
+            'create_post',
+            `post-${Date.now()}`,
+            'Publicó un apunte en el feed'
+          );
+        } catch (xpError) {
+          console.error('Error granting XP for post creation:', xpError);
+        }
+      }
+      
+      toast.success(publishToFeed ? 'Apunte subido y publicado en el feed exitosamente' : 'Apunte subido exitosamente');
       onSuccess();
     } catch (error) {
       toast.error('Error al subir el apunte');
@@ -437,6 +506,55 @@ export function NotesUpload({ onClose, onSuccess }: NotesUploadProps) {
               </p>
             </div>
 
+            {/* Feed Publication Options */}
+            <div className="space-y-4 pt-6 border-t">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Eye className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Publicar en el feed</span>
+                </div>
+                <Button
+                  variant={publishToFeed ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPublishToFeed(!publishToFeed)}
+                >
+                  {publishToFeed ? 'Sí' : 'No'}
+                </Button>
+              </div>
+
+              {publishToFeed && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Visibilidad en el feed</span>
+                    <Select value={feedVisibility} onValueChange={(value: 'public' | 'followers' | 'private') => setFeedVisibility(value)}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {visibilityOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <div className="flex items-center space-x-2">
+                              {option.icon}
+                              <span>{option.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {visibilityOptions.find(opt => opt.value === feedVisibility)?.description}
+                  </div>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500">
+                {publishToFeed 
+                  ? 'Este apunte aparecerá en el feed además de la biblioteca de apuntes.' 
+                  : 'Este apunte solo estará disponible en la biblioteca de apuntes.'}
+              </div>
+            </div>
+
             {/* Submit Buttons */}
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={onClose}>
@@ -455,7 +573,7 @@ export function NotesUpload({ onClose, onSuccess }: NotesUploadProps) {
                 ) : (
                   <>
                     <Upload className="w-4 h-4 mr-2" />
-                    Subir Apunte
+                    {publishToFeed ? 'Subir y Publicar' : 'Subir Apunte'}
                   </>
                 )}
               </Button>

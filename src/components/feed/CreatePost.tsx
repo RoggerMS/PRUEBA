@@ -1,20 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Image, FileText, HelpCircle, Send, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PlusCircle, X, Image as ImageIcon, FileText, HelpCircle, Send, Loader2, Globe, Users, Lock, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 
@@ -23,6 +23,59 @@ type PostType = 'text' | 'question' | 'note' | 'image';
 interface CreatePostProps {
   onPostCreated?: (post: any) => void;
 }
+
+interface Post {
+  id: string;
+  type: 'text' | 'question' | 'note' | 'image';
+  author: {
+    id: string;
+    name: string;
+    username: string;
+    avatar?: string;
+    verified: boolean;
+    career: string;
+  };
+  content: string;
+  title?: string;
+  tags: string[];
+  createdAt: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  isLiked: boolean;
+  isBookmarked: boolean;
+  imageUrl?: string;
+  visibility: 'public' | 'followers' | 'private';
+  publishToFeed?: boolean;
+}
+
+type VisibilityOption = {
+  value: 'public' | 'followers' | 'private';
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+};
+
+const visibilityOptions: VisibilityOption[] = [
+  {
+    value: 'public',
+    label: 'Público',
+    icon: <Globe className="w-4 h-4" />,
+    description: 'Visible para todos los usuarios'
+  },
+  {
+    value: 'followers',
+    label: 'Seguidores',
+    icon: <Users className="w-4 h-4" />,
+    description: 'Solo visible para tus seguidores'
+  },
+  {
+    value: 'private',
+    label: 'Privado',
+    icon: <Lock className="w-4 h-4" />,
+    description: 'Solo visible para ti'
+  }
+];
 
 const postTypes = [
   {
@@ -60,6 +113,8 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [visibility, setVisibility] = useState<'public' | 'followers' | 'private'>('public');
+  const [publishToFeed, setPublishToFeed] = useState(true);
 
   const handleAddTag = () => {
     if (currentTag.trim() && !tags.includes(currentTag.trim()) && tags.length < 5) {
@@ -96,14 +151,14 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
 
     try {
       // TODO: Implementar llamada a la API
-      const newPost = {
+      const newPost: Post = {
         id: Date.now().toString(),
         type: postType,
         author: {
           id: session?.user?.id || '1',
           name: session?.user?.name || 'Usuario',
           username: session?.user?.email?.split('@')[0] || 'usuario',
-          avatar: session?.user?.image,
+          avatar: session?.user?.image || undefined,
           verified: false,
           career: 'Mi Carrera'
         },
@@ -115,7 +170,9 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
         comments: 0,
         shares: 0,
         isLiked: false,
-        isBookmarked: false
+        isBookmarked: false,
+        visibility,
+        publishToFeed
       };
 
       // Simular delay de API
@@ -130,6 +187,8 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
       setCurrentTag('');
       setIsExpanded(false);
       setPostType('text');
+      setVisibility('public');
+      setPublishToFeed(true);
       
       toast.success('¡Publicación creada exitosamente!');
     } catch (error) {
@@ -275,6 +334,57 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
             )}
           </div>
 
+          {/* Privacy and Visibility Options */}
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Eye className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Visibilidad</span>
+              </div>
+              <Select value={visibility} onValueChange={(value: 'public' | 'followers' | 'private') => setVisibility(value)}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {visibilityOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center space-x-2">
+                        {option.icon}
+                        <span>{option.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {(postType === 'note' || postType === 'question') && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    {postType === 'note' ? 'Publicar apunte en el feed' : 'Publicar pregunta en el feed'}
+                  </span>
+                </div>
+                <Button
+                  variant={publishToFeed ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPublishToFeed(!publishToFeed)}
+                >
+                  {publishToFeed ? 'Sí' : 'No'}
+                </Button>
+              </div>
+            )}
+
+            <div className="text-xs text-gray-500">
+              {visibilityOptions.find(opt => opt.value === visibility)?.description}
+              {(postType === 'note' || postType === 'question') && !publishToFeed && (
+                <span className="block mt-1">
+                  Este {postType === 'note' ? 'apunte' : 'pregunta'} solo estará disponible en la sección correspondiente.
+                </span>
+              )}
+            </div>
+          </div>
+
           {/* Actions */}
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -299,12 +409,12 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Publicando...</span>
+                    <span>{publishToFeed ? 'Publicando...' : 'Guardando...'}</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
                     <Send className="w-4 h-4" />
-                    <span>Publicar</span>
+                    <span>{publishToFeed ? 'Publicar' : 'Guardar'}</span>
                   </div>
                 )}
               </Button>

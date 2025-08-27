@@ -15,7 +15,12 @@ import {
   BookOpen, 
   GraduationCap,
   Coins,
-  AlertCircle
+  AlertCircle,
+  DollarSign,
+  Globe,
+  Users,
+  Lock,
+  Eye
 } from 'lucide-react';
 
 interface AskQuestionProps {
@@ -54,6 +59,29 @@ export function AskQuestion({ onSubmit, onCancel }: AskQuestionProps) {
   });
   const [newTag, setNewTag] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [publishToFeed, setPublishToFeed] = useState(false);
+  const [feedVisibility, setFeedVisibility] = useState<'public' | 'followers' | 'private'>('public');
+
+  const visibilityOptions = [
+    {
+      value: 'public' as const,
+      label: 'Público',
+      icon: <Globe className="w-4 h-4" />,
+      description: 'Visible para todos los usuarios'
+    },
+    {
+      value: 'followers' as const,
+      label: 'Seguidores',
+      icon: <Users className="w-4 h-4" />,
+      description: 'Solo visible para tus seguidores'
+    },
+    {
+      value: 'private' as const,
+      label: 'Privado',
+      icon: <Lock className="w-4 h-4" />,
+      description: 'Solo visible para ti'
+    }
+  ];
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -90,7 +118,49 @@ export function AskQuestion({ onSubmit, onCancel }: AskQuestionProps) {
     e.preventDefault();
     if (validateForm()) {
       try {
-        onSubmit(formData);
+        // If publishing to feed, create a feed post
+        if (publishToFeed) {
+          const feedPost = {
+            id: Date.now().toString(),
+            type: 'question' as const,
+            author: {
+              id: '1',
+              name: 'Usuario Actual',
+              avatar: '/api/placeholder/32/32',
+              career: formData.career || 'Estudiante'
+            },
+            content: {
+              title: formData.title,
+              description: formData.content,
+              subject: formData.subject,
+              career: formData.career,
+              bounty: formData.bounty || undefined
+            },
+            tags: formData.tags,
+            timestamp: new Date().toISOString(),
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            bookmarks: 0,
+            visibility: feedVisibility,
+            publishToFeed: true
+          };
+          
+          // Award additional XP for publishing to feed
+          await gamificationService.grantXP(
+            'current-user',
+            10,
+            'feed_post',
+            Date.now().toString(),
+            'Pregunta publicada en el feed'
+          );
+        }
+        
+        onSubmit({
+          ...formData,
+          publishToFeed,
+          feedVisibility
+        });
         
         // Grant XP for asking a question
         await gamificationService.grantXP(
@@ -374,6 +444,56 @@ export function AskQuestion({ onSubmit, onCancel }: AskQuestionProps) {
             </CardContent>
           </Card>
 
+          {/* Feed Publication Options */}
+          <Card className="bg-white/70 backdrop-blur-sm mt-6">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Eye className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700">Publicar en el feed</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant={publishToFeed ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPublishToFeed(!publishToFeed)}
+                  >
+                    {publishToFeed ? 'Sí' : 'No'}
+                  </Button>
+                </div>
+
+                {publishToFeed && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Visibilidad en el feed</span>
+                      <select
+                        value={feedVisibility}
+                        onChange={(e) => setFeedVisibility(e.target.value as 'public' | 'followers' | 'private')}
+                        className="w-40 px-3 py-2 border rounded-md bg-white border-gray-300"
+                      >
+                        {visibilityOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {visibilityOptions.find(opt => opt.value === feedVisibility)?.description}
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs text-gray-500">
+                  {publishToFeed 
+                    ? 'Esta pregunta aparecerá en el feed además del foro.' 
+                    : 'Esta pregunta solo estará disponible en el foro.'}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Actions */}
           <div className="flex justify-end gap-4 mt-6">
             <Button 
@@ -387,7 +507,7 @@ export function AskQuestion({ onSubmit, onCancel }: AskQuestionProps) {
               type="submit"
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
-              Publicar Pregunta
+              {publishToFeed ? 'Preguntar y Publicar' : 'Publicar Pregunta'}
             </Button>
           </div>
         </form>

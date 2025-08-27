@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Flag, Link as LinkIcon, EyeOff } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Flag, Link as LinkIcon, EyeOff, CheckCircle, Globe, Users, Lock, FileText, HelpCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,7 +30,14 @@ interface Post {
     verified: boolean;
     career: string;
   };
-  content: string;
+  content: string | {
+    title?: string;
+    description?: string;
+    subject?: string;
+    category?: string;
+    price?: number;
+    bounty?: number;
+  };
   title?: string;
   tags: string[];
   createdAt: string;
@@ -40,6 +47,8 @@ interface Post {
   isLiked: boolean;
   isBookmarked: boolean;
   imageUrl?: string;
+  visibility?: 'public' | 'followers' | 'private';
+  publishToFeed?: boolean;
 }
 
 const mockPosts: Post[] = [
@@ -290,13 +299,39 @@ export function Feed() {
                       {post.author.name}
                     </Link>
                     {post.author.verified && (
-                      <Badge className="bg-crunevo-100 text-crunevo-700 text-xs">
-                        ✓
-                      </Badge>
+                      <CheckCircle className="w-4 h-4 text-blue-500" />
                     )}
-                    <Badge variant="outline" className="text-xs">
-                      {getPostTypeIcon(post.type)} {getPostTypeLabel(post.type)}
-                    </Badge>
+                    {/* Post Type Badge */}
+                    {post.type === 'question' && (
+                      <div className="flex items-center space-x-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
+                        <HelpCircle className="w-3 h-3" />
+                        <span>Pregunta</span>
+                      </div>
+                    )}
+                    {post.type === 'note' && (
+                      <div className="flex items-center space-x-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                        <FileText className="w-3 h-3" />
+                        <span>Apunte</span>
+                      </div>
+                    )}
+                    {post.type === 'text' && (
+                      <div className="flex items-center space-x-1 bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+                        <span>Post</span>
+                      </div>
+                    )}
+                    {/* Visibility Badge */}
+                    {post.visibility === 'followers' && (
+                      <div className="flex items-center space-x-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs">
+                        <Users className="w-3 h-3" />
+                        <span>Seguidores</span>
+                      </div>
+                    )}
+                    {post.visibility === 'private' && (
+                      <div className="flex items-center space-x-1 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
+                        <Lock className="w-3 h-3" />
+                        <span>Privado</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-500">
                     <span>@{post.author.username}</span>
@@ -338,14 +373,39 @@ export function Feed() {
 
             {/* Content */}
             <div className="mb-4">
-              {post.title && (
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {post.title}
-                </h3>
+              {/* Contenido específico por tipo */}
+              {post.type === 'question' && typeof post.content === 'object' && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg">{post.content.title}</h3>
+                  <p className="text-gray-700">{post.content.description}</p>
+                  {post.content.subject && (
+                    <p className="text-sm text-gray-600">Materia: {post.content.subject}</p>
+                  )}
+                  {post.content.bounty && (
+                    <p className="text-sm text-green-600 font-medium">Recompensa: {post.content.bounty} Crolars</p>
+                  )}
+                </div>
               )}
-              <p className="text-gray-700 leading-relaxed">
-                {post.content}
-              </p>
+              
+              {post.type === 'note' && typeof post.content === 'object' && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg">{post.content.title}</h3>
+                  <p className="text-gray-700">{post.content.description}</p>
+                  {post.content.category && (
+                    <p className="text-sm text-gray-600">Categoría: {post.content.category}</p>
+                  )}
+                  {post.content.price && (
+                    <p className="text-sm text-blue-600 font-medium">Precio: {post.content.price} Crolars</p>
+                  )}
+                </div>
+              )}
+              
+              {(post.type === 'text' || post.type === 'image') && (
+                <div className="space-y-2">
+                  {post.title && <h3 className="font-semibold text-lg">{post.title}</h3>}
+                  <p className="text-gray-700">{typeof post.content === 'string' ? post.content : ''}</p>
+                </div>
+              )}
             </div>
 
             {/* Tags */}
