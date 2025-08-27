@@ -22,13 +22,13 @@ export async function POST(
       where: {
         id: postId,
         OR: [
-          { visibility: 'public' },
-          { 
-            visibility: 'university',
-            author: { university: session.user.university }
+          { visibility: 'PUBLIC' },
+          {
+            visibility: 'UNIVERSITY',
+            author: { university: (session.user as any).university }
           },
           {
-            visibility: 'friends',
+            visibility: 'FRIENDS',
             author: {
               followers: {
                 some: { followerId: userId }

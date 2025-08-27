@@ -25,38 +25,38 @@ export async function POST(
     const data = sharePostSchema.parse(body);
 
     // Check if original post exists and user has access to it
-    const originalPost = await prisma.post.findFirst({
-      where: {
-        id: originalPostId,
-        OR: [
-          { visibility: 'public' },
-          { 
-            visibility: 'university',
-            author: { university: session.user.university }
-          },
-          {
-            visibility: 'friends',
-            author: {
-              followers: {
-                some: { followerId: session.user.id }
+      const originalPost = await prisma.post.findFirst({
+        where: {
+          id: originalPostId,
+          OR: [
+            { visibility: 'PUBLIC' },
+            {
+              visibility: 'UNIVERSITY',
+              author: { university: (session.user as any).university }
+            },
+            {
+              visibility: 'FRIENDS',
+              author: {
+                followers: {
+                  some: { followerId: session.user.id }
+                }
               }
+            },
+            { authorId: session.user.id }
+          ]
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              image: true,
+              verified: true
             }
-          },
-          { authorId: session.user.id }
-        ]
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            avatar: true,
-            verified: true
           }
         }
-      }
-    });
+      });
 
     if (!originalPost) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
@@ -67,9 +67,9 @@ export async function POST(
     // Create a new post that represents the share
     const sharePost = await prisma.post.create({
       data: {
-        type: 'post', // Shares are always of type 'post'
-        content: data.comment,
-        visibility: data.visibility,
+        type: 'TEXT', // Shares are stored as text posts
+        content: data.comment || '',
+        visibility: data.visibility.toUpperCase() as any,
         authorId: session.user.id
       },
       include: {
@@ -78,7 +78,7 @@ export async function POST(
             id: true,
             name: true,
             username: true,
-            avatar: true,
+            image: true,
             verified: true
           }
         },
@@ -93,37 +93,43 @@ export async function POST(
     });
 
     // Create notification for original post author (if not self-share)
-    if (originalPost.authorId !== session.user.id) {
-      await prisma.notification.create({
-        data: {
-          type: 'SHARE',
-          userId: originalPost.authorId,
-          actorId: session.user.id,
-          postId: originalPostId,
-          title: 'Post Shared',
-          message: 'shared your post'
-        }
-      }).catch(console.error);
-    }
+      if (originalPost.authorId !== session.user.id) {
+        await prisma.notification.create({
+          data: {
+            type: 'SYSTEM',
+            userId: originalPost.authorId,
+            title: 'Post Shared',
+            message: 'shared your post',
+            data: { actorId: session.user.id, postId: originalPostId }
+          }
+        }).catch(console.error);
+      }
 
     // Analytics tracking would go here if needed
 
     // Transform to FeedPost format
     const feedPost = {
       id: sharePost.id,
-      type: 'post' as const,
-      author: sharePost.author,
+      kind: 'post' as const,
+      author: {
+        id: sharePost.author.id,
+        name: sharePost.author.name,
+        username: sharePost.author.username,
+        avatar: sharePost.author.image || undefined,
+        verified: sharePost.author.verified
+      },
       createdAt: sharePost.createdAt.toISOString(),
-      content: sharePost.content || undefined,
-      visibility: sharePost.visibility as any,
+      text: sharePost.content || undefined,
+      visibility: (sharePost.visibility as string).toLowerCase() as any,
       stats: {
-        likes: sharePost._count.likes,
+        fires: sharePost._count.likes,
         comments: sharePost._count.comments,
-        bookmarks: sharePost._count.bookmarks,
+        shares: 0,
+        saves: sharePost._count.bookmarks,
         views: 0
       },
       viewerState: {
-        liked: false,
+        fired: false,
         saved: false,
         shared: true
       }
@@ -136,7 +142,7 @@ export async function POST(
     console.error('Share POST error:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+          { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }
