@@ -82,12 +82,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (query.author) {
-      whereClause.author = { username: query.author };
+      // Filter by author's username
+      whereClause.author = { is: { username: query.author } };
     }
 
     if (query.hashtag) {
+      // Our schema stores tags as a comma-separated string; use contains
       whereClause.tags = {
-        has: query.hashtag.toLowerCase()
+        contains: query.hashtag.toLowerCase()
       };
     }
 
@@ -123,7 +125,8 @@ export async function GET(request: NextRequest) {
             verified: true
           }
         },
-        ...(userId && {
+        // Only include user-specific relations when authenticated
+        ...(userId ? {
           likes: {
             where: { userId },
             select: { id: true }
@@ -132,7 +135,7 @@ export async function GET(request: NextRequest) {
             where: { userId },
             select: { id: true }
           }
-        }),
+        } : {}),
         _count: {
           select: {
             likes: true,
