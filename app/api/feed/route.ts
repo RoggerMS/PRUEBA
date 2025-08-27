@@ -28,33 +28,33 @@ const feedQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = session?.user?.id;
 
     const { searchParams } = new URL(request.url);
     const query = feedQuerySchema.parse(Object.fromEntries(searchParams));
 
     // Build where clause based on filters
-    const whereClause: any = {
-      // Visibility filter based on user's access level
-      OR: [
-        { visibility: 'public' },
-        { 
-          visibility: 'university',
-          // University filtering would go here
-        },
-        {
-          visibility: 'friends',
-          author: {
-            followers: {
-              some: { followerId: session.user.id }
-            }
-          }
-        },
-        { authorId: session.user.id } // User's own posts
-      ]
-    };
+    const whereClause: any = userId
+      ? {
+          // Visibility filter based on user's access level
+          OR: [
+            { visibility: 'public' },
+            {
+              visibility: 'university',
+              // University filtering would go here
+            },
+            {
+              visibility: 'friends',
+              author: {
+                followers: {
+                  some: { followerId: userId }
+                }
+              }
+            },
+            { authorId: userId } // User's own posts
+          ]
+        }
+      : { visibility: 'public' };
 
     // Apply additional filters
     if (query.kind) {
@@ -103,14 +103,16 @@ export async function GET(request: NextRequest) {
             verified: true
           }
         },
-        likes: {
-          where: { userId: session.user.id },
-          select: { id: true }
-        },
-        bookmarks: {
-          where: { userId: session.user.id },
-          select: { id: true }
-        },
+        ...(userId && {
+          likes: {
+            where: { userId },
+            select: { id: true }
+          },
+          bookmarks: {
+            where: { userId },
+            select: { id: true }
+          }
+        }),
 
         _count: {
           select: {
@@ -150,8 +152,8 @@ export async function GET(request: NextRequest) {
         views: 0
       },
       viewerState: {
-        fired: post.likes.length > 0,
-        saved: post.bookmarks.length > 0,
+        fired: userId ? post.likes.length > 0 : false,
+        saved: userId ? post.bookmarks.length > 0 : false,
         shared: false
       }
     }));
