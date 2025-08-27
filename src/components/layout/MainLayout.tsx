@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
@@ -13,18 +14,22 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const { status } = useSession();
+
   useEffect(() => {
-    // Initialize notification service
+    if (status !== 'authenticated') return;
+
+    // Initialize notification service only when authenticated
     notificationService.connect();
 
     // Request notification permissions
     notificationService.requestNotificationPermission();
-    
-    // Cleanup on unmount
+
+    // Cleanup on unmount or when session changes
     return () => {
       notificationService.disconnect();
     };
-  }, []);
+  }, [status]);
   
   return (
     <div className="min-h-screen bg-crunevo-gradient">
