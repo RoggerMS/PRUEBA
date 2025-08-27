@@ -19,9 +19,7 @@ const searchQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = session?.user?.id;
 
     const { searchParams } = new URL(request.url);
     const query = searchQuerySchema.parse(Object.fromEntries(searchParams));
@@ -31,23 +29,25 @@ export async function GET(request: NextRequest) {
     const hashtag = isHashtagSearch ? searchTerm.slice(1).toLowerCase() : null;
 
     // Build base where clause for visibility
-    const baseWhereClause: any = {
-      OR: [
-        { visibility: 'public' },
-        { 
-          visibility: 'university'
-        },
-        {
-          visibility: 'friends',
-          author: {
-            followers: {
-              some: { followerId: session.user.id }
-            }
-          }
-        },
-        { authorId: session.user.id } // User's own posts
-      ]
-    };
+    const baseWhereClause: any = userId
+      ? {
+          OR: [
+            { visibility: 'public' },
+            {
+              visibility: 'university'
+            },
+            {
+              visibility: 'friends',
+              author: {
+                followers: {
+                  some: { followerId: userId }
+                }
+              }
+            },
+            { authorId: userId } // User's own posts
+          ]
+        }
+      : { visibility: 'public' };
 
     // Add search conditions
     const searchConditions: any[] = [];
@@ -125,14 +125,16 @@ export async function GET(request: NextRequest) {
             verified: true
           }
         },
-        likes: {
-          where: { userId: session.user.id },
-          select: { id: true }
-        },
+        ...(userId && {
+          likes: {
+            where: { userId },
+            select: { id: true }
+          },
         bookmarks: {
-          where: { userId: session.user.id },
-          select: { id: true }
-        },
+            where: { userId },
+            select: { id: true }
+          }
+        }),
         _count: {
           select: {
             likes: true,
@@ -169,8 +171,8 @@ export async function GET(request: NextRequest) {
         saves: post._count.bookmarks
       },
       viewerState: {
-        fired: post.likes?.length > 0,
-        saved: post.bookmarks?.length > 0
+        fired: userId ? post.likes?.length > 0 : false,
+        saved: userId ? post.bookmarks?.length > 0 : false
       }
     })) as FeedPost[];
 
