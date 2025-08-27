@@ -7,10 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Progress } from '@/components/ui/progress'
-import ProfileEditor from '@/components/personal/ProfileEditor'
-import AchievementCard from '@/components/personal/AchievementCard'
-import StatsChart from '@/components/personal/StatsChart'
-import SettingsPanel from '@/components/personal/SettingsPanel'
+import ProfileEditor from '@/components/perfil/ProfileEditor'
+import AchievementCard from '@/components/perfil/AchievementCard'
+import StatsChart from '@/components/perfil/StatsChart'
+import SettingsPanel from '@/components/perfil/SettingsPanel'
 import { 
   User, 
   Trophy, 
@@ -130,7 +130,7 @@ const mockAchievements: Achievement[] = [
   }
 ]
 
-export default function PersonalSpacePage() {
+export default function PerfilPage() {
   const [activeTab, setActiveTab] = useState('profile')
   const [isEditing, setIsEditing] = useState(false)
 
@@ -154,7 +154,7 @@ export default function PersonalSpacePage() {
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Mi Espacio Personal
+            Mi Perfil
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Gestiona tu perfil, revisa tus logros y personaliza tu experiencia de aprendizaje
