@@ -79,6 +79,12 @@ class NotificationService {
   private async loadNotifications() {
     try {
       const response = await fetch('/api/notifications');
+      if (response.status === 401) {
+        // Usuario no autenticado, sin notificaciones
+        this.notifications = [];
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
         this.notifications = data.notifications.map((n: any) => ({
