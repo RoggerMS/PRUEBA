@@ -45,19 +45,21 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Hash password (stored separately if needed in the future)
-    await hash(validatedData.password, 12);
+    // Hash password
+    const hashedPassword = await hash(validatedData.password, 12);
 
-    // Create user without password field (Prisma User model has no password)
+    // Create user
     const user = await prisma.user.create({
       data: {
+        name: `${validatedData.firstName} ${validatedData.lastName}`.trim(),
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         username: validatedData.username,
         email: validatedData.email,
+        password: hashedPassword,
         birthDate: new Date(validatedData.birthDate),
         gender: validatedData.gender,
-        crolars: 1000, // Welcome bonus
+        crolars: 100, // Welcome bonus
         emailVerified: null, // Will be set when email is verified
         role: 'STUDENT'
       }

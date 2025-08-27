@@ -47,36 +47,24 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        try {
-          const user = await prisma.user.findUnique({
-            where: {
-              email: credentials.email
-            }
-          });
-
-          if (!user) {
-            return null;
-          }
-
-          // For now, we'll use a simple password check
-          // In production, you should store hashed passwords in a separate table
-          // or use a different authentication method
-          if (credentials.password !== 'demo123') {
-            return null;
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            username: user.username,
-            emailVerified: user.emailVerified
-          };
-        } catch (error) {
-          console.error('Auth error:', error);
+        const user = await getUserByEmail(credentials.email);
+        if (!user || !user.password) {
           return null;
         }
+
+        // Verify password using bcrypt
+        const isPasswordValid = await verifyPassword(credentials.password, user.password);
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          username: user.username,
+          image: user.image,
+        };
       }
     })
   ],
@@ -161,10 +149,27 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 // Helper function to get user by email
-export async function getUserByEmail(email: string): Promise<User | null> {
+export async function getUserByEmail(email: string): Promise<{
+  id: string;
+  email: string;
+  name: string | null;
+  username: string;
+  image: string | null;
+  password: string | null;
+  emailVerified: Date | null;
+} | null> {
   try {
     return await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        username: true,
+        image: true,
+        password: true,
+        emailVerified: true
+      }
     });
   } catch (error) {
     console.error('Error getting user by email:', error);
@@ -199,6 +204,7 @@ export async function createUser(userData: {
     return await prisma.user.create({
       data: {
         email: userData.email,
+        password: hashedPassword,
         name: userData.name,
         username: userData.username,
         birthDate: userData.dateOfBirth,

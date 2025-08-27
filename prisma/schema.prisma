@@ -51,6 +51,7 @@ model User {
   emailVerified DateTime?
   image         String?
   username      String    @unique
+  password      String?   // Hashed password for credentials login
   firstName     String?
   lastName      String?
   birthDate     DateTime?
