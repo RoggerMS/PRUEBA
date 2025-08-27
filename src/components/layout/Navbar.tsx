@@ -102,7 +102,7 @@ export function Navbar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center">
+                  <Link href="/perfil" className="flex items-center">
                     <User className="mr-2 h-4 w-4" />
                     <span>Perfil</span>
                   </Link>
@@ -162,7 +162,7 @@ export function Navbar() {
                 <span>Mensajes</span>
               </Link>
               <Link
-                href="/profile"
+                href="/perfil"
                 className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

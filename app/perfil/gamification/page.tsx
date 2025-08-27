@@ -247,7 +247,7 @@ const mockLeaderboard: LeaderboardType = {
   ]
 }
 
-export default function GamificationPage() {
+export default function PerfilGamificationPage() {
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -290,7 +290,7 @@ export default function GamificationPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Trophy className="h-8 w-8 text-yellow-500" />
-            Sistema de Gamificación
+            Gamificación del Perfil
           </h1>
           <p className="text-gray-600 mt-2">
             Sigue tu progreso, desbloquea logros y compite con otros estudiantes

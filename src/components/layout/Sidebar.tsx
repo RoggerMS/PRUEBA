@@ -48,7 +48,7 @@ interface SidebarItem {
 const mainNavItems: SidebarItem[] = [
   { name: 'Inicio', href: '/', icon: Home },
   { name: 'Feed', href: '/feed', icon: Rss },
-  { name: 'Perfil', href: '/personal', icon: User },
+  { name: 'Perfil', href: '/perfil', icon: User },
   { name: 'Espacio Personal', href: '/workspace', icon: Grid3X3, color: 'text-crunevo-600' },
   { name: 'Apuntes', href: '/notes', icon: FileText },
   { name: 'Foro', href: '/forum', icon: MessageSquare },
@@ -59,7 +59,7 @@ const mainNavItems: SidebarItem[] = [
 ];
 
 const gamificationItems: SidebarItem[] = [
-  { name: 'Gamificación', href: '/gamification', icon: Zap, color: 'text-crunevo-600' },
+  { name: 'Gamificación', href: '/perfil/gamification', icon: Zap, color: 'text-crunevo-600' },
   { name: 'Misiones', href: '/challenges', icon: Target, badge: '3' },
   { name: 'Ranking', href: '/ranking', icon: Trophy },
   { name: 'Liga Académica', href: '/league', icon: Award },
