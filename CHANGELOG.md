@@ -8,4 +8,6 @@
 - Align gamification leaderboard and achievement data with defined types.
 - Guard optional marketplace product properties to avoid undefined access.
 - Categorize gamification notifications correctly to allow local builds.
+- Add Feed page and navigation link in sidebar.
+- Correct footer links for Cookies, Privacy, Terms, and Support pages.
 

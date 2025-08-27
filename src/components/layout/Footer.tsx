@@ -22,20 +22,20 @@ export function Footer() {
               >
                 Sobre
               </Link>
-              <Link 
-                href="/legal/cookies" 
+              <Link
+                href="/cookies"
                 className="text-gray-600 hover:text-crunevo-600 transition-colors"
               >
                 Cookies
               </Link>
-              <Link 
-                href="/legal/privacy" 
+              <Link
+                href="/privacy"
                 className="text-gray-600 hover:text-crunevo-600 transition-colors"
               >
                 Privacidad
               </Link>
-              <Link 
-                href="/legal/terms" 
+              <Link
+                href="/terms"
                 className="text-gray-600 hover:text-crunevo-600 transition-colors"
               >
                 Términos
@@ -52,8 +52,8 @@ export function Footer() {
               <div className="flex items-center space-x-4">
                 <span>Versión 1.0.0</span>
                 <span>•</span>
-                <Link 
-                  href="/support" 
+                <Link
+                  href="/help"
                   className="hover:text-crunevo-600 transition-colors"
                 >
                   Soporte
