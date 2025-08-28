@@ -117,24 +117,24 @@ const mockComments = [
 const mockAttendees = [
   {
     id: "1",
-    name: "Ana Martín",
-    avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20profile%20avatar%20female%20academic&image_size=square",
-    role: "Estudiante de Ingeniería",
-    university: "Universidad Técnica"
+    name: "Ana Quispe",
+    avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20profile%20avatar%20female%20academic%20peruvian&image_size=square",
+    role: "Estudiante de Educación Inicial",
+    university: "La Cantuta"
   },
   {
     id: "2",
-    name: "Carlos Ruiz",
-    avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20profile%20avatar%20male%20academic&image_size=square",
-    role: "Estudiante de Ciencias",
-    university: "Universidad Nacional"
+    name: "Carlos Mamani",
+    avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20profile%20avatar%20male%20academic%20peruvian&image_size=square",
+    role: "Estudiante de Matemática e Informática",
+    university: "La Cantuta"
   },
   {
     id: "3",
-    name: "Laura Silva",
-    avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20profile%20avatar%20female%20tech&image_size=square",
-    role: "Desarrolladora",
-    university: "Profesional"
+    name: "Laura Huamán",
+    avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20profile%20avatar%20female%20tech%20peruvian&image_size=square",
+    role: "Estudiante de Educación Física",
+    university: "La Cantuta"
   }
 ];
 

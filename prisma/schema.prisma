@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -117,6 +117,7 @@ model User {
   referrals     Referral[] @relation("ReferralUser")
   referredBy    Referral[] @relation("ReferredUser")
   personalSpace PersonalSpace?
+  workspaceBoards WorkspaceBoard[]
   
   @@map("users")
 }
@@ -781,6 +782,113 @@ model SpaceBlock {
 }
 
 // ============================================================================
+// WORKSPACE SYSTEM
+// ============================================================================
+
+model WorkspaceBoard {
+  id        String    @id @default(cuid())
+  name      String
+  isDefault Boolean   @default(false)
+  
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relations
+  blocks    WorkspaceBlock[]
+  
+  @@map("workspace_boards")
+}
+
+model WorkspaceBlock {
+  id      String           @id @default(cuid())
+  type    WorkspaceBlockType
+  title   String
+  x       Int              @default(0)
+  y       Int              @default(0)
+  w       Int              @default(300)
+  h       Int              @default(200)
+  zIndex  Int              @default(1)
+  locked  Boolean          @default(false)
+  
+  boardId String
+  board   WorkspaceBoard   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  
+  // Relations
+  docsPages     DocsPage[]
+  kanbanColumns KanbanColumn[]
+  frasesItems   FrasesItem[]
+  
+  @@map("workspace_blocks")
+}
+
+model DocsPage {
+  id       String         @id @default(cuid())
+  title    String         @default("Sin título")
+  content  String         @default("")
+  orderIndex Int          @default(0)
+  
+  blockId  String
+  block    WorkspaceBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  @@map("docs_pages")
+}
+
+model KanbanColumn {
+  id         String         @id @default(cuid())
+  title      String
+  orderIndex Int            @default(0)
+  
+  blockId    String
+  block      WorkspaceBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  
+  // Relations
+  cards      KanbanCard[]
+  
+  @@map("kanban_columns")
+}
+
+model KanbanCard {
+  id          String       @id @default(cuid())
+  title       String
+  description String       @default("")
+  orderIndex  Int          @default(0)
+  
+  columnId    String
+  column      KanbanColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  @@map("kanban_cards")
+}
+
+model FrasesItem {
+  id      String         @id @default(cuid())
+  content String
+  tags    Json           @default("[]")
+  
+  blockId String
+  block   WorkspaceBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  
+  @@map("frases_items")
+}
+
+// ============================================================================
 // NOTIFICATIONS
 // ============================================================================
 
@@ -940,6 +1048,12 @@ enum BlockType {
   CALENDAR
   CHART
   QUOTE
+}
+
+enum WorkspaceBlockType {
+  DOCS
+  KANBAN
+  FRASES
 }
 
 enum NotificationType {

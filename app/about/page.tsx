@@ -10,23 +10,23 @@ export default function AboutPage() {
   const features = [
     {
       icon: BookOpen,
-      title: 'Biblioteca de Apuntes',
-      description: 'Accede y comparte apuntes de calidad con toda la comunidad estudiantil.'
+      title: 'Recursos Pedagógicos',
+      description: 'Accede y comparte materiales educativos, planes de clase y recursos didácticos cantutinos.'
     },
     {
       icon: MessageSquare,
-      title: 'Foro Estudiantil',
-      description: 'Conecta con otros estudiantes, resuelve dudas y participa en discusiones académicas.'
+      title: 'Foro Educativo',
+      description: 'Conecta con futuros docentes, comparte experiencias pedagógicas y resuelve dudas académicas.'
     },
     {
       icon: ShoppingBag,
-      title: 'Marketplace',
-      description: 'Compra y vende libros, materiales y servicios entre estudiantes.'
+      title: 'Marketplace Educativo',
+      description: 'Intercambia libros pedagógicos, materiales didácticos y servicios educativos.'
     },
     {
       icon: Trophy,
-      title: 'Gamificación',
-      description: 'Gana Crolars y desbloquea logros mientras participas en la plataforma.'
+      title: 'Logros Cantutinos',
+      description: 'Gana Crolars y desbloquea logros mientras fortaleces tu formación docente.'
     }
   ];
 
@@ -54,10 +54,10 @@ export default function AboutPage() {
   ];
 
   const stats = [
-    { number: '10,000+', label: 'Estudiantes Activos' },
+    { number: '10,000+', label: 'Estudiantes Cantutinos' },
     { number: '50,000+', label: 'Apuntes Compartidos' },
-    { number: '25+', label: 'Universidades' },
-    { number: '100+', label: 'Carreras Representadas' }
+    { number: '7', label: 'Facultades de La Cantuta' },
+    { number: '60+', label: 'Programas de Pregrado' }
   ];
 
   return (
@@ -101,9 +101,9 @@ export default function AboutPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 leading-relaxed text-lg">
-                Democratizar el acceso al conocimiento universitario en Perú, 
-                creando una plataforma donde los estudiantes puedan colaborar, 
-                aprender y crecer juntos, sin importar su universidad o carrera.
+                Fortalecer la comunidad educativa de La Cantuta y democratizar el acceso 
+                al conocimiento pedagógico en Perú, creando una plataforma donde los futuros 
+                educadores puedan colaborar, compartir experiencias y crecer profesionalmente.
               </p>
             </CardContent>
           </Card>
@@ -117,9 +117,9 @@ export default function AboutPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 leading-relaxed text-lg">
-                Ser la red estudiantil más grande de Latinoamérica, 
-                transformando la manera en que los universitarios se conectan, 
-                estudian y se preparan para su futuro profesional.
+                Ser la plataforma educativa líder que conecte a todos los estudiantes 
+                de La Cantuta y universidades pedagógicas del Perú, transformando la 
+                formación docente y fortaleciendo la educación nacional.
               </p>
             </CardContent>
           </Card>
@@ -191,21 +191,21 @@ export default function AboutPage() {
           <CardContent className="prose prose-lg max-w-none">
             <div className="text-gray-700 space-y-4">
               <p>
-                CRUNEVO nació en 2024 con una visión clara: crear la primera plataforma 
-                estudiantil integral diseñada específicamente para universitarios peruanos. 
-                Reconocimos que los estudiantes necesitaban más que solo redes sociales 
-                tradicionales; necesitaban un espacio dedicado al crecimiento académico y profesional.
+                CRUNEVO nació en 2024 en el corazón de Chosica, inspirado por la rica tradición 
+                educativa de la Universidad Nacional de Educación Enrique Guzmán y Valle "La Cantuta". 
+                Reconocimos que los futuros educadores del Perú necesitaban una plataforma que 
+                fortaleciera su formación pedagógica y los conectara con la comunidad educativa nacional.
               </p>
               <p>
-                Comenzamos como un proyecto universitario y rápidamente evolucionamos hacia 
-                una plataforma completa que integra biblioteca de apuntes, foros de discusión, 
-                marketplace estudiantil y un sistema de gamificación único con nuestra moneda 
-                virtual "Crolars".
+                Comenzamos como un proyecto estudiantil cantutino y evolucionamos hacia una 
+                plataforma integral que integra recursos pedagógicos, foros académicos especializados 
+                en educación, marketplace de servicios educativos y un sistema de gamificación 
+                único con nuestra moneda virtual "Crolars".
               </p>
               <p>
-                Hoy, CRUNEVO conecta a miles de estudiantes de diferentes universidades 
-                peruanas, facilitando el intercambio de conocimiento y creando oportunidades 
-                de colaboración que trascienden las barreras institucionales.
+                Hoy, CRUNEVO conecta a miles de estudiantes de La Cantuta y otras instituciones 
+                pedagógicas del Perú, fortaleciendo la formación docente y contribuyendo al 
+                desarrollo de la educación nacional desde sus raíces en Chosica.
               </p>
             </div>
           </CardContent>

@@ -118,20 +118,20 @@ export default function ContactPage() {
 
   const faqItems = [
     {
-      question: "¿Cómo puedo recuperar mi contraseña?",
-      answer: "Visita la página de inicio de sesión y haz clic en 'Olvidé mi contraseña'."
+      question: "¿Cómo puedo registrarme con mi correo de La Cantuta?",
+      answer: "Usa tu correo institucional @une.edu.pe para registrarte y acceder a todas las funciones de la plataforma."
     },
     {
-      question: "¿CRUNEVO es gratuito?",
-      answer: "Sí, CRUNEVO es completamente gratuito para todos los estudiantes universitarios."
+      question: "¿CRUNEVO es gratuito para estudiantes cantutinos?",
+      answer: "Sí, CRUNEVO es completamente gratuito para todos los estudiantes de La Cantuta y universidades pedagógicas del Perú."
     },
     {
       question: "¿Cómo puedo ganar más Crolars?",
-      answer: "Participa activamente en foros, completa desafíos y contribuye con contenido de calidad."
+      answer: "Participa en foros educativos, comparte recursos pedagógicos, completa desafíos académicos y contribuye con contenido de calidad."
     },
     {
-      question: "¿Mi universidad está disponible?",
-      answer: "Trabajamos constantemente para agregar más universidades peruanas a nuestra plataforma."
+      question: "¿Puedo encontrar recursos específicos de mi facultad?",
+      answer: "Sí, tenemos recursos organizados por las 7 facultades de La Cantuta y sus respectivos programas de pregrado."
     }
   ];
 

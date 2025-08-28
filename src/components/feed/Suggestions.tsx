@@ -45,8 +45,8 @@ const mockUsers: User[] = [
     id: '1',
     name: 'Diego Vargas',
     username: 'diego_v',
-    avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20portrait%20male%20engineering&image_size=square',
-    career: 'Ingeniería Civil',
+    avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20portrait%20male%20education&image_size=square',
+    career: 'Matemática e Informática',
     followers: 234,
     isFollowing: false,
     verified: true
@@ -55,16 +55,16 @@ const mockUsers: User[] = [
     id: '2',
     name: 'Sofía Herrera',
     username: 'sofia_h',
-    career: 'Arquitectura',
+    career: 'Educación Inicial',
     followers: 189,
     isFollowing: false,
     verified: false
   },
   {
     id: '3',
-    name: 'Roberto Chen',
-    username: 'roberto_c',
-    career: 'Medicina',
+    name: 'Roberto Quispe',
+    username: 'roberto_q',
+    career: 'Educación Física',
     followers: 456,
     isFollowing: false,
     verified: true
@@ -74,19 +74,19 @@ const mockUsers: User[] = [
 const mockClubs: Club[] = [
   {
     id: '1',
-    name: 'Programadores UNMSM',
-    description: 'Comunidad de estudiantes de programación',
-    members: 1247,
+    name: 'Informática La Cantuta',
+    description: 'Comunidad de estudiantes de Informática y Matemática e Informática',
+    members: 847,
     category: 'Tecnología',
     isJoined: false,
-    avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=programming%20club%20logo%20modern%20tech&image_size=square'
+    avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=programming%20club%20logo%20modern%20tech%20education&image_size=square'
   },
   {
     id: '2',
-    name: 'Medicina Integral',
-    description: 'Recursos y discusiones médicas',
-    members: 892,
-    category: 'Salud',
+    name: 'Futuros Educadores',
+    description: 'Recursos pedagógicos y metodologías de enseñanza',
+    members: 1234,
+    category: 'Educación',
     isJoined: false
   }
 ];
@@ -94,20 +94,20 @@ const mockClubs: Club[] = [
 const mockCourses: Course[] = [
   {
     id: '1',
-    title: 'Cálculo Diferencial Avanzado',
-    instructor: 'Dr. María López',
+    title: 'Didáctica de las Matemáticas',
+    instructor: 'Mg. María López Cantuta',
     rating: 4.8,
     students: 156,
-    price: 250,
-    thumbnail: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=mathematics%20calculus%20course%20educational&image_size=landscape_4_3'
+    price: 180,
+    thumbnail: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=mathematics%20teaching%20pedagogy%20educational%20classroom&image_size=landscape_4_3'
   },
   {
     id: '2',
-    title: 'Anatomía Humana Básica',
-    instructor: 'Dr. Carlos Mendoza',
+    title: 'Psicología del Aprendizaje',
+    instructor: 'Dr. Carlos Mendoza Ríos',
     rating: 4.9,
     students: 203,
-    price: 180
+    price: 150
   }
 ];
 

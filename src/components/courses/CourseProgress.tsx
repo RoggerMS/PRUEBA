@@ -75,15 +75,15 @@ const mockProgressStats: ProgressStats = {
 const mockAchievements: Achievement[] = [
   {
     id: "1",
-    title: "Primer Curso",
-    description: "Completa tu primer curso",
+    title: "Futuro Educador",
+    description: "Completa tu primer curso pedagógico",
     icon: "🎓",
     earned: true,
     earnedDate: "2024-01-20"
   },
   {
     id: "2",
-    title: "Racha de 7 días",
+    title: "Disciplina Cantutina",
     description: "Estudia 7 días consecutivos",
     icon: "🔥",
     earned: true,
@@ -91,16 +91,16 @@ const mockAchievements: Achievement[] = [
   },
   {
     id: "3",
-    title: "Madrugador",
-    description: "Estudia antes de las 8 AM",
+    title: "Madrugador de Chosica",
+    description: "Estudia antes de las 8 AM como buen cantutino",
     icon: "🌅",
     earned: true,
     earnedDate: "2024-01-15"
   },
   {
     id: "4",
-    title: "Velocista",
-    description: "Completa 10 lecciones en un día",
+    title: "Pedagogo Veloz",
+    description: "Completa 10 lecciones pedagógicas en un día",
     icon: "⚡",
     earned: false,
     progress: 7,
@@ -108,8 +108,8 @@ const mockAchievements: Achievement[] = [
   },
   {
     id: "5",
-    title: "Explorador",
-    description: "Inscríbete en 5 cursos diferentes",
+    title: "Explorador de Facultades",
+    description: "Estudia materias de 5 facultades diferentes",
     icon: "🗺️",
     earned: false,
     progress: 4,
@@ -117,8 +117,8 @@ const mockAchievements: Achievement[] = [
   },
   {
     id: "6",
-    title: "Maestro",
-    description: "Obtén calificación perfecta en 5 quizzes",
+    title: "Maestro de La Cantuta",
+    description: "Obtén calificación perfecta en 5 evaluaciones",
     icon: "👑",
     earned: false,
     progress: 2,
@@ -139,47 +139,47 @@ const mockWeeklyActivity: WeeklyActivity[] = [
 const mockCourseProgress: CourseProgressSummary[] = [
   {
     id: "1",
-    title: "Cálculo Diferencial e Integral",
-    thumbnail: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=calculus%20mathematics%20education%20blackboard%20formulas&image_size=square",
+    title: "Didáctica de las Matemáticas",
+    thumbnail: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=mathematics%20teaching%20classroom%20blackboard%20students%20education&image_size=square",
     progress: 75,
     completedLessons: 34,
     totalLessons: 45,
     lastAccessed: "2024-01-25",
     timeSpent: "18h 45m",
-    category: "Matemáticas"
+    category: "Pedagogía"
   },
   {
     id: "2",
-    title: "Física Cuántica Básica",
-    thumbnail: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=quantum%20physics%20atoms%20particles%20science%20laboratory&image_size=square",
+    title: "Psicología Educativa",
+    thumbnail: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=educational%20psychology%20children%20learning%20classroom%20development&image_size=square",
     progress: 100,
     completedLessons: 28,
     totalLessons: 28,
     lastAccessed: "2024-01-24",
     timeSpent: "12h 30m",
-    category: "Ciencias"
+    category: "Psicología"
   },
   {
     id: "3",
-    title: "Química Orgánica Avanzada",
-    thumbnail: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=organic%20chemistry%20molecules%20laboratory%20compounds&image_size=square",
+    title: "Metodología de la Investigación Educativa",
+    thumbnail: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=educational%20research%20methodology%20books%20data%20analysis&image_size=square",
     progress: 45,
     completedLessons: 23,
     totalLessons: 52,
     lastAccessed: "2024-01-23",
     timeSpent: "10h 15m",
-    category: "Ciencias"
+    category: "Investigación"
   },
   {
     id: "4",
-    title: "Historia del Arte Moderno",
-    thumbnail: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20art%20gallery%20paintings%20sculptures%20museum&image_size=square",
+    title: "Historia de la Educación Peruana",
+    thumbnail: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=peruvian%20education%20history%20school%20traditional%20classroom&image_size=square",
     progress: 20,
     completedLessons: 5,
     totalLessons: 24,
     lastAccessed: "2024-01-22",
     timeSpent: "4h 00m",
-    category: "Humanidades"
+    category: "Historia Educativa"
   }
 ];
 

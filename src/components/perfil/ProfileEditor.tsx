@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
   User, 
   Camera, 
@@ -20,20 +21,24 @@ import {
   Plus,
   Trash2,
   Eye,
-  Edit
+  Edit,
+  GraduationCap
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { gamificationService } from '@/services/gamificationService'
 import PublicProfileView from './PublicProfileView'
+import { CANTUTA_FACULTIES, PERU_CITIES, getProgramsByFaculty, getFacultyByProgram, isValidFacultyProgramCombination } from '@/data/cantuta-data'
 
 interface UserProfile {
   id: string
   name: string
   email: string
   avatar: string
+  banner?: string
   bio: string
   location: string
   university: string
+  faculty?: string
   major: string
   interests: string[]
   socialLinks: {
@@ -50,10 +55,11 @@ interface ProfileEditorProps {
 }
 
 export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEditorProps) {
-  const [formData, setFormData] = useState<UserProfile>(profile)
+  const [formData, setFormData] = useState<UserProfile & { faculty?: string }>({ ...profile, faculty: profile.faculty || '' })
   const [newInterest, setNewInterest] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const [isPublicView, setIsPublicView] = useState(false)
 
   const handleInputChange = (field: keyof UserProfile, value: string) => {
@@ -111,6 +117,27 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
     }
   }
 
+  const handleBannerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('La imagen del banner debe ser menor a 10MB')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setBannerPreview(result)
+        setFormData(prev => ({
+          ...prev,
+          banner: result
+        }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSave = async () => {
     setIsLoading(true)
     try {
@@ -125,6 +152,20 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
         toast.error('El email no es válido')
+        return
+      }
+
+      // Validación de combinación facultad-programa
+      if (formData.faculty && formData.major) {
+        if (!isValidFacultyProgramCombination(formData.faculty, formData.major)) {
+          toast.error('La combinación de facultad y programa seleccionada no es válida para La Cantuta')
+          return
+        }
+      }
+
+      // Validación de email institucional
+      if (formData.email && !formData.email.endsWith('@une.edu.pe')) {
+        toast.error('Debes usar tu correo institucional de La Cantuta (@une.edu.pe)')
         return
       }
 
@@ -216,6 +257,43 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Banner Section */}
+          <div className="space-y-3">
+            <div className="relative">
+              <div className="w-full h-32 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg overflow-hidden">
+                {(bannerPreview || formData.banner) && (
+                  <img 
+                    src={bannerPreview || formData.banner} 
+                    alt="Banner" 
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <label className="absolute top-2 right-2 cursor-pointer">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 w-8 rounded-full p-0 bg-white/80 hover:bg-white"
+                  type="button"
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium">Banner del Perfil</h4>
+              <p className="text-xs text-gray-600">
+                Sube una imagen de hasta 10MB en formato JPG, PNG o GIF. Recomendado: 1200x300px
+              </p>
+            </div>
+          </div>
+
           {/* Avatar Section */}
           <div className="flex items-center space-x-4">
             <div className="relative">
@@ -278,13 +356,16 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
               <Label htmlFor="location">Ubicación</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  placeholder="Ciudad, País"
-                  className="pl-10"
-                />
+                <Select value={formData.location} onValueChange={(value) => handleInputChange('location', value)}>
+                  <SelectTrigger className="pl-10">
+                    <SelectValue placeholder="Selecciona tu ciudad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERU_CITIES.map((city) => (
+                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-2">
@@ -293,24 +374,50 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
                 <BookOpen className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="university"
-                  value={formData.university}
-                  onChange={(e) => handleInputChange('university', e.target.value)}
-                  placeholder="Nombre de tu universidad"
-                  className="pl-10"
+                  value="Universidad Nacional de Educación Enrique Guzmán y Valle (La Cantuta)"
+                  disabled
+                  className="pl-10 bg-gray-50"
                 />
               </div>
             </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="major">Carrera</Label>
+            <div className="space-y-2">
+              <Label htmlFor="faculty">Facultad</Label>
+              <div className="relative">
+                <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Select value={formData.faculty} onValueChange={(value) => {
+                  handleInputChange('faculty', value)
+                  // Reset major when faculty changes
+                  handleInputChange('major', '')
+                }}>
+                  <SelectTrigger className="pl-10">
+                    <SelectValue placeholder="Selecciona tu facultad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CANTUTA_FACULTIES.map((faculty) => (
+                      <SelectItem key={faculty.id} value={faculty.name}>{faculty.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="major">Programa de Pregrado</Label>
               <div className="relative">
                 <Target className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="major"
-                  value={formData.major}
-                  onChange={(e) => handleInputChange('major', e.target.value)}
-                  placeholder="Tu carrera o área de estudio"
-                  className="pl-10"
-                />
+                <Select 
+                  value={formData.major} 
+                  onValueChange={(value) => handleInputChange('major', value)}
+                  disabled={!formData.faculty}
+                >
+                  <SelectTrigger className="pl-10">
+                    <SelectValue placeholder={formData.faculty ? "Selecciona tu programa" : "Primero selecciona una facultad"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formData.faculty && getProgramsByFaculty(formData.faculty).map((program) => (
+                      <SelectItem key={program.id} value={program.name}>{program.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

@@ -94,7 +94,7 @@ export default function TermsPage() {
             </CardHeader>
             <CardContent className="space-y-4 text-gray-700">
               <div className="space-y-3">
-                <p><strong>3.1 Elegibilidad:</strong> Debes ser estudiante universitario en Perú con email institucional válido.</p>
+                <p><strong>3.1 Elegibilidad:</strong> Debes ser estudiante de La Cantuta o institución pedagógica en Perú con email institucional válido (@une.edu.pe o similar).</p>
                 <p><strong>3.2 Verificación:</strong> Es obligatorio verificar tu identidad estudiantil para acceder a todas las funcionalidades.</p>
                 <p><strong>3.3 Responsabilidad:</strong> Eres responsable de mantener la confidencialidad de tu cuenta y contraseña.</p>
                 <p><strong>3.4 Información Veraz:</strong> Debes proporcionar información precisa y actualizada durante el registro.</p>
@@ -127,11 +127,12 @@ export default function TermsPage() {
                   <li>Evita el spam y la publicidad no autorizada</li>
                 </ul>
                 
-                <p><strong>4.3 Marketplace:</strong></p>
+                <p><strong>4.3 Marketplace Educativo:</strong></p>
                 <ul className="list-disc list-inside ml-4 space-y-1">
-                  <li>Solo ofrece servicios legales y relacionados con el ámbito estudiantil</li>
+                  <li>Solo ofrece servicios legales relacionados con la formación docente y educación</li>
                   <li>Cumple con todas las transacciones acordadas</li>
                   <li>No uses la plataforma para actividades fraudulentas</li>
+                  <li>Prioriza materiales y servicios que fortalezcan la formación pedagógica</li>
                 </ul>
               </div>
             </CardContent>

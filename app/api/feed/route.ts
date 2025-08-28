@@ -347,7 +347,7 @@ export async function POST(request: NextRequest) {
         type: postType as any,
         imageUrl: mediaUrls.find(url => url.startsWith('data:image/')) || null,
         videoUrl: mediaUrls.find(url => url.startsWith('data:video/')) || null,
-        tags: [...new Set(allHashtags)],
+        tags: JSON.stringify([...new Set(allHashtags)]),
         visibility: mapVisibility(validatedData.visibility),
         authorId: session.user.id,
       },
@@ -402,10 +402,10 @@ export async function POST(request: NextRequest) {
       id: newPost.id,
       kind: postTypeToKind(newPost.type),
       author: {
-        id: newPost.author.id,
-        name: newPost.author.name || '',
-        username: newPost.author.name || '',
-        avatar: newPost.author.image || undefined,
+        id: session.user.id,
+        name: session.user.name || '',
+        username: session.user.name || '',
+        avatar: session.user.image || undefined,
         verified: false,
       },
       createdAt: newPost.createdAt.toISOString(),
@@ -417,10 +417,10 @@ export async function POST(request: NextRequest) {
         name: newPost.imageUrl ? 'image' : 'video'
       }] : undefined,
       visibility: toVisibilityLevel(newPost.visibility),
-      hashtags: newPost.tags || undefined,
+      hashtags: newPost.tags ? JSON.parse(newPost.tags) : undefined,
       stats: {
-        fires: newPost._count.likes,
-        comments: newPost._count.comments,
+        fires: 0,
+        comments: 0,
         shares: 0,
         saves: 0,
         views: 0
