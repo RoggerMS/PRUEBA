@@ -16,4 +16,5 @@
 - Gracefully return an empty feed when the database is unavailable.
 - Show mock feed posts and composer in development when the feed service is offline.
 - Render home page content instead of a blank screen and replace Next.js links with React Router links.
+- Fix missing Feed route and update feed component links to use React Router so the social network is displayed correctly.
 
