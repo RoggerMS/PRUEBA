@@ -19,4 +19,5 @@
 - Render home page content instead of a blank screen and replace Next.js links with React Router links.
 - Fix missing Feed route and update feed component links to use React Router so the social network is displayed correctly.
 - Stub authentication routes and add a session endpoint to avoid 404 errors during development.
+- Rename "Espacio Personal" navigation item to "Workspace" and fix related links.
 

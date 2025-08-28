@@ -49,7 +49,7 @@ const mainNavItems: SidebarItem[] = [
   { name: 'Inicio', href: '/', icon: Home },
   { name: 'Feed', href: '/feed', icon: Rss },
   { name: 'Perfil', href: '/perfil', icon: User },
-  { name: 'Espacio Personal', href: '/workspace', icon: Grid3X3, color: 'text-crunevo-600' },
+  { name: 'Workspace', href: '/workspace', icon: Grid3X3, color: 'text-crunevo-600' },
   { name: 'Apuntes', href: '/notes', icon: FileText },
   { name: 'Foro', href: '/forum', icon: MessageSquare },
   { name: 'Clubes', href: '/clubs', icon: Users },
