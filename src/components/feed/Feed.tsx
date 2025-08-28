@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { CreatePost } from './CreatePost';
 import { gamificationService } from '@/services/gamificationService';
 
@@ -297,7 +297,7 @@ export function Feed() {
           Sigue a otros usuarios, únete a clubes o crea tu primera publicación.
         </p>
         <Button asChild>
-          <Link href="/create-post">
+          <Link to="/create-post">
             Crear primera publicación
           </Link>
         </Button>
@@ -337,8 +337,8 @@ export function Feed() {
                 
                 <div>
                   <div className="flex items-center space-x-2">
-                    <Link 
-                      href={`/profile/${post.author.username}`}
+                    <Link
+                      to={`/profile/${post.author.username}`}
                       className="font-semibold text-gray-900 hover:text-crunevo-600 transition-all duration-200 hover:scale-105 inline-block"
                     >
                       {post.author.name}
@@ -457,7 +457,7 @@ export function Feed() {
             {post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {post.tags.map((tag) => (
-                  <Link key={tag} href={`/search?q=${encodeURIComponent(tag)}`}>
+                  <Link key={tag} to={`/search?q=${encodeURIComponent(tag)}`}>
                     <Badge 
                       variant="secondary" 
                       className="text-xs hover:bg-crunevo-100 hover:text-crunevo-700 transition-colors cursor-pointer"
