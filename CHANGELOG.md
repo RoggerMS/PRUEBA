@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Fix TypeScript build errors across project.
+- Correct Feed import in App.tsx to use named export.
 - Move notification stream helpers to `src/lib/notificationStream.ts`.
 - Remove unsupported fields from auth registration and welcome transaction.
 - Align gamification leaderboard and achievement data with defined types.
