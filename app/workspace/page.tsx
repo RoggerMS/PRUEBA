@@ -22,8 +22,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { WorkspaceBlock } from '@/components/workspace/WorkspaceBlock';
-import { CreateBlockModal } from '@/components/workspace/CreateBlockModal';
+import { WorkspaceBlock } from '../../components/workspace/WorkspaceBlock';
+import { CreateBlockModal } from '../../components/workspace/CreateBlockModal';
 
 interface WorkspaceBoard {
   id: string;

@@ -6,8 +6,7 @@ import { z } from 'zod';
 
 // Schema for frases item update
 const updateFrasesItemSchema = z.object({
-  text: z.string().min(1, 'El texto es requerido').max(500, 'El texto es muy largo').optional(),
-  author: z.string().max(100, 'El autor es muy largo').optional(),
+  content: z.string().min(1, 'El contenido es requerido').max(500, 'El contenido es muy largo').optional(),
 });
 
 interface RouteParams {
@@ -107,7 +106,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }

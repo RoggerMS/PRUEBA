@@ -6,8 +6,7 @@ import { z } from 'zod';
 
 // Schema for frases item creation
 const createFrasesItemSchema = z.object({
-  text: z.string().min(1, 'El texto es requerido').max(500, 'El texto es muy largo'),
-  author: z.string().max(100, 'El autor es muy largo').optional(),
+  content: z.string().min(1, 'El contenido es requerido').max(500, 'El contenido es muy largo'),
   blockId: z.string().cuid('ID de bloque inválido'),
 });
 
@@ -119,8 +118,7 @@ export async function POST(request: NextRequest) {
 
     const item = await prisma.frasesItem.create({
       data: {
-        text: validatedData.text,
-        author: validatedData.author || '',
+        content: validatedData.content,
         blockId: validatedData.blockId,
       },
     });
@@ -129,7 +127,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }
