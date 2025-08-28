@@ -27,7 +27,7 @@ export default function Hero() {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           <Link
-            href="/feed"
+            to="/feed"
             className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-50 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
           >
             Explorar Feed
@@ -35,7 +35,7 @@ export default function Hero() {
           </Link>
 
           <Link
-            href="/auth/register"
+            to="/auth/register"
             className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300 flex items-center gap-2"
           >
             Únete Ahora

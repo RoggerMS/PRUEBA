@@ -79,7 +79,8 @@ const quickActionItems: SidebarItem[] = [
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const pathname = usePathname();
+  const location = useLocation();
+  const pathname = location.pathname;
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -94,7 +95,7 @@ export function Sidebar() {
 
     return (
       <Link
-        href={item.href}
+        to={item.href}
         className={cn(
           'flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 group',
           active
@@ -146,26 +147,42 @@ export function Sidebar() {
 
         {/* User Crolars Balance - Enhanced Visibility */}
         {!isCollapsed && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-yellow-400/20 via-orange-400/15 to-yellow-500/20 rounded-xl border-2 border-yellow-400/30 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-yellow-400 rounded-full shadow-md">
-                  <Coins className="w-6 h-6 text-white" />
+          <Link to="/crolars">
+            <div className="mb-6 p-4 bg-gradient-to-r from-yellow-400/20 via-orange-400/15 to-yellow-500/20 rounded-xl border-2 border-yellow-400/30 shadow-lg hover:shadow-xl hover:border-yellow-400/50 transition-all duration-300 cursor-pointer group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-yellow-400 rounded-full shadow-md group-hover:bg-yellow-500 transition-colors duration-200">
+                    <Coins className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide group-hover:text-gray-800 transition-colors duration-200">Mis Crolars</p>
+                    <p className="text-2xl font-bold text-yellow-600 group-hover:text-yellow-700 transition-colors duration-200">2,450</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Mis Crolars</p>
-                  <p className="text-2xl font-bold text-yellow-600">2,450</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Saldo</p>
-                <div className="flex items-center space-x-1">
-                  <Star className="w-3 h-3 text-yellow-500" />
-                  <span className="text-xs font-medium text-gray-600">Premium</span>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 group-hover:text-gray-600 transition-colors duration-200">Saldo</p>
+                  <div className="flex items-center space-x-1">
+                    <Star className="w-3 h-3 text-yellow-500 group-hover:text-yellow-600 transition-colors duration-200" />
+                    <span className="text-xs font-medium text-gray-600 group-hover:text-gray-700 transition-colors duration-200">Premium</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
+        )}
+        
+        {/* Collapsed Crolars Balance */}
+        {isCollapsed && (
+          <Link to="/crolars">
+            <div className="mb-6 p-3 bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 rounded-lg border border-yellow-400/30 hover:border-yellow-400/50 transition-all duration-300 cursor-pointer group">
+              <div className="flex flex-col items-center space-y-1">
+                <div className="p-2 bg-yellow-400 rounded-full shadow-md group-hover:bg-yellow-500 transition-colors duration-200">
+                  <Coins className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-xs font-bold text-yellow-600 group-hover:text-yellow-700 transition-colors duration-200">2.4K</p>
+              </div>
+            </div>
+          </Link>
         )}
 
         {/* Main Navigation */}

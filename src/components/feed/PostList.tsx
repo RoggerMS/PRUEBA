@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, memo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useIntersection } from '@/hooks/useIntersection';
 import { PostCard } from './PostCard';
+// import PostSkeleton from './PostSkeleton'; // Using local component instead
+import EmptyState from './EmptyState';
+import ErrorState from './ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
@@ -21,7 +24,7 @@ interface PostListProps {
 
 const POSTS_PER_PAGE = 10;
 
-export function PostList({ 
+export const PostList = memo(function PostList({ 
   ranking = 'home', 
   authorId, 
   hashtag, 
@@ -105,6 +108,13 @@ export function PostList({
     };
   }, [refetch]);
 
+  const handleRefresh = useCallback(() => {
+    refetch();
+    toast.success('Actualizando feed...', {
+      description: 'Buscando nuevas publicaciones'
+    });
+  }, [refetch]);
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -132,7 +142,7 @@ export function PostList({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleRefresh]);
 
   const scrollToNextPost = useCallback(() => {
     const posts = listRef.current?.querySelectorAll('[data-post-id]');
@@ -164,22 +174,15 @@ export function PostList({
     }
   }, []);
 
-  const handleRefresh = useCallback(() => {
-    refetch();
-    toast.success('Actualizando feed...', {
-      description: 'Buscando nuevas publicaciones'
-    });
-  }, [refetch]);
-
   // Flatten all posts from pages
   const allPosts = data?.pages.flatMap(page => page.posts) || [];
 
   // Loading state
   if (isLoading) {
     return (
-      <div className={cn('space-y-6', className)}>
+      <div className="space-y-6">
         {Array.from({ length: 3 }).map((_, i) => (
-          <PostSkeleton key={i} />
+          <PostSkeleton key={`skeleton-${i}`} />
         ))}
       </div>
     );
@@ -203,51 +206,28 @@ export function PostList({
 
   // Error state
   if (isError) {
+    const errorType = !navigator.onLine ? 'network' : 'server';
     return (
-      <div className={cn('text-center py-12', className)}>
-        <div className="max-w-md mx-auto">
-          <div className="text-red-500 mb-4">
-            <WifiOff className="w-12 h-12 mx-auto" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Error al cargar el feed
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {error instanceof Error ? error.message : 'Algo salió mal'}
-          </p>
-          <Button onClick={() => refetch()} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Intentar de nuevo
-          </Button>
-        </div>
-      </div>
+      <ErrorState 
+        type={errorType}
+        onRetry={() => refetch()}
+        isRetrying={isRefetching}
+      />
     );
   }
 
   // Empty state (production only)
   if (allPosts.length === 0) {
     return (
-      <div className={cn('text-center py-12', className)}>
-        <div className="max-w-md mx-auto">
-          <div className="text-gray-400 mb-4">
-            <RefreshCw className="w-12 h-12 mx-auto" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {hashtag ? `No hay posts con #${hashtag}` :
-             authorId ? 'Este usuario no ha publicado nada' :
-             'No hay publicaciones'}
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {hashtag ? 'Intenta con otro hashtag' :
-             authorId ? 'Sigue a más usuarios para ver contenido' :
-             'Sé el primero en publicar algo'}
-          </p>
-          <Button onClick={handleRefresh} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Actualizar
-          </Button>
-        </div>
-      </div>
+      <EmptyState 
+        type="feed"
+        actionText="Crear publicación"
+        onAction={() => {
+          // Scroll to composer
+          const composer = document.querySelector('[data-composer]');
+          composer?.scrollIntoView({ behavior: 'smooth' });
+        }}
+      />
     );
   }
 
@@ -315,7 +295,7 @@ export function PostList({
       </div>
     </div>
   );
-}
+});
 
 // Post skeleton component
 function PostSkeleton() {

@@ -10,11 +10,10 @@ import {
   Star, 
   ShoppingCart, 
   Eye, 
-  Download, 
   Heart,
-  Coins,
   Crown,
-  MessageCircle
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -32,12 +31,13 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  priceUSD?: number;
   category: string;
   subject: string;
   seller: Seller;
   rating: number;
   reviews: number;
-  image: string;
+  images: string[];
   tags: string[];
   createdAt: Date;
   featured: boolean;
@@ -51,21 +51,27 @@ interface ProductCardProps {
 export function ProductCard({ product, onClick }: ProductCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const {
     name,
     description,
     price,
+    priceUSD,
     category,
     subject,
     seller,
     rating,
     reviews,
-    image,
+    images,
     tags,
     createdAt,
     featured
   } = product;
+
+  // Usar la primera imagen si images no está definido (compatibilidad)
+  const productImages = images || [(product as any).image || ''];
+  const currentImage = productImages[currentImageIndex] || productImages[0];
 
   const timeAgo = formatDistanceToNow(createdAt, { 
     addSuffix: true, 
@@ -125,19 +131,71 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
     }
   };
 
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => 
+      prev === productImages.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? productImages.length - 1 : prev - 1
+    );
+  };
+
   return (
     <Card 
-      className="bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-all duration-300 group hover:shadow-xl border-0 overflow-hidden cursor-pointer"
+      className="bg-white hover:shadow-lg transition-all duration-300 group border border-gray-200 overflow-hidden cursor-pointer rounded-xl"
       onClick={onClick}
     >
       <div className="relative">
-        {/* Product Image */}
-        <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+        {/* Product Images - Diseño cuadrado */}
+        <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
           <img 
-            src={image} 
+            src={currentImage} 
             alt={name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
+          
+          {/* Navegación de imágenes */}
+          {productImages.length > 1 && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevImage();
+                }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextImage();
+                }}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              
+              {/* Indicadores de imagen */}
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                {productImages.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
           
           {/* Featured Badge */}
           {featured && (
@@ -170,125 +228,124 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
           </div>
         </div>
 
-        <CardContent className="p-6">
+        <CardContent className="p-3 space-y-2">
           {/* Subject */}
-          <div className="mb-3">
+          <div className="mb-2">
             <Badge variant="outline" className={getSubjectColor(subject)}>
               {subject}
             </Badge>
           </div>
 
-          {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-600 transition-colors">
-            {name}
-          </h3>
-
-          {/* Description */}
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-            {description}
-          </p>
-
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1 mb-4">
-            {tags.slice(0, 3).map((tag, index) => (
-              <Badge 
-                key={index} 
-                variant="secondary" 
-                className="text-xs bg-gray-100 text-gray-600"
-              >
-                #{tag}
-              </Badge>
-            ))}
-            {tags.length > 3 && (
-              <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
-                +{tags.length - 3}
-              </Badge>
-            )}
+          {/* Product Title */}
+          <div className="space-y-1">
+            <h3 className="font-semibold text-base text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
+              {name}
+            </h3>
+            <p className="text-xs text-gray-500 line-clamp-1">
+              {description}
+            </p>
           </div>
 
-          {/* Rating and Reviews */}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-              <span className="text-sm font-medium text-gray-700">{rating}</span>
-              <span className="text-sm text-gray-500">({reviews})</span>
+          {/* Tags - Solo mostrar 2 */}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {tags.slice(0, 2).map((tag, index) => (
+                <Badge 
+                  key={index} 
+                  variant="secondary" 
+                  className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                >
+                  {tag}
+                </Badge>
+              ))}
+              {tags.length > 2 && (
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600">
+                  +{tags.length - 2}
+                </Badge>
+              )}
             </div>
-            <div className="flex items-center gap-1 text-sm text-gray-500">
-              <Eye className="w-4 h-4" />
+          )}
+
+          {/* Rating y Reviews - Más compacto */}
+          <div className="flex items-center gap-1.5 mb-3">
+            <div className="flex items-center gap-0.5">
+              <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs font-medium text-gray-700">{rating}</span>
+            </div>
+            <span className="text-xs text-gray-400">({reviews})</span>
+            <div className="flex items-center gap-1 text-xs text-gray-400 ml-2">
+              <Eye className="w-3.5 h-3.5" />
               <span>{Math.floor(Math.random() * 500) + 100}</span>
             </div>
           </div>
 
-          {/* Seller Info */}
-          <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
-            <Avatar className="w-8 h-8">
+          {/* Seller Info - Más compacto */}
+          <div className="flex items-center gap-2 pt-1 border-t border-gray-100 mb-3">
+            <Avatar className="w-5 h-5">
               <AvatarImage src={seller.avatar} alt={seller.name} />
-              <AvatarFallback className="bg-purple-100 text-purple-600 text-xs">
-                {seller.name.split(' ').map(n => n[0]).join('')}
+              <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
+                {seller.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">{seller.name}</p>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                  <span>{seller.rating}</span>
-                </div>
-                <span>•</span>
-                <span>{seller.sales} ventas</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-700 truncate">{seller.name}</p>
+              <div className="flex items-center gap-0.5">
+                <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs text-gray-400">{seller.rating}</span>
               </div>
             </div>
           </div>
 
           {/* Price and Actions */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Coins className="w-5 h-5 text-yellow-500" />
-              <span className="text-2xl font-bold text-gray-900">{price}</span>
-              <span className="text-sm text-gray-500">Crolars</span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1">
+                <span className="text-lg font-bold text-green-600">S/ {price}</span>
+                {priceUSD && (
+                  <span className="text-xs text-gray-400">(${priceUSD})</span>
+                )}
+              </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="text-gray-600 hover:text-purple-600 border-gray-300"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onClick?.();
+                  handleLike();
                 }}
+                className={`p-1.5 hover:bg-red-50 ${isLiked ? 'text-red-500' : 'text-gray-400'}`}
               >
-                <Eye className="w-4 h-4" />
+                <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
               
               <Button
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePurchase();
                 }}
                 disabled={isPurchasing}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 text-xs"
               >
                 {isPurchasing ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Comprando...
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="w-4 h-4" />
-                    Comprar
+                  <div className="flex items-center gap-1">
+                    <ShoppingCart className="w-3 h-3" />
+                    <span>Comprar</span>
                   </div>
                 )}
               </Button>
             </div>
           </div>
 
-          {/* Time */}
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <p className="text-xs text-gray-500">
-              Publicado {timeAgo}
-            </p>
+          {/* Time ago */}
+          <div className="text-xs text-gray-400 mt-1">
+            {timeAgo}
           </div>
         </CardContent>
       </div>

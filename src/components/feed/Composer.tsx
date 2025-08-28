@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, memo } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,7 +83,7 @@ const VISIBILITY_OPTIONS = [
   }
 ];
 
-export function Composer({ className }: ComposerProps) {
+export const Composer = memo(function Composer({ className }: ComposerProps) {
   const { data: session } = useSession();
   const isDev = process.env.NODE_ENV !== 'production';
   const user = session?.user ||
@@ -164,7 +164,7 @@ export function Composer({ className }: ComposerProps) {
     }
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!text.trim() && !title.trim()) {
       toast.error('Agrega contenido a tu post');
       return;
@@ -185,7 +185,7 @@ export function Composer({ className }: ComposerProps) {
     };
 
     createPostMutation.mutate(postData);
-  };
+  }, [activeTab, text, title, visibility, hashtags, selectedFiles, createPostMutation]);
 
   const addFiles = useCallback((files: File[]) => {
     const validFiles = files.filter(file => {
@@ -243,28 +243,28 @@ export function Composer({ className }: ComposerProps) {
     addFiles(files);
   }, [addFiles]);
 
-  const removeFile = (index: number) => {
+  const removeFile = useCallback((index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     toast.success('Archivo eliminado');
-  };
+  }, []);
 
-  const addHashtag = () => {
+  const addHashtag = useCallback(() => {
     const tag = hashtagInput.trim().toLowerCase().replace(/^#/, '');
     if (tag && !hashtags.includes(tag) && hashtags.length < 10) {
       setHashtags(prev => [...prev, tag]);
       setHashtagInput('');
     }
-  };
+  }, [hashtagInput, hashtags]);
 
-  const removeHashtag = (tag: string) => {
+  const removeHashtag = useCallback((tag: string) => {
     setHashtags(prev => prev.filter(t => t !== tag));
-  };
+  }, []);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       handleSubmit();
     }
-  };
+  }, [handleSubmit]);
 
   if (!user) {
     return (
@@ -275,7 +275,7 @@ export function Composer({ className }: ComposerProps) {
   }
 
   return (
-    <Card className={cn(`overflow-hidden transition-all duration-300 ${isExpanded ? 'shadow-lg border-orange-200' : 'hover:shadow-md'}`, className)}>
+    <Card data-composer className={cn(`overflow-hidden transition-all duration-300 ${isExpanded ? 'shadow-lg border-orange-200' : 'hover:shadow-md'}`, className)}>
       <CardContent className="p-0">
         {/* Header */}
         <div className="p-4 border-b border-gray-100">
@@ -520,4 +520,4 @@ export function Composer({ className }: ComposerProps) {
       </CardContent>
     </Card>
   );
-}
+});

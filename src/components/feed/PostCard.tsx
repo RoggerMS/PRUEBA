@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,7 +53,7 @@ const VISIBILITY_LABELS = {
   private: 'Privado'
 };
 
-export function PostCard({ post, priority = false, className }: PostCardProps) {
+export const PostCard = memo(function PostCard({ post, priority = false, className }: PostCardProps) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -228,23 +228,23 @@ export function PostCard({ post, priority = false, className }: PostCardProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleFireReaction = () => {
+  const handleFireReaction = useCallback(() => {
     if (!session) {
       toast.error('Inicia sesión para reaccionar');
       return;
     }
     fireReactionMutation.mutate();
-  };
+  }, [session, fireReactionMutation]);
 
-  const handleSavePost = () => {
+  const handleSavePost = useCallback(() => {
     if (!session) {
       toast.error('Inicia sesión para guardar posts');
       return;
     }
     savePostMutation.mutate();
-  };
+  }, [session, savePostMutation]);
 
-  const handleShare = async () => {
+  const handleShare = useCallback(async () => {
     const url = `${window.location.origin}/post/${post.id}`;
     
     if (navigator.share) {
@@ -263,14 +263,14 @@ export function PostCard({ post, priority = false, className }: PostCardProps) {
         description: 'El enlace del post se copió al portapapeles'
       });
     }
-  };
+  }, [post.id, post.author.name, post.text]);
 
-  const truncateText = (text: string, maxLength: number = 300) => {
+  const truncateText = useCallback((text: string, maxLength: number = 300) => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
-  };
+  }, []);
 
-  const renderHashtags = (text: string) => {
+  const renderHashtags = useCallback((text: string) => {
     return text.split(' ').map((word, index) => {
       if (word.startsWith('#')) {
         return (
@@ -288,7 +288,7 @@ export function PostCard({ post, priority = false, className }: PostCardProps) {
       }
       return word + ' ';
     });
-  };
+  }, []);
 
   const renderMedia = () => {
     if (!post.media || post.media.length === 0) return null;
@@ -517,10 +517,10 @@ export function PostCard({ post, priority = false, className }: PostCardProps) {
       </CardContent>
     </Card>
   );
-}
+});
 
 // Media item component
-function MediaItem({ 
+const MediaItem = memo(function MediaItem({ 
   media, 
   priority = false, 
   showOverlay = false, 
@@ -532,6 +532,10 @@ function MediaItem({
   overlayCount?: number; 
 }) {
   const [isLoading, setIsLoading] = useState(true);
+  
+  const handleImageLoad = useCallback(() => {
+    setIsLoading(false);
+  }, []);
 
   if (media.type.startsWith('image/')) {
     return (
@@ -545,7 +549,7 @@ function MediaItem({
             'object-cover transition-all duration-300 group-hover:scale-105',
             isLoading && 'blur-sm'
           )}
-          onLoad={() => setIsLoading(false)}
+          onLoad={handleImageLoad}
         />
         
         {showOverlay && (
@@ -606,4 +610,6 @@ function MediaItem({
       </div>
     </div>
   );
-}
+});
+
+export default PostCard;

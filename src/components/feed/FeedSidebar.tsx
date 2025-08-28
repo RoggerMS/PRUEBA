@@ -293,9 +293,9 @@ export function FeedSidebar({ className }: FeedSidebarProps) {
       {/* Footer */}
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
-          <Link href="/about" className="hover:text-gray-700">Acerca de</Link>
-          <Link href="/privacy" className="hover:text-gray-700">Privacidad</Link>
-          <Link href="/terms" className="hover:text-gray-700">Términos</Link>
+          <Link to="/about" className="hover:text-gray-700">Acerca de</Link>
+          <Link to="/privacy" className="hover:text-gray-700">Privacidad</Link>
+          <Link to="/terms" className="hover:text-gray-700">Términos</Link>
         </div>
         
         <p className="text-xs text-gray-400">
