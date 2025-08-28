@@ -5,6 +5,10 @@ import { traeBadgePlugin } from 'vite-plugin-trae-solo-badge';
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    global: 'globalThis',
+    'process.env': 'import.meta.env'
+  },
   plugins: [
     react({
       babel: {
@@ -25,6 +29,9 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   server: {
+    port: 3000,
+    strictPort: true,
+    host: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',

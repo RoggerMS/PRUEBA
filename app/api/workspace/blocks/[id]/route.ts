@@ -4,6 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 // Schema for block update
 const updateBlockSchema = z.object({
   title: z.string().min(1, 'El título es requerido').max(100, 'El título es muy largo').optional(),
@@ -76,7 +81,19 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ block });
+    // Map database fields to frontend expected fields
+    const mappedBlock = {
+      ...block,
+      width: block.w,
+      height: block.h,
+      completed: block.locked,
+      // Remove original fields
+      w: undefined,
+      h: undefined,
+      locked: undefined,
+    };
+
+    return NextResponse.json({ block: mappedBlock });
   } catch (error) {
     console.error('Error fetching block:', error);
     return NextResponse.json(
@@ -175,7 +192,19 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json({ block: updatedBlock });
+    // Map database fields to frontend expected fields
+    const mappedBlock = {
+      ...updatedBlock,
+      width: updatedBlock.w,
+      height: updatedBlock.h,
+      completed: updatedBlock.locked,
+      // Remove original fields
+      w: undefined,
+      h: undefined,
+      locked: undefined,
+    };
+
+    return NextResponse.json({ block: mappedBlock });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

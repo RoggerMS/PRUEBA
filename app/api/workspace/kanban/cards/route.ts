@@ -4,6 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 // Schema for card creation
 const createCardSchema = z.object({
   title: z.string().min(1, 'El título es requerido').max(100, 'El título es muy largo'),

@@ -5,6 +5,11 @@ import { prisma } from '@/lib/prisma';
 import type { Comment } from '@/types/feed';
 import { z } from 'zod';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 const createCommentSchema = z.object({
   text: z.string().min(1).max(2000),
   parentId: z.string().optional(),

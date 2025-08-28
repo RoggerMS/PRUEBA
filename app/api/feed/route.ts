@@ -5,6 +5,11 @@ import { prisma } from '@/lib/prisma';
 import { FeedPost, FeedResponse, CreatePostData, FeedRanking } from '@/types/feed';
 import { z } from 'zod';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 // Validation schemas
 const createPostSchema = z.object({
   kind: z.enum(['post', 'photo', 'video', 'question', 'note']),

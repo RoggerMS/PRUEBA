@@ -3,6 +3,11 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

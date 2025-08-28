@@ -37,10 +37,11 @@ router.post('/logout', async (req: Request, res: Response): Promise<void> => {
 /**
  * Get current session
  * GET /api/auth/session
+ * NOTE: Commented out to avoid conflict with NextAuth /api/auth/session
  */
-router.get('/session', async (req: Request, res: Response): Promise<void> => {
-  // Return null session until auth is implemented
-  res.status(200).json(null);
-});
+// router.get('/session', async (req: Request, res: Response): Promise<void> => {
+//   // Return null session until auth is implemented
+//   res.status(200).json(null);
+// });
 
 export default router;

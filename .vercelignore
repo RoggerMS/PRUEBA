@@ -1,6 +1,108 @@
-node_modules
-build
-dist
-.git
-.trae
-.log
+# Archivos de desarrollo
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache de dependencias
+node_modules/
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Cache de Next.js
+.next/
+out/
+
+# Cache de build
+build/
+dist/
+
+# Archivos de sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Scripts de utilidad
+fix-dynamic-routes.cjs
+
+# Documentos de desarrollo
+.trae/
+README.md
+
+# Archivos de configuración de desarrollo
+.eslintcache
+.stylelintcache
+
+# Archivos de prueba
+__tests__/
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+coverage/
+
+# Archivos de base de datos local
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de migración de desarrollo
+prisma/migrations/
+
+# Archivos de configuración local
+.env.example
+
+# Archivos de Vite (no necesarios para Next.js)
+vite.config.ts
+index.html
+src/main.tsx
+
+# Archivos de configuración adicionales
+postcss.config.js
+tailwind.config.js
+
+# Archivos de TypeScript de configuración
+tsconfig.node.json
+
+# Archivos de cache adicionales
+.turbo/
+.swc/
+
+# Archivos de desarrollo de API
+api/test/
+api/dev/
+
+# Archivos de documentación
+*.md
+docs/
+
+# Archivos de configuración de herramientas
+.prettierrc
+.eslintrc.json
+.gitignore

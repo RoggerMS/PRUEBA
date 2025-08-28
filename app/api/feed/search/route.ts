@@ -5,6 +5,10 @@ import { prisma } from '@/lib/prisma';
 import { FeedPost } from '@/types/feed';
 import { z } from 'zod';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const searchQuerySchema = z.object({
   q: z.string().min(1).max(200),
   cursor: z.string().optional(),

@@ -4,6 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 // Schema for board update
 const updateBoardSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es muy largo').optional(),
@@ -68,7 +73,22 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ board });
+    // Map database fields to frontend expected fields
+    const mappedBoard = {
+      ...board,
+      blocks: board.blocks.map(block => ({
+        ...block,
+        width: block.w,
+        height: block.h,
+        completed: block.locked,
+        // Remove original fields
+        w: undefined,
+        h: undefined,
+        locked: undefined,
+      })),
+    };
+
+    return NextResponse.json({ board: mappedBoard });
   } catch (error) {
     console.error('Error fetching board:', error);
     return NextResponse.json(
@@ -151,7 +171,22 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json({ board: updatedBoard });
+    // Map database fields to frontend expected fields
+    const mappedBoard = {
+      ...updatedBoard,
+      blocks: updatedBoard.blocks.map(block => ({
+        ...block,
+        width: block.w,
+        height: block.h,
+        completed: block.locked,
+        // Remove original fields
+        w: undefined,
+        h: undefined,
+        locked: undefined,
+      })),
+    };
+
+    return NextResponse.json({ board: mappedBoard });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

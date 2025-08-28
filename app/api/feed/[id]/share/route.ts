@@ -4,6 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 const sharePostSchema = z.object({
   comment: z.string().max(500).optional(),
   visibility: z.enum(['public', 'university', 'friends', 'private']).default('public'),

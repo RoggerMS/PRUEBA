@@ -5,6 +5,11 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { WorkspaceBlockType } from '@prisma/client';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 // Schema for block creation
 const createBlockSchema = z.object({
   type: z.nativeEnum(WorkspaceBlockType),
@@ -86,7 +91,19 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ blocks });
+    // Map database fields to frontend expected fields
+    const mappedBlocks = blocks.map(block => ({
+      ...block,
+      width: block.w,
+      height: block.h,
+      completed: block.locked,
+      // Remove original fields
+      w: undefined,
+      h: undefined,
+      locked: undefined,
+    }));
+
+    return NextResponse.json({ blocks: mappedBlocks });
   } catch (error) {
     console.error('Error fetching blocks:', error);
     return NextResponse.json(
@@ -230,7 +247,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ block: createdBlock }, { status: 201 });
+    // Map database fields to frontend expected fields
+    const mappedBlock = {
+      ...createdBlock,
+      width: createdBlock!.w,
+      height: createdBlock!.h,
+      completed: createdBlock!.locked,
+      // Remove original fields
+      w: undefined,
+      h: undefined,
+      locked: undefined,
+    };
+
+    return NextResponse.json({ block: mappedBlock }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -4,6 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+// Marcar como ruta dinámica
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+
 // Schema for frases item update
 const updateFrasesItemSchema = z.object({
   content: z.string().min(1, 'El contenido es requerido').max(500, 'El contenido es muy largo').optional(),

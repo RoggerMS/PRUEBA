@@ -1,12 +1,9 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "version": 2,
+  "env": {
+    "DATABASE_URL": "file:./prod.db",
+    "NEXTAUTH_URL": "https://prueba-workspace.vercel.app",
+    "NEXTAUTH_SECRET": "production-secret-key-change-this",
+    "NODE_ENV": "production"
+  }
 }
