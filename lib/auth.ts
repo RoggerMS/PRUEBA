@@ -3,7 +3,7 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
-import { User } from '@prisma/client';
+import { User as PrismaUser } from '@prisma/client';
 
 // Extend NextAuth types
 declare module 'next-auth' {
@@ -79,7 +79,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.username = (user as any).username;
+        token.username = (user as PrismaUser).username;
       }
       return token;
     },
@@ -178,7 +178,7 @@ export async function getUserByEmail(email: string): Promise<{
 }
 
 // Helper function to get user by username
-export async function getUserByUsername(username: string): Promise<User | null> {
+export async function getUserByUsername(username: string): Promise<PrismaUser | null> {
   try {
     return await prisma.user.findUnique({
       where: { username }
@@ -197,7 +197,7 @@ export async function createUser(userData: {
   username: string;
   dateOfBirth?: Date;
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
-}): Promise<User | null> {
+}): Promise<PrismaUser | null> {
   try {
     const hashedPassword = await hashPassword(userData.password);
     

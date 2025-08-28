@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -88,6 +88,24 @@ export function WorkspaceBlock({
     });
   };
 
+  // Update block on server
+  const updateBlockOnServer = useCallback(async () => {
+    try {
+      await fetch(`/api/workspace/blocks/${block.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          x: block.x,
+          y: block.y,
+          width: block.width,
+          height: block.height,
+        }),
+      });
+    } catch (error) {
+      console.error('Error updating block:', error);
+    }
+  }, [block]);
+
   // Handle mouse move for drag and resize
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -134,25 +152,7 @@ export function WorkspaceBlock({
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, isResizing, dragStart, resizeStart, block, onUpdate, zoom]);
-
-  // Update block on server
-  const updateBlockOnServer = async () => {
-    try {
-      await fetch(`/api/workspace/blocks/${block.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          x: block.x,
-          y: block.y,
-          width: block.width,
-          height: block.height,
-        }),
-      });
-    } catch (error) {
-      console.error('Error updating block:', error);
-    }
-  };
+  }, [isDragging, isResizing, dragStart, resizeStart, block, onUpdate, zoom, updateBlockOnServer]);
 
   // Handle delete
   const handleDelete = async () => {
