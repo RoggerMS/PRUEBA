@@ -1,5 +1,5 @@
 import { ArrowRight, Sparkles } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export default function CTA() {
   return (
@@ -22,16 +22,16 @@ export default function CTA() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link 
-            href="/auth/register" 
+          <Link
+            to="/auth/register"
             className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-50 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
           >
             Crear Cuenta Gratis
             <ArrowRight className="w-5 h-5" />
           </Link>
-          
-          <Link 
-            href="/feed" 
+
+          <Link
+            to="/feed"
             className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300"
           >
             Explorar Contenido
