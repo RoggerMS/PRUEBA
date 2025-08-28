@@ -18,10 +18,10 @@ interface QuickAction {
 const quickActions: QuickAction[] = [
   {
     name: 'Nota Rápida',
-    href: '/personal-space?action=quick-note',
+    href: '/workspace?action=quick-note',
     icon: FileText,
     color: 'bg-blue-500 hover:bg-blue-600',
-    description: 'Crear una nota rápida en tu espacio personal'
+    description: 'Crear una nota rápida en tu workspace'
   },
   {
     name: 'Pregunta',

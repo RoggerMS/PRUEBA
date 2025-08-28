@@ -299,7 +299,7 @@
   * `/profile/:username` (vista pÃºblica) y `/me` (vista privada)
   * `/settings` (tabs: perfil, tienda, verificaciÃ³n, notifs, tema, legal)
   * `/notifications`
-  * `/personal-space`
+  * `/workspace`
   * `/crunebot` (desactivado)
   * `/plus` (Crunevo+)
 

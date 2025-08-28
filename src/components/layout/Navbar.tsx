@@ -108,9 +108,9 @@ export function Navbar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/personal-space" className="flex items-center">
+                  <Link href="/workspace" className="flex items-center">
                     <div className="mr-2 h-4 w-4 bg-crunevo-500 rounded-sm"></div>
-                    <span>Espacio Personal</span>
+                    <span>Workspace</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
