@@ -23,14 +23,8 @@
     "noUncheckedSideEffectImports": false,
     "forceConsistentCasingInFileNames": false,
     "baseUrl": "./",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
     "types": [
-      "node",
-      "express"
+      "node"
     ],
     "allowJs": true,
     "incremental": true,
@@ -45,9 +39,7 @@
     "strictNullChecks": true
   },
   "include": [
-    "src",
     "app",
-    "api",
     ".next/types/**/*.ts"
   ],
   "exclude": [
