@@ -59,6 +59,7 @@ export default function WorkspacePage() {
   const [currentBoard, setCurrentBoard] = useState<WorkspaceBoard | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -66,40 +67,50 @@ export default function WorkspacePage() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
 
-  // Fetch boards
-  const fetchBoards = useCallback(async () => {
+
+  const fetcher = async (url: string) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  };
+
+  const loadBoards = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/workspace/boards');
-      if (!response.ok) throw new Error('Failed to fetch boards');
-      
-      const data = await response.json();
-      setBoards(data.boards);
-      
-      // Set current board to default or first board
-      const defaultBoard = data.boards.find((board: WorkspaceBoard) => board.isDefault);
-      setCurrentBoard(defaultBoard || data.boards[0] || null);
-    } catch (error) {
-      console.error('Error fetching boards:', error);
-      toast.error('Error al cargar las pizarras');
+      const data = await fetcher('/api/workspace/boards');
+      if (!data.defaultBoard) {
+        await fetch('/api/workspace/boards', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ name: 'Pizarra 1' })
+        });
+        const again = await fetcher('/api/workspace/boards');
+        setBoards(again.boards);
+        const def = again.boards.find((b: WorkspaceBoard) => b.id === again.defaultBoard) || again.boards[0] || null;
+        setCurrentBoard(def);
+      } else {
+        setBoards(data.boards);
+        const def = data.boards.find((b: WorkspaceBoard) => b.id === data.defaultBoard) || data.boards[0] || null;
+        setCurrentBoard(def);
+      }
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setIsLoading(false);
     }
   }, []);
-
-  // Create new board
   const createBoard = async (name: string) => {
     try {
-      const response = await fetch('/api/workspace/boards', {
+      await fetch('/api/workspace/boards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
-      
-      if (!response.ok) throw new Error('Failed to create board');
-      
-      const data = await response.json();
-      setBoards(prev => [...prev, data.board]);
-      setCurrentBoard(data.board);
+      await loadBoards();
       toast.success('Pizarra creada exitosamente');
     } catch (error) {
       console.error('Error creating board:', error);
@@ -180,14 +191,14 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      fetchBoards();
+      loadBoards();
     }
-  }, [status, fetchBoards]);
+  }, [status, loadBoards]);
 
   if (status === 'loading' || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="text-gray-500">Cargando...</div>
       </div>
     );
   }
@@ -205,6 +216,29 @@ export default function WorkspacePage() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 text-center">
+          <p className="mb-4 text-red-500">{error}</p>
+          <Button onClick={loadBoards}>Reintentar</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!boards.length) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 text-center">
+          <h2 className="text-xl font-semibold mb-2">Crea tu primer bloque</h2>
+          <Button onClick={() => createBoard('Pizarra 1')}>Crear Bloque</Button>
+        </Card>
+      </div>
+    );
+  }
+
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">

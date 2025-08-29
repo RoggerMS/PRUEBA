@@ -1,37 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// POST /api/workspace/kanban/cards - Create a new card
-export async function POST(request: NextRequest) {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const body = await request.json();
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/kanban/cards`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    const { searchParams } = new URL(req.url);
+    const columnId = searchParams.get('columnId');
+    if (!columnId) {
+      return Response.json({ error: 'Column ID is required' }, { status: 400 });
+    }
+    const cards = await prisma.kanbanCard.findMany({
+      where: { columnId, column: { block: { board: { userId: session.user.id } } } },
+      orderBy: { orderIndex: 'asc' }
     });
+    return Response.json({ cards });
+  } catch (e) {
+    console.error('[GET /api/workspace/kanban/cards]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
+  }
+}
 
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error creating kanban card:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const body = await req.json();
+    const column = await prisma.kanbanColumn.findFirst({
+      where: { id: body.columnId, block: { board: { userId: session.user.id } } }
+    });
+    if (!column) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const card = await prisma.kanbanCard.create({
+      data: {
+        columnId: body.columnId,
+        title: body.title,
+        description: body.description ?? '',
+        orderIndex: body.orderIndex ?? 0
+      }
+    });
+    return Response.json({ card }, { status: 201 });
+  } catch (e) {
+    console.error('[POST /api/workspace/kanban/cards]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
   }
 }

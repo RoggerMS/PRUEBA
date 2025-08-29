@@ -1,75 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// GET /api/workspace/blocks - Get all blocks for a board
-export async function GET(request: NextRequest) {
+export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { searchParams } = new URL(request.url);
-    const boardId = searchParams.get('boardId');
-
-    if (!boardId) {
-      return NextResponse.json({ error: 'Board ID is required' }, { status: 400 });
-    }
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/blocks?boardId=${boardId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
+    const body = await req.json();
+    const board = await prisma.workspaceBoard.findFirst({
+      where: { id: body.boardId, userId: session.user.id }
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
+    if (!board) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error fetching blocks:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-// POST /api/workspace/blocks - Create a new block
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/blocks`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    const block = await prisma.workspaceBlock.create({
+      data: {
+        boardId: body.boardId,
+        type: body.type,
+        title: body.title || '',
+        x: body.x ?? 0,
+        y: body.y ?? 0,
+        w: body.w ?? 300,
+        h: body.h ?? 200,
+        zIndex: body.zIndex ?? 1
+      }
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error creating block:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ block }, { status: 201 });
+  } catch (e) {
+    console.error('[POST /api/workspace/blocks]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
   }
 }

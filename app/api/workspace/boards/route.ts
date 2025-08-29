@@ -1,68 +1,66 @@
-import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// GET /api/workspace/boards - Get all boards for the authenticated user
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/boards`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
+    const boards = await prisma.workspaceBoard.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        blocks: {
+          include: {
+            docsPages: true,
+            kanbanColumns: { include: { cards: true } },
+            frasesItems: true
+          }
+        }
+      }
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
+    const defaultBoard = boards.find(b => b.isDefault)?.id ?? null;
+    if (!boards.length) {
+      const created = await prisma.workspaceBoard.create({
+        data: { userId: session.user.id, name: 'Pizarra 1', isDefault: true },
+        include: {
+          blocks: {
+            include: {
+              docsPages: true,
+              kanbanColumns: { include: { cards: true } },
+              frasesItems: true
+            }
+          }
+        }
+      });
+      return Response.json({ boards: [created], defaultBoard: created.id });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error fetching boards:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ boards, defaultBoard });
+  } catch (e) {
+    console.error('[GET /api/workspace/boards]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
   }
 }
 
-// POST /api/workspace/boards - Create a new board
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const body = await request.json();
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/boards`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    const { name } = await req.json();
+    const board = await prisma.workspaceBoard.create({
+      data: { userId: session.user.id, name: name || 'Pizarra 1', isDefault: false }
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error creating board:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ board }, { status: 201 });
+  } catch (e) {
+    console.error('[POST /api/workspace/boards]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
   }
 }
