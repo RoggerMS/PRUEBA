@@ -4,12 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\"",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 8080",
-    "lint": "next lint",
-    "client:dev": "next dev",
-    "server:dev": "nodemon"
+    "lint": "next lint"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
