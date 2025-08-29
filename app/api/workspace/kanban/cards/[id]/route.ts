@@ -2,16 +2,15 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { proxyWorkspace } from '@/lib/workspace-proxy';
+import { getSession } from '@/lib/session';
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const proxy = await proxyWorkspace(req, `/kanban/cards/${params.id}`);
   if (proxy) return proxy;
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (!session?.user?.id) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -34,7 +33,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   const proxy = await proxyWorkspace(req, `/kanban/cards/${params.id}`);
   if (proxy) return proxy;
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (!session?.user?.id) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
