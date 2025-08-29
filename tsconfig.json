@@ -29,7 +29,8 @@
       ]
     },
     "types": [
-      "node"
+      "node",
+      "express"
     ],
     "allowJs": true,
     "incremental": true,
@@ -41,11 +42,14 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": [
     "src",
     "app",
+    "api",
     ".next/types/**/*.ts"
   ],
   "exclude": [
