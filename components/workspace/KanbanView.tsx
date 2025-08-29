@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit3, Trash2, Save, X } from 'lucide-react';
+import { Plus, MoreVertical, Edit3, Trash2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface KanbanCard {
@@ -46,11 +46,11 @@ export function KanbanView({ blockId }: KanbanViewProps) {
   const [editCardDescription, setEditCardDescription] = useState('');
 
   // Fetch columns
-  const fetchColumns = useCallback(async () => {
+  const fetchColumns = async () => {
     try {
       const response = await fetch(`/api/workspace/kanban/columns?blockId=${blockId}`);
       if (!response.ok) throw new Error('Failed to fetch columns');
-
+      
       const data = await response.json();
       setColumns(data.columns);
     } catch (error) {
@@ -58,7 +58,7 @@ export function KanbanView({ blockId }: KanbanViewProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [blockId]);
+  };
 
   // Create column
   const createColumn = async () => {
@@ -234,7 +234,7 @@ export function KanbanView({ blockId }: KanbanViewProps) {
 
   useEffect(() => {
     fetchColumns();
-  }, [fetchColumns]);
+  }, [blockId]);
 
   if (isLoading) {
     return (
