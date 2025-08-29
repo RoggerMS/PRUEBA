@@ -5,8 +5,11 @@ export const revalidate = 0;
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { proxyWorkspace } from '@/lib/workspace-proxy';
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  const proxy = await proxyWorkspace(req, `/docs/pages/${params.id}`);
+  if (proxy) return proxy;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -27,7 +30,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  const proxy = await proxyWorkspace(req, `/docs/pages/${params.id}`);
+  if (proxy) return proxy;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

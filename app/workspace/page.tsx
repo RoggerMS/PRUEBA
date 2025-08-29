@@ -77,6 +77,12 @@ export default function WorkspacePage() {
     return res.json();
   };
 
+  const normalizeBlock = (b: any): WorkspaceBlockData => ({
+    ...b,
+    width: b.width ?? b.w ?? 300,
+    height: b.height ?? b.h ?? 200,
+  });
+
   const loadBoards = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -89,12 +95,20 @@ export default function WorkspacePage() {
           body: JSON.stringify({ name: 'Pizarra 1' })
         });
         const again = await fetcher('/api/workspace/boards');
-        setBoards(again.boards);
-        const def = again.boards.find((b: WorkspaceBoard) => b.id === again.defaultBoard) || again.boards[0] || null;
+        const mapped = again.boards.map((b: any) => ({
+          ...b,
+          blocks: b.blocks.map(normalizeBlock),
+        }));
+        setBoards(mapped);
+        const def = mapped.find((b: WorkspaceBoard) => b.id === again.defaultBoard) || mapped[0] || null;
         setCurrentBoard(def);
       } else {
-        setBoards(data.boards);
-        const def = data.boards.find((b: WorkspaceBoard) => b.id === data.defaultBoard) || data.boards[0] || null;
+        const mapped = data.boards.map((b: any) => ({
+          ...b,
+          blocks: b.blocks.map(normalizeBlock),
+        }));
+        setBoards(mapped);
+        const def = mapped.find((b: WorkspaceBoard) => b.id === data.defaultBoard) || mapped[0] || null;
         setCurrentBoard(def);
       }
     } catch (e: any) {
@@ -166,19 +180,20 @@ export default function WorkspacePage() {
           boardId: currentBoard.id,
           x: Math.random() * 500, // Random position
           y: Math.random() * 500,
-          width: MIN_BLOCK_SIZE.width,
-          height: MIN_BLOCK_SIZE.height,
+          w: MIN_BLOCK_SIZE.width,
+          h: MIN_BLOCK_SIZE.height,
         }),
       });
-      
+
       if (!response.ok) throw new Error('Failed to create block');
-      
+
       const data = await response.json();
-      
+      const block = normalizeBlock(data.block);
+
       // Update current board with new block
       setCurrentBoard(prev => prev ? {
         ...prev,
-        blocks: [...prev.blocks, data.block]
+        blocks: [...prev.blocks, block]
       } : null);
       
       toast.success('Bloque creado exitosamente');

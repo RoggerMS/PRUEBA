@@ -5,11 +5,14 @@ export const revalidate = 0;
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { proxyWorkspace } from '@/lib/workspace-proxy';
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { boardId: string } }
 ) {
+  const proxy = await proxyWorkspace(req, `/boards/${params.boardId}/blocks`);
+  if (proxy) return proxy;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
