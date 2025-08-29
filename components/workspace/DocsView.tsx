@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Plus, FileText, Edit3, Save, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, FileText, Edit3, Trash2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DocsPage {
@@ -32,20 +33,24 @@ export function DocsView({ blockId }: DocsViewProps) {
   const [newPageTitle, setNewPageTitle] = useState('');
 
   // Fetch pages
-  const fetchPages = useCallback(async () => {
+  const fetchPages = async () => {
     try {
       const response = await fetch(`/api/workspace/docs/pages?blockId=${blockId}`);
       if (!response.ok) throw new Error('Failed to fetch pages');
-
+      
       const data = await response.json();
       setPages(data.pages);
-      setCurrentPage(prev => prev ?? (data.pages[0] ?? null));
+      
+      // Set current page to first page if none selected
+      if (!currentPage && data.pages.length > 0) {
+        setCurrentPage(data.pages[0]);
+      }
     } catch (error) {
       console.error('Error fetching pages:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [blockId]);
+  };
 
   // Create new page
   const createPage = async () => {
@@ -144,7 +149,7 @@ export function DocsView({ blockId }: DocsViewProps) {
 
   useEffect(() => {
     fetchPages();
-  }, [fetchPages]);
+  }, [blockId]);
 
   if (isLoading) {
     return (
