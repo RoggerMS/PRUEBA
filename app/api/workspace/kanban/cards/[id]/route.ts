@@ -1,71 +1,48 @@
-import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// PATCH /api/workspace/kanban/cards/[id] - Update a card
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const body = await request.json();
-    const { id } = params;
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/kanban/cards/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    const card = await prisma.kanbanCard.findFirst({
+      where: { id: params.id, column: { block: { board: { userId: session.user.id } } } }
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
+    if (!card) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error updating kanban card:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const data = await req.json();
+    const updated = await prisma.kanbanCard.update({ where: { id: params.id }, data });
+    return Response.json({ card: updated });
+  } catch (e) {
+    console.error('[PATCH /api/workspace/kanban/cards/:id]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
   }
 }
 
-// DELETE /api/workspace/kanban/cards/[id] - Delete a card
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { id } = params;
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/kanban/cards/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
+    const card = await prisma.kanbanCard.findFirst({
+      where: { id: params.id, column: { block: { board: { userId: session.user.id } } } }
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
+    if (!card) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error deleting kanban card:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    await prisma.kanbanCard.delete({ where: { id: params.id } });
+    return Response.json({ ok: true });
+  } catch (e) {
+    console.error('[DELETE /api/workspace/kanban/cards/:id]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
   }
 }

@@ -1,75 +1,56 @@
-import { NextRequest, NextResponse } from 'next/server';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// GET /api/workspace/frases/items - Get all items for a block
-export async function GET(request: NextRequest) {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(req.url);
     const blockId = searchParams.get('blockId');
-
     if (!blockId) {
-      return NextResponse.json({ error: 'Block ID is required' }, { status: 400 });
+      return Response.json({ error: 'Block ID is required' }, { status: 400 });
     }
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/frases/items?blockId=${blockId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
+    const items = await prisma.frasesItem.findMany({
+      where: { blockId, block: { board: { userId: session.user.id } } },
+      orderBy: { createdAt: 'asc' }
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error fetching frases items:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ items });
+  } catch (e) {
+    console.error('[GET /api/workspace/frases/items]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
   }
 }
 
-// POST /api/workspace/frases/items - Create a new item
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const body = await request.json();
-
-    // Forward request to NestJS microservice
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/workspace/frases/items`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.user.email}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    const body = await req.json();
+    const block = await prisma.workspaceBlock.findFirst({
+      where: { id: body.blockId, board: { userId: session.user.id } }
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json({ error }, { status: response.status });
+    if (!block) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error creating frases item:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const item = await prisma.frasesItem.create({
+      data: {
+        blockId: body.blockId,
+        content: body.content,
+        tags: body.tags ?? '[]'
+      }
+    });
+    return Response.json({ item }, { status: 201 });
+  } catch (e) {
+    console.error('[POST /api/workspace/frases/items]', e);
+    return Response.json({ error: 'Internal error' }, { status: 500 });
   }
 }
