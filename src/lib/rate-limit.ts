@@ -21,8 +21,8 @@ function getClientIP(request: NextRequest): string {
   if (realIP) {
     return realIP;
   }
-  
-  return request.ip || 'unknown';
+
+  return 'unknown';
 }
 
 // Rate limit middleware

@@ -79,8 +79,7 @@ const quickActionItems: SidebarItem[] = [
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const location = useLocation();
-  const pathname = location.pathname;
+  const pathname = usePathname();
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -95,7 +94,7 @@ export function Sidebar() {
 
     return (
       <Link
-        to={item.href}
+        href={item.href}
         className={cn(
           'flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 group',
           active
@@ -147,7 +146,7 @@ export function Sidebar() {
 
         {/* User Crolars Balance - Enhanced Visibility */}
         {!isCollapsed && (
-          <Link to="/crolars">
+          <Link href="/crolars">
             <div className="mb-6 p-4 bg-gradient-to-r from-yellow-400/20 via-orange-400/15 to-yellow-500/20 rounded-xl border-2 border-yellow-400/30 shadow-lg hover:shadow-xl hover:border-yellow-400/50 transition-all duration-300 cursor-pointer group">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -173,7 +172,7 @@ export function Sidebar() {
         
         {/* Collapsed Crolars Balance */}
         {isCollapsed && (
-          <Link to="/crolars">
+          <Link href="/crolars">
             <div className="mb-6 p-3 bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 rounded-lg border border-yellow-400/30 hover:border-yellow-400/50 transition-all duration-300 cursor-pointer group">
               <div className="flex flex-col items-center space-y-1">
                 <div className="p-2 bg-yellow-400 rounded-full shadow-md group-hover:bg-yellow-500 transition-colors duration-200">

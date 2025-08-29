@@ -29,8 +29,7 @@
       ]
     },
     "types": [
-      "node",
-      "express"
+      "node"
     ],
     "allowJs": true,
     "incremental": true,
@@ -47,7 +46,6 @@
   "include": [
     "src",
     "app",
-    "api",
     ".next/types/**/*.ts"
   ],
   "exclude": [
