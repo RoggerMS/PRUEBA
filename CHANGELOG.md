@@ -21,4 +21,5 @@
 - Stub authentication routes and add a session endpoint to avoid 404 errors during development.
 - Rename "Espacio Personal" navigation item to "Workspace" and fix related links.
 - Wrap root layout with SessionProvider and improve workspace board loading to prevent endless "Cargando..." state.
+- Move SessionProvider into client Providers and add development session fallback so workspace loads without RSC errors.
 

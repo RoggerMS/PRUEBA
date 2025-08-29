@@ -2,15 +2,14 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { proxyWorkspace } from '@/lib/workspace-proxy';
+import { getSession } from '@/lib/session';
 
 export async function GET(req: Request) {
   const proxy = await proxyWorkspace(req, '/debug');
   if (proxy) return proxy;
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (!session?.user?.id) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
