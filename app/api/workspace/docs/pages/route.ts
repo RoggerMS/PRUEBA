@@ -5,8 +5,11 @@ export const revalidate = 0;
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { proxyWorkspace } from '@/lib/workspace-proxy';
 
 export async function GET(req: Request) {
+  const proxy = await proxyWorkspace(req, '/docs/pages');
+  if (proxy) return proxy;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -29,6 +32,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const proxy = await proxyWorkspace(req, '/docs/pages');
+  if (proxy) return proxy;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

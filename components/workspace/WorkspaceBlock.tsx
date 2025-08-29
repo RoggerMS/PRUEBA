@@ -145,8 +145,8 @@ export function WorkspaceBlock({
         body: JSON.stringify({
           x: block.x,
           y: block.y,
-          width: block.width,
-          height: block.height,
+          w: block.width,
+          h: block.height,
         }),
       });
     } catch (error) {
