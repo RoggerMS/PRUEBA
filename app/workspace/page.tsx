@@ -88,31 +88,17 @@ export default function WorkspacePage() {
     setError(null);
     try {
       const data = await fetcher('/api/workspace/boards');
-      if (!data.defaultBoard) {
-        await fetch('/api/workspace/boards', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ name: 'Pizarra 1' })
-        });
-        const again = await fetcher('/api/workspace/boards');
-        const mapped = again.boards.map((b: any) => ({
-          ...b,
-          blocks: b.blocks.map(normalizeBlock),
-        }));
-        setBoards(mapped);
-        const def = mapped.find((b: WorkspaceBoard) => b.id === again.defaultBoard) || mapped[0] || null;
-        setCurrentBoard(def);
-      } else {
-        const mapped = data.boards.map((b: any) => ({
-          ...b,
-          blocks: b.blocks.map(normalizeBlock),
-        }));
-        setBoards(mapped);
-        const def = mapped.find((b: WorkspaceBoard) => b.id === data.defaultBoard) || mapped[0] || null;
-        setCurrentBoard(def);
-      }
+      const mapped = (data.boards || []).map((b: any) => ({
+        ...b,
+        blocks: (b.blocks || []).map(normalizeBlock),
+      }));
+      setBoards(mapped);
+      const def = mapped.find((b: WorkspaceBoard) => b.id === data.defaultBoard) || mapped[0] || null;
+      setCurrentBoard(def);
     } catch (e: any) {
-      setError(e.message);
+      console.error("Error loading boards", e);
+      setError("No se pudo cargar las pizarras");
+      toast.error("Error al cargar las pizarras");
     } finally {
       setIsLoading(false);
     }
@@ -218,41 +204,38 @@ export default function WorkspacePage() {
     );
   }
 
-  if (status === 'unauthenticated') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Acceso Requerido</h1>
-          <p className="text-gray-600 mb-4">Debes iniciar sesión para acceder al Workspace</p>
-          <Button onClick={() => window.location.href = '/auth/login'}>
-            Iniciar Sesión
-          </Button>
-        </Card>
-      </div>
-    );
-  }
+    if (status === 'unauthenticated') {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <Card className="p-8 text-center">
+            <h1 className="text-2xl font-bold mb-4">Acceso Requerido</h1>
+            <p className="text-gray-600 mb-4">Debes iniciar sesión para acceder al Workspace</p>
+            <Button onClick={() => window.location.href = '/auth/login'}>
+              Iniciar Sesión
+            </Button>
+          </Card>
+        </div>
+      );
+    }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-8 text-center">
-          <p className="mb-4 text-red-500">{error}</p>
-          <Button onClick={loadBoards}>Reintentar</Button>
-        </Card>
-      </div>
-    );
-  }
+    if (error) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <Card className="p-8 text-center">
+            <p className="mb-4 text-red-500">{error}</p>
+            <Button onClick={loadBoards}>Reintentar</Button>
+          </Card>
+        </div>
+      );
+    }
 
-  if (!boards.length) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">Crea tu primer bloque</h2>
-          <Button onClick={() => createBoard('Pizarra 1')}>Crear Bloque</Button>
-        </Card>
-      </div>
-    );
-  }
+    if (!isLoading && !currentBoard) {
+      return (
+        <div className="flex items-center justify-center min-h-screen text-gray-500">
+          No tienes pizarras aún.
+        </div>
+      );
+    }
 
 
   return (
