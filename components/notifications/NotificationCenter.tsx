@@ -15,30 +15,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useNotificationContext, useNotificationBadge } from '@/contexts/NotificationContext';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export function NotificationCenter() {
   const {
     notifications,
     unreadCount,
     isLoading,
-    error,
     hasMore,
     loadNotifications,
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    clearAll
-  } = useNotificationContext();
-  
+    clearAll,
+    page,
+  } = useNotifications();
+
   const [isOpen, setIsOpen] = useState(false);
-  const [page, setPage] = useState(1);
 
   // Cargar más notificaciones
   const loadMore = async () => {
     if (hasMore && !isLoading) {
       await loadNotifications(page + 1, false);
-      setPage(prev => prev + 1);
     }
   };
 
@@ -86,7 +84,6 @@ export function NotificationCenter() {
   useEffect(() => {
     if (isOpen && notifications.length === 0) {
       loadNotifications(1, true);
-      setPage(1);
     }
   }, [isOpen, notifications.length, loadNotifications]);
 
