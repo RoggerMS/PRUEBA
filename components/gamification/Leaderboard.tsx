@@ -162,7 +162,9 @@ const getRankChange = (rank: number, previousRank?: number) => {
       =
     </div>
   );
-};
+}
+
+export default Leaderboard;
 
 const getPodiumHeight = (rank: number) => {
   switch (rank) {

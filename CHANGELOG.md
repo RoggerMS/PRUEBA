@@ -34,5 +34,14 @@
 - Correct camera icon alignment on profile avatar and banner.
 - Replace missing Fire icon with FlameIcon and use proper NotificationToast import to resolve development runtime errors.
 
-- Ensure notification service connects correctly and improve WebSocket error handling.
+- **FIXED: Notification Service Errors**
+  - Added missing `connect()`, `disconnect()`, and `requestNotificationPermission()` methods to `notificationService.ts`
+  - Fixed TypeError: "notificationService.connect is not a function" in MainLayout
+  - Migrated from WebSocket to Server-Sent Events (SSE) for real-time notifications due to Next.js compatibility
+  - Updated `useWebSocketNotifications.ts` to use EventSource API instead of WebSocket
+  - Updated `useNotifications.ts` to use SSE for real-time notification streaming
+  - Fixed "Network error" issues by switching to `/api/notifications/stream` SSE endpoint
+  - Improved error handling and reconnection logic for SSE connections
+  - Enhanced notification service with user ID tracking and connection status management
+  - Added browser notification permission handling and display functionality
 

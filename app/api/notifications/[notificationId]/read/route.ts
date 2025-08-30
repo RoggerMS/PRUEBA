@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // PUT /api/notifications/[notificationId]/read - Mark notification as read
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { notificationId: string } }
+  { params }: { params: Promise<{ notificationId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { notificationId } = params;
+    const { notificationId } = await params;
 
     // Check if notification exists and belongs to user
     const notification = await prisma.notification.findFirst({

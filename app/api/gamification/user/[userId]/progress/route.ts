@@ -7,11 +7,11 @@ import { gamificationService } from '@/lib/gamificationService';
 // GET /api/gamification/user/[userId]/progress - Obtener progreso del usuario
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId } = params;
+    const { userId } = await params;
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -284,11 +284,11 @@ async function getLongestStreak(userId: string): Promise<number> {
 // PUT /api/gamification/user/[userId]/progress - Actualizar progreso manualmente (solo admin)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId } = params;
+    const { userId } = await params;
     
     if (!session?.user?.id) {
       return NextResponse.json(

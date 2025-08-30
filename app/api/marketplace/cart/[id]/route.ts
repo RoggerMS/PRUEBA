@@ -9,16 +9,10 @@ const UpdateCartItemSchema = z.object({
   quantity: z.number().int().positive().max(10)
 });
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // PUT /api/marketplace/cart/[id] - Actualizar cantidad de item en carrito
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -26,12 +20,13 @@ export async function PUT(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { quantity } = UpdateCartItemSchema.parse(body);
 
     // Verificar que el item del carrito existe y pertenece al usuario
     const cartItem = await prisma.cartItem.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         product: true
       }
@@ -68,7 +63,7 @@ export async function PUT(
     }
 
     const updatedCartItem = await prisma.cartItem.update({
-      where: { id: params.id },
+      where: { id },
       data: { quantity },
       include: {
         product: {
@@ -107,7 +102,7 @@ export async function PUT(
 // DELETE /api/marketplace/cart/[id] - Eliminar item del carrito
 export async function DELETE(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -115,9 +110,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const { id } = await params;
     // Verificar que el item del carrito existe y pertenece al usuario
     const cartItem = await prisma.cartItem.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!cartItem) {
@@ -135,7 +131,7 @@ export async function DELETE(
     }
 
     await prisma.cartItem.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ message: 'Item eliminado del carrito exitosamente' });

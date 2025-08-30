@@ -16,12 +16,13 @@ const commentsQuerySchema = z.object({
 // GET /api/feed/[id]/comments - Get comments for a post
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getSession();
 
-    const postId = params.id;
+    const postId = id;
     const { searchParams } = new URL(request.url);
     const query = commentsQuerySchema.parse({
       cursor: searchParams.get('cursor'),

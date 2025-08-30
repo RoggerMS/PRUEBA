@@ -19,8 +19,9 @@ const updateAchievementSchema = z.object({
 // GET /api/admin/gamification/achievements/[achievementId] - Obtener achievement específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { achievementId: string } }
+  { params }: { params: Promise<{ achievementId: string }> }
 ) {
+  const { achievementId } = await params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -41,7 +42,7 @@ export async function GET(
 
     const achievement = await prisma.achievement.findUnique({
       where: {
-        id: params.achievementId
+        id: achievementId
       },
       include: {
         badge: {
@@ -80,8 +81,9 @@ export async function GET(
 // PUT /api/admin/gamification/achievements/[achievementId] - Actualizar achievement
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { achievementId: string } }
+  { params }: { params: Promise<{ achievementId: string }> }
 ) {
+  const { achievementId } = await params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -105,7 +107,7 @@ export async function PUT(
 
     // Verificar que el achievement existe
     const existingAchievement = await prisma.achievement.findUnique({
-      where: { id: params.achievementId }
+      where: { id: achievementId }
     });
 
     if (!existingAchievement) {
@@ -120,7 +122,7 @@ export async function PUT(
       const nameExists = await prisma.achievement.findFirst({
         where: {
           name: validatedData.name,
-          id: { not: params.achievementId }
+          id: { not: achievementId }
         }
       });
 
@@ -149,7 +151,7 @@ export async function PUT(
     // Actualizar achievement
     const updatedAchievement = await prisma.achievement.update({
       where: {
-        id: params.achievementId
+        id: achievementId
       },
       data: {
         ...validatedData,
@@ -193,8 +195,9 @@ export async function PUT(
 // DELETE /api/admin/gamification/achievements/[achievementId] - Eliminar achievement
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { achievementId: string } }
+  { params }: { params: Promise<{ achievementId: string }> }
 ) {
+  const { achievementId } = await params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -215,7 +218,7 @@ export async function DELETE(
 
     // Verificar que el achievement existe
     const existingAchievement = await prisma.achievement.findUnique({
-      where: { id: params.achievementId },
+      where: { id: achievementId },
       include: {
         _count: {
           select: {
@@ -246,7 +249,7 @@ export async function DELETE(
     // Eliminar achievement
     await prisma.achievement.delete({
       where: {
-        id: params.achievementId
+        id: achievementId
       }
     });
 

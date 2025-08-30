@@ -6,8 +6,9 @@ import { prisma } from '@/lib/prisma';
 import { proxyWorkspace } from '@/lib/workspace-proxy';
 import { getSession } from '@/lib/session';
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const proxy = await proxyWorkspace(req, `/kanban/cards/${params.id}`);
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const proxy = await proxyWorkspace(req, `/kanban/cards/${id}`);
   if (proxy) return proxy;
   try {
     const session = await getSession();
@@ -15,13 +16,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const card = await prisma.kanbanCard.findFirst({
-      where: { id: params.id, column: { block: { board: { userId: session.user.id } } } }
+      where: { id, column: { block: { board: { userId: session.user.id } } } }
     });
     if (!card) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const data = await req.json();
-    const updated = await prisma.kanbanCard.update({ where: { id: params.id }, data });
+    const updated = await prisma.kanbanCard.update({ where: { id }, data });
     return Response.json({ card: updated });
   } catch (e) {
     console.error('[PATCH /api/workspace/kanban/cards/:id]', e);
@@ -29,8 +30,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const proxy = await proxyWorkspace(req, `/kanban/cards/${params.id}`);
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const proxy = await proxyWorkspace(req, `/kanban/cards/${id}`);
   if (proxy) return proxy;
   try {
     const session = await getSession();
@@ -38,12 +40,12 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const card = await prisma.kanbanCard.findFirst({
-      where: { id: params.id, column: { block: { board: { userId: session.user.id } } } }
+      where: { id, column: { block: { board: { userId: session.user.id } } } }
     });
     if (!card) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    await prisma.kanbanCard.delete({ where: { id: params.id } });
+    await prisma.kanbanCard.delete({ where: { id } });
     return Response.json({ ok: true });
   } catch (e) {
     console.error('[DELETE /api/workspace/kanban/cards/:id]', e);

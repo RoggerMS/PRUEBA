@@ -37,7 +37,7 @@ export function useNotifications(): UseNotificationsReturn {
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const wsRef = useRef<WebSocket | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
@@ -178,24 +178,22 @@ export function useNotifications(): UseNotificationsReturn {
     }
   }, []);
 
-  // Configurar WebSocket para notificaciones en tiempo real
-  const setupWebSocket = useCallback(() => {
-    if (!session?.user?.id || wsRef.current?.readyState === WebSocket.OPEN) {
+  // Configurar SSE para notificaciones en tiempo real
+  const setupSSE = useCallback(() => {
+    if (!session?.user?.id || eventSourceRef.current) {
       return;
     }
 
     try {
-      // En un entorno real, esto sería wss://tu-dominio.com/ws
-      const wsUrl = `ws://localhost:3001/ws?userId=${session.user.id}`;
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
+      const eventSource = new EventSource(`/api/notifications/stream?userId=${session.user.id}`);
+      eventSourceRef.current = eventSource;
 
-      ws.onopen = () => {
-        console.log('WebSocket conectado para notificaciones');
+      eventSource.onopen = () => {
+        console.log('SSE conectado para notificaciones');
         reconnectAttempts.current = 0;
       };
 
-      ws.onmessage = (event) => {
+      eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           
@@ -216,43 +214,39 @@ export function useNotifications(): UseNotificationsReturn {
             });
           }
         } catch (err) {
-          console.error('Error parsing WebSocket message:', err);
+          console.error('Error parsing SSE message:', err);
         }
       };
 
-      ws.onclose = (event) => {
-        console.log('WebSocket desconectado:', event.code, event.reason);
-        wsRef.current = null;
+      eventSource.onerror = (event) => {
+        console.error('Error en SSE:', event);
+        eventSource.close();
+        eventSourceRef.current = null;
         
         // Intentar reconectar si no fue un cierre intencional
-        if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
+        if (reconnectAttempts.current < maxReconnectAttempts) {
           const delay = Math.pow(2, reconnectAttempts.current) * 1000; // Backoff exponencial
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttempts.current++;
-            setupWebSocket();
+            setupSSE();
           }, delay);
         }
       };
-
-      ws.onerror = (event) => {
-        const message = event instanceof ErrorEvent ? event.message : 'Network error';
-        console.error('Error en WebSocket:', message);
-      };
     } catch (err) {
-      console.error('Error setting up WebSocket:', err);
+      console.error('Error setting up SSE:', err);
     }
   }, [session?.user?.id]);
 
-  // Limpiar WebSocket
-  const cleanupWebSocket = useCallback(() => {
+  // Limpiar SSE
+  const cleanupSSE = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
     
-    if (wsRef.current) {
-      wsRef.current.close(1000, 'Component unmounting');
-      wsRef.current = null;
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
     }
   }, []);
 
@@ -260,16 +254,16 @@ export function useNotifications(): UseNotificationsReturn {
   useEffect(() => {
     if (session?.user?.id) {
       loadNotifications(1, true);
-      setupWebSocket();
+      setupSSE();
     }
 
-    return cleanupWebSocket;
-  }, [session?.user?.id, loadNotifications, setupWebSocket, cleanupWebSocket]);
+    return cleanupSSE;
+  }, [session?.user?.id, loadNotifications, setupSSE, cleanupSSE]);
 
   // Limpiar al desmontar
   useEffect(() => {
-    return cleanupWebSocket;
-  }, [cleanupWebSocket]);
+    return cleanupSSE;
+  }, [cleanupSSE]);
 
   return {
     notifications,

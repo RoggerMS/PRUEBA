@@ -11,6 +11,8 @@ export interface NotificationData {
 class NotificationService {
   private static instance: NotificationService
   private subscribers: ((notification: NotificationData) => void)[] = []
+  private userId: string | null = null
+  private isConnected: boolean = false
 
   private constructor() {}
 
@@ -77,6 +79,59 @@ class NotificationService {
 
   info(title: string, message: string, actionUrl?: string, actionText?: string) {
     this.notify({ type: 'info', title, message, actionUrl, actionText })
+  }
+
+  // Connection methods for WebSocket integration
+  connect(userId: string) {
+    this.userId = userId
+    this.isConnected = true
+    console.log(`Notification service connected for user: ${userId}`)
+  }
+
+  disconnect() {
+    this.userId = null
+    this.isConnected = false
+    console.log('Notification service disconnected')
+  }
+
+  // Request browser notification permission
+  async requestNotificationPermission(): Promise<NotificationPermission> {
+    if (!('Notification' in window)) {
+      console.warn('This browser does not support notifications')
+      return 'denied'
+    }
+
+    if (Notification.permission === 'granted') {
+      return 'granted'
+    }
+
+    if (Notification.permission === 'denied') {
+      return 'denied'
+    }
+
+    try {
+      const permission = await Notification.requestPermission()
+      return permission
+    } catch (error) {
+      console.error('Error requesting notification permission:', error)
+      return 'denied'
+    }
+  }
+
+  // Show browser notification
+  showBrowserNotification(title: string, options?: NotificationOptions) {
+    if (Notification.permission === 'granted') {
+      new Notification(title, options)
+    }
+  }
+
+  // Getters
+  getUserId(): string | null {
+    return this.userId
+  }
+
+  getIsConnected(): boolean {
+    return this.isConnected
   }
 }
 

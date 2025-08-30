@@ -31,10 +31,11 @@ const mockAchievements = [
 ]
 
 interface PageProps {
-  params: { username: string }
+  params: Promise<{ username: string }>
 }
 
-export default function PublicAchievementsPage({ params }: PageProps) {
+export default async function PublicAchievementsPage({ params }: PageProps) {
+  const { username } = await params;
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -42,7 +43,7 @@ export default function PublicAchievementsPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-yellow-500" />
-              Logros de {params.username}
+              Logros de {username}
             </CardTitle>
           </CardHeader>
           <CardContent>

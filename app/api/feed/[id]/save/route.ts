@@ -14,15 +14,16 @@ const saveSchema = z.object({
 // POST /api/feed/[id]/save - Save or unsave post
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const postId = params.id;
+    const postId = id;
     const body = await request.json();
     const { action } = saveSchema.parse(body);
 

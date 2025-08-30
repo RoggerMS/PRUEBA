@@ -6,11 +6,11 @@ import { authOptions } from '@/lib/auth';
 // GET /api/gamification/user/[userId]/badges - Obtener badges del usuario
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId } = params;
+    const { userId } = await params;
     
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -207,11 +207,11 @@ export async function GET(
 // POST /api/gamification/user/[userId]/badges - Otorgar badge manualmente (solo admin)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const { userId } = params;
+    const { userId } = await params;
     
     if (!session?.user?.id) {
       return NextResponse.json(

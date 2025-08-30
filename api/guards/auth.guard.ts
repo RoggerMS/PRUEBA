@@ -8,6 +8,20 @@ import { Request } from 'express';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 
+// Extend Request interface to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email: string;
+        name: string | null;
+        username: string;
+      };
+    }
+  }
+}
+
 const prisma = new PrismaClient();
 
 @Injectable()
@@ -40,7 +54,7 @@ export class AuthGuard implements CanActivate {
       }
 
       // Attach user to request
-      request['user'] = user;
+      request.user = user;
       return true;
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired token');

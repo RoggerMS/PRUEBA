@@ -168,7 +168,7 @@ export function useNotifications(): UseNotificationsReturn {
       es.close();
       setIsConnected(false);
     };
-  }, [session?.user?.id, markAsRead]);
+  }, [session?.user?.id, markAsRead, eventSource]);
 
   // Initial fetch of notifications
   useEffect(() => {

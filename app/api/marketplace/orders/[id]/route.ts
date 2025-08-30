@@ -11,16 +11,10 @@ const UpdateOrderSchema = z.object({
   notes: z.string().max(500).optional()
 });
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // GET /api/marketplace/orders/[id] - Obtener orden específica
 export async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -28,8 +22,9 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const { id } = await params;
     const order = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         buyer: {
           select: {
@@ -106,7 +101,7 @@ export async function GET(
 // PUT /api/marketplace/orders/[id] - Actualizar estado de orden
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -114,12 +109,13 @@ export async function PUT(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { status, trackingNumber, notes } = UpdateOrderSchema.parse(body);
 
     // Verificar que la orden existe
     const existingOrder = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         items: {
           include: {
@@ -178,7 +174,7 @@ export async function PUT(
       await prisma.$transaction(async (tx) => {
         // Actualizar la orden
         await tx.order.update({
-          where: { id: params.id },
+          where: { id },
           data: updateData
         });
 
@@ -211,7 +207,7 @@ export async function PUT(
             type: 'MARKETPLACE_ORDER_CANCELLED',
             title: 'Orden cancelada',
             message: `Tu orden ha sido cancelada. Los Crolars han sido devueltos a tu cuenta.`,
-            metadata: JSON.stringify({ orderId: params.id })
+            metadata: JSON.stringify({ orderId: id })
           }
         });
       });
@@ -220,7 +216,7 @@ export async function PUT(
       await prisma.$transaction(async (tx) => {
         // Actualizar la orden
         await tx.order.update({
-          where: { id: params.id },
+          where: { id },
           data: updateData
         });
 
@@ -255,7 +251,7 @@ export async function PUT(
               type: 'MARKETPLACE_PAYMENT_RECEIVED',
               title: 'Pago recibido',
               message: `Has recibido ${amount} Crolars por una venta completada.`,
-              metadata: JSON.stringify({ orderId: params.id, amount })
+              metadata: JSON.stringify({ orderId: id, amount })
             }
           });
         }
@@ -267,14 +263,14 @@ export async function PUT(
             type: 'MARKETPLACE_ORDER_DELIVERED',
             title: 'Orden entregada',
             message: 'Tu orden ha sido marcada como entregada.',
-            metadata: JSON.stringify({ orderId: params.id })
+            metadata: JSON.stringify({ orderId: id })
           }
         });
       });
     } else {
       // Actualización normal de estado
       await prisma.order.update({
-        where: { id: params.id },
+        where: { id },
         data: updateData
       });
 
@@ -285,14 +281,14 @@ export async function PUT(
           type: 'MARKETPLACE_ORDER_UPDATE',
           title: 'Actualización de orden',
           message: `Tu orden ha sido actualizada a: ${status}`,
-          metadata: JSON.stringify({ orderId: params.id, status })
+          metadata: JSON.stringify({ orderId: id, status })
         }
       });
     }
 
     // Obtener la orden actualizada
     const updatedOrder = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         buyer: {
           select: {

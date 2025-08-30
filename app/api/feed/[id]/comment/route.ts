@@ -16,8 +16,9 @@ const createCommentSchema = z.object({
 // POST /api/feed/[id]/comment - Create new comment
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getSession();
     if (!session?.user?.id) {
@@ -33,7 +34,7 @@ export async function POST(
       );
     }
 
-    const postId = params.id;
+    const postId = id;
     const body = await request.json();
     const { content, parentId } = createCommentSchema.parse(body);
 

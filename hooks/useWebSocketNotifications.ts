@@ -24,62 +24,43 @@ export function useWebSocketNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
 
   const connect = () => {
-    if (!session?.user?.id || wsRef.current?.readyState === WebSocket.OPEN) {
+    if (!session?.user?.id || eventSourceRef.current?.readyState === EventSource.OPEN) {
       return;
     }
 
     try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/ws?userId=${session.user.id}`;
+      const sseUrl = `/api/notifications/stream?userId=${session.user.id}`;
       
-      wsRef.current = new WebSocket(wsUrl);
+      eventSourceRef.current = new EventSource(sseUrl);
 
-      wsRef.current.onopen = () => {
-        console.log('WebSocket connected');
+      eventSourceRef.current.onopen = () => {
+        console.log('SSE connected');
         setIsConnected(true);
         reconnectAttempts.current = 0;
         
-        // Request initial notifications
-        wsRef.current?.send(JSON.stringify({
-          type: 'get_notifications',
-          limit: 20,
-          offset: 0
-        }));
+        // Load initial notifications via API
+        loadInitialNotifications();
       };
 
-      wsRef.current.onmessage = (event) => {
+      eventSourceRef.current.onmessage = (event) => {
         try {
-          const message: WebSocketMessage = JSON.parse(event.data);
-          
-          switch (message.type) {
-            case 'notification':
-              if (message.notification) {
-                handleNewNotification(message.notification);
-              }
-              break;
-            case 'notifications':
-              if (message.notifications) {
-                setNotifications(message.notifications);
-                updateUnreadCount(message.notifications);
-              }
-              break;
-            case 'error':
-              console.error('WebSocket error:', message.message);
-              break;
+          if (event.type === 'notification') {
+            const notification: Notification = JSON.parse(event.data);
+            handleNewNotification(notification);
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          console.error('Error parsing SSE message:', error);
         }
       };
 
-      wsRef.current.onclose = () => {
-        console.log('WebSocket disconnected');
+      eventSourceRef.current.onclose = () => {
+        console.log('SSE disconnected');
         setIsConnected(false);
         
         // Attempt to reconnect
@@ -92,9 +73,9 @@ export function useWebSocketNotifications() {
         }
       };
 
-      wsRef.current.onerror = (event) => {
-        const message = event instanceof ErrorEvent ? event.message : 'Network error';
-        console.error('WebSocket error:', message);
+      eventSourceRef.current.onerror = (event) => {
+        console.error('SSE error:', event);
+        setIsConnected(false);
       };
     } catch (error) {
       console.error('Error creating WebSocket connection:', error);
@@ -107,12 +88,25 @@ export function useWebSocketNotifications() {
       reconnectTimeoutRef.current = null;
     }
     
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
     }
     
     setIsConnected(false);
+  };
+
+  const loadInitialNotifications = async () => {
+    try {
+      const response = await fetch('/api/notifications?limit=20&offset=0');
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications || []);
+        updateUnreadCount(data.notifications || []);
+      }
+    } catch (error) {
+      console.error('Error loading initial notifications:', error);
+    }
   };
 
   const handleNewNotification = (notification: Notification) => {
@@ -175,13 +169,7 @@ export function useWebSocketNotifications() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      // Send WebSocket message
-      wsRef.current?.send(JSON.stringify({
-        type: 'mark_read',
-        notificationId
-      }));
-
-      // Update local state
+      // Update local state immediately for better UX
       setNotifications(prev => 
         prev.map(n => 
           n.id === notificationId ? { ...n, read: true } : n
@@ -191,12 +179,19 @@ export function useWebSocketNotifications() {
       // Update unread count
       setUnreadCount(prev => Math.max(0, prev - 1));
 
-      // Also call API as backup
+      // Call API to persist the change
       await fetch(`/api/notifications/${notificationId}/read`, {
         method: 'PUT'
       });
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      // Revert local state on error
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === notificationId ? { ...n, read: false } : n
+        )
+      );
+      setUnreadCount(prev => prev + 1);
     }
   };
 
@@ -219,23 +214,11 @@ export function useWebSocketNotifications() {
   };
 
   const refreshNotifications = () => {
-    wsRef.current?.send(JSON.stringify({
-      type: 'get_notifications',
-      limit: 20,
-      offset: 0
-    }));
+    loadInitialNotifications();
   };
 
-  // Send periodic ping to keep connection alive
-  useEffect(() => {
-    if (!isConnected) return;
-
-    const pingInterval = setInterval(() => {
-      wsRef.current?.send(JSON.stringify({ type: 'ping' }));
-    }, 30000); // Ping every 30 seconds
-
-    return () => clearInterval(pingInterval);
-  }, [isConnected]);
+  // SSE connections don't need periodic pings
+  // The browser handles connection keep-alive automatically
 
   // Connect when session is available
   useEffect(() => {

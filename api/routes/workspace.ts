@@ -12,7 +12,7 @@ router.get('/boards', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const boards = await prisma.board.findMany({
+    const boards = await prisma.workspaceBoard.findMany({
       where: { userId },
       include: {
         blocks: true,
@@ -39,10 +39,9 @@ router.post('/boards', async (req, res) => {
 
     const { name, description } = req.body;
     
-    const board = await prisma.board.create({
+    const board = await prisma.workspaceBoard.create({
       data: {
         name,
-        description,
         userId,
       },
       include: {
@@ -75,7 +74,7 @@ router.get('/blocks', async (req, res) => {
       whereClause.boardId = boardId;
     }
 
-    const blocks = await prisma.block.findMany({
+    const blocks = await prisma.workspaceBlock.findMany({
       where: whereClause,
       include: {
         board: {
@@ -99,10 +98,10 @@ router.post('/blocks', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { boardId, type, content, position, size } = req.body;
+    const { boardId, type, title, x, y, w, h } = req.body;
     
     // Verify board ownership
-    const board = await prisma.board.findFirst({
+    const board = await prisma.workspaceBoard.findFirst({
       where: { id: boardId, userId }
     });
     
@@ -110,13 +109,15 @@ router.post('/blocks', async (req, res) => {
       return res.status(404).json({ error: 'Board not found' });
     }
 
-    const block = await prisma.block.create({
+    const block = await prisma.workspaceBlock.create({
       data: {
         boardId,
         type,
-        content,
-        position,
-        size,
+        title,
+        x: x || 0,
+        y: y || 0,
+        w: w || 300,
+        h: h || 200,
       },
       include: {
         board: {
@@ -142,7 +143,7 @@ router.patch('/blocks/:id', async (req, res) => {
     }
 
     // Verify block ownership through board
-    const existingBlock = await prisma.block.findFirst({
+    const existingBlock = await prisma.workspaceBlock.findFirst({
       where: {
         id: blockId,
         board: { userId }
@@ -153,15 +154,19 @@ router.patch('/blocks/:id', async (req, res) => {
       return res.status(404).json({ error: 'Block not found' });
     }
 
-    const { type, content, position, size } = req.body;
+    const { type, title, x, y, w, h, locked, completed } = req.body;
     
-    const block = await prisma.block.update({
+    const block = await prisma.workspaceBlock.update({
       where: { id: blockId },
       data: {
         ...(type && { type }),
-        ...(content && { content }),
-        ...(position && { position }),
-        ...(size && { size }),
+        ...(title && { title }),
+        ...(x !== undefined && { x }),
+        ...(y !== undefined && { y }),
+        ...(w !== undefined && { w }),
+        ...(h !== undefined && { h }),
+        ...(locked !== undefined && { locked }),
+        ...(completed !== undefined && { completed }),
       },
       include: {
         board: {
@@ -187,7 +192,7 @@ router.delete('/blocks/:id', async (req, res) => {
     }
 
     // Verify block ownership through board
-    const existingBlock = await prisma.block.findFirst({
+    const existingBlock = await prisma.workspaceBlock.findFirst({
       where: {
         id: blockId,
         board: { userId }
@@ -198,7 +203,7 @@ router.delete('/blocks/:id', async (req, res) => {
       return res.status(404).json({ error: 'Block not found' });
     }
 
-    await prisma.block.delete({
+    await prisma.workspaceBlock.delete({
       where: { id: blockId }
     });
 
@@ -219,16 +224,21 @@ router.get('/docs/pages', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const whereClause: any = { board: { userId } };
+    const whereClause: any = { block: { board: { userId } } };
     if (boardId) {
-      whereClause.boardId = boardId;
+      whereClause.block = { boardId };
     }
 
     const pages = await prisma.docsPage.findMany({
       where: whereClause,
       include: {
-        board: {
-          select: { id: true, name: true }
+        block: {
+          select: { id: true, title: true },
+          include: {
+            board: {
+              select: { id: true, name: true }
+            }
+          }
         }
       },
       orderBy: { updatedAt: 'desc' }
@@ -248,26 +258,31 @@ router.post('/docs/pages', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { boardId, title, content } = req.body;
+    const { blockId, title, content } = req.body;
     
-    // Verify board ownership
-    const board = await prisma.board.findFirst({
-      where: { id: boardId, userId }
+    // Verify block ownership
+    const block = await prisma.workspaceBlock.findFirst({
+      where: { id: blockId, board: { userId } }
     });
     
-    if (!board) {
-      return res.status(404).json({ error: 'Board not found' });
+    if (!block) {
+      return res.status(404).json({ error: 'Block not found' });
     }
 
     const page = await prisma.docsPage.create({
       data: {
-        boardId,
+        blockId,
         title,
         content,
       },
       include: {
-        board: {
-          select: { id: true, name: true }
+        block: {
+          select: { id: true, title: true },
+          include: {
+            board: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
     });
@@ -288,11 +303,11 @@ router.patch('/docs/pages/:id', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Verify page ownership through board
+    // Verify page ownership through block
     const existingPage = await prisma.docsPage.findFirst({
       where: {
         id: pageId,
-        board: { userId }
+        block: { board: { userId } }
       }
     });
     
@@ -309,8 +324,13 @@ router.patch('/docs/pages/:id', async (req, res) => {
         ...(content && { content }),
       },
       include: {
-        board: {
-          select: { id: true, name: true }
+        block: {
+          select: { id: true, title: true },
+          include: {
+            board: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
     });
@@ -331,11 +351,11 @@ router.delete('/docs/pages/:id', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Verify page ownership through board
+    // Verify page ownership through block
     const existingPage = await prisma.docsPage.findFirst({
       where: {
         id: pageId,
-        board: { userId }
+        block: { board: { userId } }
       }
     });
     

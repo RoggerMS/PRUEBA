@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Función principal para verificar y desbloquear logros
-export async function checkAndUnlockAchievements(userId: string) {
+async function checkAndUnlockAchievements(userId: string) {
   const newlyUnlocked = [];
 
   try {

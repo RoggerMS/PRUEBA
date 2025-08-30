@@ -249,3 +249,5 @@ export function NotificationCenter() {
     </DropdownMenu>
   );
 }
+
+export default NotificationCenter;

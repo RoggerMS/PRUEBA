@@ -16,20 +16,15 @@ const ProductUpdateSchema = z.object({
   status: z.enum(['ACTIVE', 'INACTIVE', 'SOLD_OUT']).optional()
 });
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // GET /api/marketplace/products/[id] - Obtener producto específico
 export async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const product = await prisma.product.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         seller: {
           select: {
@@ -65,7 +60,7 @@ export async function GET(
 // PUT /api/marketplace/products/[id] - Actualizar producto
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -73,12 +68,13 @@ export async function PUT(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const validatedData = ProductUpdateSchema.parse(body);
 
     // Verificar que el producto existe
     const existingProduct = await prisma.product.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingProduct) {
@@ -100,7 +96,7 @@ export async function PUT(
     }
 
     const updatedProduct = await prisma.product.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       include: {
         seller: {
@@ -135,7 +131,7 @@ export async function PUT(
 // DELETE /api/marketplace/products/[id] - Eliminar producto
 export async function DELETE(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -143,9 +139,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const { id } = await params;
     // Verificar que el producto existe
     const existingProduct = await prisma.product.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingProduct) {
@@ -169,7 +166,7 @@ export async function DELETE(
     // Verificar si hay órdenes pendientes con este producto
     const pendingOrders = await prisma.orderItem.findFirst({
       where: {
-        productId: params.id,
+        productId: id,
         order: {
           status: {
             in: ['PENDING', 'PROCESSING']
@@ -186,7 +183,7 @@ export async function DELETE(
     }
 
     await prisma.product.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ message: 'Producto eliminado exitosamente' });

@@ -336,3 +336,5 @@ export function GamificationNotifications({
     </Card>
   );
 }
+
+export default GamificationNotifications;

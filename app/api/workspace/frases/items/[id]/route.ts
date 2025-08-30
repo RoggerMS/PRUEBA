@@ -6,8 +6,9 @@ import { prisma } from '@/lib/prisma';
 import { proxyWorkspace } from '@/lib/workspace-proxy';
 import { getSession } from '@/lib/session';
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const proxy = await proxyWorkspace(req, `/frases/items/${params.id}`);
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const proxy = await proxyWorkspace(req, `/frases/items/${id}`);
   if (proxy) return proxy;
   try {
     const session = await getSession();
@@ -15,13 +16,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const item = await prisma.frasesItem.findFirst({
-      where: { id: params.id, block: { board: { userId: session.user.id } } }
+      where: { id, block: { board: { userId: session.user.id } } }
     });
     if (!item) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const data = await req.json();
-    const updated = await prisma.frasesItem.update({ where: { id: params.id }, data });
+    const updated = await prisma.frasesItem.update({ where: { id }, data });
     return Response.json({ item: updated });
   } catch (e) {
     console.error('[PATCH /api/workspace/frases/items/:id]', e);
@@ -29,8 +30,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const proxy = await proxyWorkspace(req, `/frases/items/${params.id}`);
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const proxy = await proxyWorkspace(req, `/frases/items/${id}`);
   if (proxy) return proxy;
   try {
     const session = await getSession();
@@ -38,12 +40,12 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const item = await prisma.frasesItem.findFirst({
-      where: { id: params.id, block: { board: { userId: session.user.id } } }
+      where: { id, block: { board: { userId: session.user.id } } }
     });
     if (!item) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    await prisma.frasesItem.delete({ where: { id: params.id } });
+    await prisma.frasesItem.delete({ where: { id } });
     return Response.json({ ok: true });
   } catch (e) {
     console.error('[DELETE /api/workspace/frases/items/:id]', e);

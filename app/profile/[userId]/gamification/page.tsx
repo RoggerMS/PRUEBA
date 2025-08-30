@@ -7,14 +7,15 @@ import { prisma } from '@/lib/prisma';
 import { GamificationProfile } from '@/components/gamification/GamificationProfile';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     userId: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { userId } = await params;
   const user = await prisma.user.findUnique({
-    where: { id: params.userId },
+    where: { id: userId },
     select: { name: true, username: true }
   });
 
@@ -31,11 +32,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function GamificationPage({ params }: PageProps) {
+  const { userId } = await params;
   const session = await getServerSession(authOptions);
   
   // Verificar que el usuario existe
   const user = await prisma.user.findUnique({
-    where: { id: params.userId },
+    where: { id: userId },
     select: {
       id: true,
       name: true,
@@ -53,7 +55,7 @@ export default async function GamificationPage({ params }: PageProps) {
     notFound();
   }
 
-  const isOwnProfile = session?.user?.id === params.userId;
+  const isOwnProfile = session?.user?.id === userId;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -87,7 +89,7 @@ export default async function GamificationPage({ params }: PageProps) {
 
       {/* Componente de gamificación */}
       <GamificationProfile 
-        userId={params.userId}
+        userId={userId}
         isOwnProfile={isOwnProfile}
       />
     </div>

@@ -480,3 +480,5 @@ export function AchievementSystem({
     </div>
   );
 }
+
+export default AchievementSystem;

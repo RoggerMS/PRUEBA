@@ -8,9 +8,10 @@ import { getSession } from '@/lib/session';
 
 export async function GET(
   req: Request,
-  { params }: { params: { boardId: string } }
+  { params }: { params: Promise<{ boardId: string }> }
 ) {
-  const proxy = await proxyWorkspace(req, `/boards/${params.boardId}/blocks`);
+  const { boardId } = await params;
+  const proxy = await proxyWorkspace(req, `/boards/${boardId}/blocks`);
   if (proxy) return proxy;
   try {
     const session = await getSession();
@@ -19,7 +20,7 @@ export async function GET(
     }
     const blocks = await prisma.workspaceBlock.findMany({
       where: {
-        boardId: params.boardId,
+        boardId: boardId,
         board: { userId: session.user.id }
       },
       orderBy: { createdAt: 'asc' },

@@ -17,8 +17,9 @@ const updateBadgeSchema = z.object({
 // GET /api/admin/gamification/badges/[badgeId] - Obtener badge específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { badgeId: string } }
+  { params }: { params: Promise<{ badgeId: string }> }
 ) {
+  const { badgeId } = await params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -39,7 +40,7 @@ export async function GET(
 
     const badge = await prisma.badge.findUnique({
       where: {
-        id: params.badgeId
+        id: badgeId
       },
       include: {
         _count: {
@@ -70,8 +71,9 @@ export async function GET(
 // PUT /api/admin/gamification/badges/[badgeId] - Actualizar badge
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { badgeId: string } }
+  { params }: { params: Promise<{ badgeId: string }> }
 ) {
+  const { badgeId } = await params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -95,7 +97,7 @@ export async function PUT(
 
     // Verificar que el badge existe
     const existingBadge = await prisma.badge.findUnique({
-      where: { id: params.badgeId }
+      where: { id: badgeId }
     });
 
     if (!existingBadge) {
@@ -110,7 +112,7 @@ export async function PUT(
       const nameExists = await prisma.badge.findFirst({
         where: {
           name: validatedData.name,
-          id: { not: params.badgeId }
+          id: { not: badgeId }
         }
       });
 
@@ -125,7 +127,7 @@ export async function PUT(
     // Actualizar badge
     const updatedBadge = await prisma.badge.update({
       where: {
-        id: params.badgeId
+        id: badgeId
       },
       data: {
         ...validatedData,
@@ -160,8 +162,9 @@ export async function PUT(
 // DELETE /api/admin/gamification/badges/[badgeId] - Eliminar badge
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { badgeId: string } }
+  { params }: { params: Promise<{ badgeId: string }> }
 ) {
+  const { badgeId } = await params;
   try {
     const session = await getServerSession(authOptions);
     
@@ -182,7 +185,7 @@ export async function DELETE(
 
     // Verificar que el badge existe
     const existingBadge = await prisma.badge.findUnique({
-      where: { id: params.badgeId },
+      where: { id: badgeId },
       include: {
         _count: {
           select: {
@@ -224,7 +227,7 @@ export async function DELETE(
     // Eliminar badge
     await prisma.badge.delete({
       where: {
-        id: params.badgeId
+        id: badgeId
       }
     });
 

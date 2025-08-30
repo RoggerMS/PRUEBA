@@ -6,8 +6,9 @@ import { prisma } from '@/lib/prisma';
 import { proxyWorkspace } from '@/lib/workspace-proxy';
 import { getSession } from '@/lib/session';
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const proxy = await proxyWorkspace(req, `/blocks/${params.id}`);
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const proxy = await proxyWorkspace(req, `/blocks/${id}`);
   if (proxy) return proxy;
   try {
     const session = await getSession();
@@ -15,14 +16,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const existing = await prisma.workspaceBlock.findFirst({
-      where: { id: params.id, board: { userId: session.user.id } }
+      where: { id: id, board: { userId: session.user.id } }
     });
     if (!existing) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const data = await req.json();
     const block = await prisma.workspaceBlock.update({
-      where: { id: params.id },
+      where: { id: id },
       data
     });
     return Response.json({ block });
@@ -32,8 +33,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const proxy = await proxyWorkspace(req, `/blocks/${params.id}`);
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const proxy = await proxyWorkspace(req, `/blocks/${id}`);
   if (proxy) return proxy;
   try {
     const session = await getSession();
@@ -41,12 +43,12 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const existing = await prisma.workspaceBlock.findFirst({
-      where: { id: params.id, board: { userId: session.user.id } }
+      where: { id: id, board: { userId: session.user.id } }
     });
     if (!existing) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    await prisma.workspaceBlock.delete({ where: { id: params.id } });
+    await prisma.workspaceBlock.delete({ where: { id: id } });
     return Response.json({ ok: true });
   } catch (e) {
     console.error('[DELETE /api/workspace/blocks/:id]', e);
