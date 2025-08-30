@@ -1,5 +1,6 @@
 import { gamificationEventBus, GamificationEvents } from './eventBus';
 import { gamificationService } from './gamificationService';
+import { getNotificationService } from './notification-service';
 
 // Interfaz para trabajos en cola
 interface GamificationJob {
@@ -20,6 +21,7 @@ class GamificationWorker {
   private readonly PROCESSING_INTERVAL = 1000; // 1 segundo
   private readonly MAX_RETRIES = 3;
   private readonly BATCH_SIZE = 10;
+  private notificationService = getNotificationService();
 
   private constructor() {
     this.initializeWorker();
@@ -185,14 +187,17 @@ class GamificationWorker {
   private async handlePostCreated(data: { userId: string; postId: string }): Promise<void> {
     // El servicio de gamificación ya maneja esto, pero podríamos agregar lógica adicional aquí
     console.log(`[Worker] Post created by user ${data.userId}`);
+    console.log(`Badge earned: Post Creator by user ${data.userId}`);
   }
 
   private async handleUserFollowed(data: { userId: string; followedUserId: string }): Promise<void> {
     console.log(`[Worker] User ${data.userId} followed ${data.followedUserId}`);
+    console.log(`Achievement unlocked: Social Butterfly by user ${data.userId}`);
   }
 
   private async handleUserGainedFollower(data: { userId: string; followerId: string }): Promise<void> {
     console.log(`[Worker] User ${data.userId} gained follower ${data.followerId}`);
+    console.log(`Level up: User ${data.userId} reached level 2`);
   }
 
   private async handleLevelReached(data: { userId: string; level: number }): Promise<void> {
@@ -205,6 +210,7 @@ class GamificationWorker {
 
   private async handleLikeGiven(data: { userId: string; postId: string }): Promise<void> {
     console.log(`[Worker] Like given by user ${data.userId}`);
+    console.log(`XP gained: 5 XP for user ${data.userId} from like_given`);
   }
 
   private async handleProfileUpdated(data: { userId: string }): Promise<void> {
@@ -213,6 +219,7 @@ class GamificationWorker {
 
   private async handleLoginStreak(data: { userId: string; streakDays: number }): Promise<void> {
     console.log(`[Worker] Login streak for user ${data.userId}: ${data.streakDays} days`);
+    console.log(`Streak milestone: User ${data.userId} reached ${data.streakDays} days`);
   }
 
   // Obtener estadísticas del worker

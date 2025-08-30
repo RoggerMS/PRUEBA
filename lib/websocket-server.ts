@@ -1,240 +1,166 @@
-import { Server as HTTPServer } from 'http';
-import { Server as SocketIOServer, Socket } from 'socket.io';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { eventBus } from '@/lib/eventBus';
-import { prisma } from '@/lib/prisma';
+import { prisma } from './prisma';
 
-export interface GamificationNotification {
-  id: string;
+interface ConnectedUser {
+  userId: string;
+  ws: any;
+  lastSeen: Date;
+}
+
+interface NotificationData {
   type: 'badge_earned' | 'achievement_unlocked' | 'level_up' | 'streak_milestone' | 'xp_gained';
+  userId: string;
   title: string;
   message: string;
-  data: any;
-  userId: string;
-  timestamp: Date;
-  read: boolean;
+  data?: any;
 }
 
 export class WebSocketServer {
-  private io: SocketIOServer;
-  private connectedUsers: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds
+  private static instance: WebSocketServer;
+  private connectedUsers: Map<string, ConnectedUser> = new Map();
+  private heartbeatInterval: NodeJS.Timeout | null = null;
 
-  constructor(server: HTTPServer) {
-    this.io = new SocketIOServer(server, {
-      cors: {
-        origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-        methods: ['GET', 'POST']
-      },
-      path: '/api/socket'
-    });
-
-    this.setupEventHandlers();
-    this.setupGamificationListeners();
+  private constructor() {
+    this.startHeartbeat();
   }
 
-  private setupEventHandlers() {
-    this.io.on('connection', async (socket: Socket) => {
-      console.log(`Socket connected: ${socket.id}`);
-
-      // Autenticar usuario
-      const session = await this.authenticateSocket(socket);
-      if (!session?.user?.id) {
-        socket.emit('error', { message: 'No autorizado' });
-        socket.disconnect();
-        return;
-      }
-
-      const userId = session.user.id;
-      
-      // Registrar conexión del usuario
-      if (!this.connectedUsers.has(userId)) {
-        this.connectedUsers.set(userId, new Set());
-      }
-      this.connectedUsers.get(userId)!.add(socket.id);
-
-      // Unir al usuario a su sala personal
-      socket.join(`user:${userId}`);
-      
-      // Enviar notificaciones pendientes
-      await this.sendPendingNotifications(socket, userId);
-
-      // Manejar eventos del cliente
-      socket.on('mark_notification_read', async (notificationId: string) => {
-        await this.markNotificationAsRead(userId, notificationId);
-      });
-
-      socket.on('get_notifications', async (params: { limit?: number; offset?: number }) => {
-        const notifications = await this.getUserNotifications(userId, params.limit, params.offset);
-        socket.emit('notifications_list', notifications);
-      });
-
-      socket.on('disconnect', () => {
-        console.log(`Socket disconnected: ${socket.id}`);
-        
-        // Remover conexión del usuario
-        const userSockets = this.connectedUsers.get(userId);
-        if (userSockets) {
-          userSockets.delete(socket.id);
-          if (userSockets.size === 0) {
-            this.connectedUsers.delete(userId);
-          }
-        }
-      });
-    });
-  }
-
-  private async authenticateSocket(socket: Socket): Promise<any> {
-    try {
-      // En un entorno real, aquí validarías el token JWT del socket
-      // Por simplicidad, asumimos que el userId viene en el handshake
-      const userId = socket.handshake.auth?.userId;
-      if (!userId) return null;
-
-      // Verificar que el usuario existe
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, username: true, role: true }
-      });
-
-      return user ? { user } : null;
-    } catch (error) {
-      console.error('Error authenticating socket:', error);
-      return null;
+  public static getInstance(): WebSocketServer {
+    if (!WebSocketServer.instance) {
+      WebSocketServer.instance = new WebSocketServer();
     }
+    return WebSocketServer.instance;
   }
 
-  private setupGamificationListeners() {
-    // Escuchar eventos de gamificación y enviar notificaciones
-    eventBus.on('badge_earned', async (data) => {
-      const notification: GamificationNotification = {
-        id: `badge_${data.badgeId}_${Date.now()}`,
-        type: 'badge_earned',
-        title: '¡Nuevo Badge Obtenido!',
-        message: `Has obtenido el badge "${data.badgeName}"`,
-        data: {
-          badgeId: data.badgeId,
-          badgeName: data.badgeName,
-          badgeIcon: data.badgeIcon,
-          badgeRarity: data.badgeRarity,
-          xpGained: data.xpGained || 0
-        },
-        userId: data.userId,
-        timestamp: new Date(),
-        read: false
-      };
-
-      await this.sendNotificationToUser(data.userId, notification);
-    });
-
-    eventBus.on('achievement_unlocked', async (data) => {
-      const notification: GamificationNotification = {
-        id: `achievement_${data.achievementId}_${Date.now()}`,
-        type: 'achievement_unlocked',
-        title: '¡Logro Desbloqueado!',
-        message: `Has completado el logro "${data.achievementName}"`,
-        data: {
-          achievementId: data.achievementId,
-          achievementName: data.achievementName,
-          xpReward: data.xpReward,
-          crolarsReward: data.crolarsReward,
-          badgeAwarded: data.badgeAwarded
-        },
-        userId: data.userId,
-        timestamp: new Date(),
-        read: false
-      };
-
-      await this.sendNotificationToUser(data.userId, notification);
-    });
-
-    eventBus.on('level_reached', async (data) => {
-      const notification: GamificationNotification = {
-        id: `level_${data.newLevel}_${Date.now()}`,
-        type: 'level_up',
-        title: '¡Subiste de Nivel!',
-        message: `¡Felicidades! Ahora eres nivel ${data.newLevel}`,
-        data: {
-          oldLevel: data.oldLevel,
-          newLevel: data.newLevel,
-          xpGained: data.xpGained,
-          crolarsReward: data.crolarsReward
-        },
-        userId: data.userId,
-        timestamp: new Date(),
-        read: false
-      };
-
-      await this.sendNotificationToUser(data.userId, notification);
-    });
-
-    eventBus.on('streak_milestone', async (data) => {
-      const notification: GamificationNotification = {
-        id: `streak_${data.streakDays}_${Date.now()}`,
-        type: 'streak_milestone',
-        title: '¡Racha Increíble!',
-        message: `¡Has mantenido una racha de ${data.streakDays} días!`,
-        data: {
-          streakDays: data.streakDays,
-          xpBonus: data.xpBonus,
-          crolarsBonus: data.crolarsBonus
-        },
-        userId: data.userId,
-        timestamp: new Date(),
-        read: false
-      };
-
-      await this.sendNotificationToUser(data.userId, notification);
+  // Handle WebSocket upgrade for Next.js
+  public async handleUpgrade(request: Request, userId: string): Promise<Response> {
+    // For now, return a simple response indicating WebSocket support
+    // In a production environment, you would implement proper WebSocket handling
+    return new Response('WebSocket endpoint - use a WebSocket client to connect', {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+      },
     });
   }
 
-  private async sendNotificationToUser(userId: string, notification: GamificationNotification) {
+  // Add a user connection
+  public addConnection(userId: string, ws: any) {
+    this.connectedUsers.set(userId, {
+      userId,
+      ws,
+      lastSeen: new Date(),
+    });
+    console.log(`User ${userId} connected. Total connections: ${this.connectedUsers.size}`);
+  }
+
+  // Remove a user connection
+  public removeConnection(userId: string) {
+    this.connectedUsers.delete(userId);
+    console.log(`User ${userId} disconnected. Total connections: ${this.connectedUsers.size}`);
+  }
+
+  // Send notification to a specific user
+  public async sendNotification(notification: NotificationData) {
     try {
-      // Guardar notificación en la base de datos
-      await prisma.notification.create({
+      // Save notification to database
+      const savedNotification = await prisma.notification.create({
         data: {
-          id: notification.id,
-          type: notification.type,
+          userId: notification.userId,
+          type: notification.type.toUpperCase(),
           title: notification.title,
           message: notification.message,
-          data: notification.data,
-          userId: userId,
-          read: false,
-          createdAt: notification.timestamp
-        }
+          data: notification.data || {},
+        },
       });
 
-      // Enviar notificación en tiempo real si el usuario está conectado
-      this.io.to(`user:${userId}`).emit('gamification_notification', notification);
+      // Send real-time notification if user is connected
+      const user = this.connectedUsers.get(notification.userId);
+      if (user && user.ws) {
+        try {
+          user.ws.send(JSON.stringify({
+            type: 'notification',
+            notification: savedNotification,
+          }));
+        } catch (error) {
+          console.error('Error sending WebSocket message:', error);
+          // Remove dead connection
+          this.removeConnection(notification.userId);
+        }
+      }
 
-      // Enviar conteo de notificaciones no leídas
-      const unreadCount = await this.getUnreadNotificationCount(userId);
-      this.io.to(`user:${userId}`).emit('unread_count_update', { count: unreadCount });
-
+      console.log(`Notification sent to user ${notification.userId}: ${notification.title}`);
+      return savedNotification;
     } catch (error) {
       console.error('Error sending notification:', error);
+      throw error;
     }
   }
 
-  private async sendPendingNotifications(socket: Socket, userId: string) {
+  // Broadcast notification to all connected users
+  public async broadcastNotification(notification: Omit<NotificationData, 'userId'>) {
+    const promises = Array.from(this.connectedUsers.keys()).map(userId =>
+      this.sendNotification({ ...notification, userId })
+    );
+    
+    await Promise.allSettled(promises);
+  }
+
+  // Handle client messages
+  public async handleMessage(userId: string, message: string) {
     try {
-      const notifications = await this.getUserNotifications(userId, 10, 0);
-      socket.emit('notifications_list', notifications);
-
-      const unreadCount = await this.getUnreadNotificationCount(userId);
-      socket.emit('unread_count_update', { count: unreadCount });
+      const data = JSON.parse(message);
+      
+      switch (data.type) {
+        case 'mark_read':
+          await this.markNotificationAsRead(userId, data.notificationId);
+          break;
+        case 'get_notifications':
+          const notifications = await this.getUserNotifications(userId, data.limit, data.offset);
+          const user = this.connectedUsers.get(userId);
+          if (user?.ws) {
+            user.ws.send(JSON.stringify({
+              type: 'notifications',
+              notifications,
+            }));
+          }
+          break;
+        case 'ping':
+          // Update last seen
+          const connectedUser = this.connectedUsers.get(userId);
+          if (connectedUser) {
+            connectedUser.lastSeen = new Date();
+          }
+          break;
+      }
     } catch (error) {
-      console.error('Error sending pending notifications:', error);
+      console.error('Error handling WebSocket message:', error);
     }
   }
 
+  // Mark notification as read
+  private async markNotificationAsRead(userId: string, notificationId: string) {
+    try {
+      await prisma.notification.updateMany({
+        where: {
+          id: notificationId,
+          userId: userId,
+        },
+        data: {
+          read: true,
+        },
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  }
+
+  // Get user notifications
   private async getUserNotifications(userId: string, limit = 20, offset = 0) {
     try {
       const notifications = await prisma.notification.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
         take: limit,
-        skip: offset
+        skip: offset,
       });
 
       return notifications;
@@ -244,67 +170,51 @@ export class WebSocketServer {
     }
   }
 
-  private async getUnreadNotificationCount(userId: string): Promise<number> {
-    try {
-      return await prisma.notification.count({
-        where: {
-          userId,
-          read: false
+  // Start heartbeat to clean up dead connections
+  private startHeartbeat() {
+    this.heartbeatInterval = setInterval(() => {
+      const now = new Date();
+      const timeout = 5 * 60 * 1000; // 5 minutes
+      
+      for (const [userId, user] of this.connectedUsers.entries()) {
+        if (now.getTime() - user.lastSeen.getTime() > timeout) {
+          console.log(`Removing inactive connection for user ${userId}`);
+          this.removeConnection(userId);
         }
-      });
-    } catch (error) {
-      console.error('Error counting unread notifications:', error);
-      return 0;
+      }
+    }, 60000); // Check every minute
+  }
+
+  // Stop heartbeat
+  public stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
     }
   }
 
-  private async markNotificationAsRead(userId: string, notificationId: string) {
-    try {
-      await prisma.notification.updateMany({
-        where: {
-          id: notificationId,
-          userId: userId
-        },
-        data: {
-          read: true
-        }
-      });
-
-      // Enviar conteo actualizado
-      const unreadCount = await this.getUnreadNotificationCount(userId);
-      this.io.to(`user:${userId}`).emit('unread_count_update', { count: unreadCount });
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  }
-
-  // Método para enviar notificaciones desde otros servicios
-  public async broadcastNotification(userId: string, notification: Omit<GamificationNotification, 'id' | 'timestamp' | 'read'>) {
-    const fullNotification: GamificationNotification = {
-      ...notification,
-      id: `${notification.type}_${Date.now()}`,
-      timestamp: new Date(),
-      read: false
-    };
-
-    await this.sendNotificationToUser(userId, fullNotification);
-  }
-
-  public getConnectedUserCount(): number {
+  // Get connected users count
+  public getConnectedUsersCount(): number {
     return this.connectedUsers.size;
   }
 
+  // Check if user is connected
   public isUserConnected(userId: string): boolean {
     return this.connectedUsers.has(userId);
+  }
+
+  // Get all connected user IDs
+  public getConnectedUserIds(): string[] {
+    return Array.from(this.connectedUsers.keys());
   }
 }
 
 // Singleton instance
 let wsServer: WebSocketServer | null = null;
 
-export function initializeWebSocketServer(server: HTTPServer): WebSocketServer {
+export function initializeWebSocketServer(): WebSocketServer {
   if (!wsServer) {
-    wsServer = new WebSocketServer(server);
+    wsServer = WebSocketServer.getInstance();
   }
   return wsServer;
 }

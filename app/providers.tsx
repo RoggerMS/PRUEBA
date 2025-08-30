@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Toaster } from 'sonner'
 import { useState } from 'react'
 import { SessionProvider } from 'next-auth/react'
-import { NotificationProvider } from '@/contexts/NotificationContext'
+import { NotificationProvider as GamificationNotificationProvider } from '../components/notifications/NotificationProvider'
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -31,7 +31,7 @@ export default function Providers({ children }: ProvidersProps) {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <NotificationProvider>
+        <GamificationNotificationProvider>
           {children}
           <Toaster
             position="top-right"
@@ -48,7 +48,7 @@ export default function Providers({ children }: ProvidersProps) {
             }}
           />
           <ReactQueryDevtools initialIsOpen={false} />
-        </NotificationProvider>
+        </GamificationNotificationProvider>
       </QueryClientProvider>
     </SessionProvider>
   )

@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { NotificationCenter } from '@/components/notifications/NotificationCenter'
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 import { VerificationBadge } from '@/components/auth/VerificationStatus'
 
 interface NavigationProps {
@@ -45,6 +46,7 @@ export function Navigation({ session, onMenuClick }: NavigationProps) {
               <>
                 <VerificationBadge />
                 <NotificationCenter />
+                <NotificationDropdown />
                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
