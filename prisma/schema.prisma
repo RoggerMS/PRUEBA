@@ -812,6 +812,7 @@ model WorkspaceBlock {
   h       Int              @default(200)
   zIndex  Int              @default(1)
   locked  Boolean          @default(false)
+  completed Boolean        @default(false)
   
   boardId String
   board   WorkspaceBoard   @relation(fields: [boardId], references: [id], onDelete: Cascade)
