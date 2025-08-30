@@ -80,52 +80,64 @@ export function Navbar() {
             </Button>
 
             {/* User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            {session ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={session.user?.image || ''} alt={session.user?.name || ''} />
+                      <AvatarFallback className="bg-crunevo-500 text-white">
+                        {session.user?.name?.charAt(0) || <User className="h-4 w-4" />}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{session.user?.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {session.user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/perfil" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Perfil</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/workspace" className="flex items-center">
+                      <div className="mr-2 h-4 w-4 bg-crunevo-500 rounded-sm"></div>
+                      <span>Workspace</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Configuración</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Cerrar sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/auth/login">
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />
                     <AvatarFallback className="bg-crunevo-500 text-white">
-                      {session?.user?.name?.charAt(0) || 'U'}
+                      <User className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{session?.user?.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {session?.user?.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/perfil" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Perfil</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/workspace" className="flex items-center">
-                    <div className="mr-2 h-4 w-4 bg-crunevo-500 rounded-sm"></div>
-                    <span>Workspace</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Configuración</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar sesión</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -144,46 +156,59 @@ export function Navbar() {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-crunevo-200 py-4">
             <div className="flex flex-col space-y-3">
-              <Link
-                href="/notifications"
-                className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Bell className="w-5 h-5" />
-                <span>Notificaciones</span>
-                <Badge className="ml-auto bg-crunevo-500">3</Badge>
-              </Link>
-              <Link
-                href="/messages"
-                className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span>Mensajes</span>
-              </Link>
-              <Link
-                href="/perfil"
-                className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <User className="w-5 h-5" />
-                <span>Perfil</span>
-              </Link>
-              <Link
-                href="/settings"
-                className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Settings className="w-5 h-5" />
-                <span>Configuración</span>
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-red-50 text-red-600 w-full text-left"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Cerrar sesión</span>
-              </button>
+              {session ? (
+                <>
+                  <Link
+                    href="/notifications"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Bell className="w-5 h-5" />
+                    <span>Notificaciones</span>
+                    <Badge className="ml-auto bg-crunevo-500">3</Badge>
+                  </Link>
+                  <Link
+                    href="/messages"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <span>Mensajes</span>
+                  </Link>
+                  <Link
+                    href="/perfil"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User className="w-5 h-5" />
+                    <span>Perfil</span>
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>Configuración</span>
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-red-50 text-red-600 w-full text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Cerrar sesión</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="w-5 h-5" />
+                  <span>Iniciar sesión</span>
+                </Link>
+              )}
             </div>
           </div>
         )}
