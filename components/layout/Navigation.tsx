@@ -45,8 +45,8 @@ export function Navigation({ session, onMenuClick }: NavigationProps) {
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={session.user?.image || ''} alt={session.user?.name || ''} />
-                      <AvatarFallback>
-                        {session.user?.name?.charAt(0) || session.user?.email?.charAt(0) || 'U'}
+                      <AvatarFallback className="bg-violet-100 text-violet-600">
+                        {session.user?.name?.charAt(0) || session.user?.email?.charAt(0) || 'C'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -66,7 +66,7 @@ export function Navigation({ session, onMenuClick }: NavigationProps) {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">
+                    <Link href="/perfil">
                       <User className="mr-2 h-4 w-4" />
                       <span>Perfil</span>
                     </Link>
