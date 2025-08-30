@@ -5,10 +5,11 @@ import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { MapPin, Calendar, GraduationCap, Users, FileText, Trophy, BarChart3, Star, Award, Heart } from 'lucide-react'
+import { MapPin, Calendar, GraduationCap, Users, FileText, Trophy, BarChart3, Star, Award, Heart, Target, Zap, BookOpen } from 'lucide-react'
 import { ProfileHeader } from '@/components/perfil/ProfileHeader'
 import { ProfileFeed } from '@/components/perfil/ProfileFeed'
 import AchievementCard from '@/components/perfil/AchievementCard'
+import { toast } from 'sonner'
 
 interface PublicUser {
   id: string
@@ -223,8 +224,7 @@ export default function PublicProfilePage() {
           {/* Right Column - Feed and Achievements */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Feed */}
-            <ProfileFeed 
-              posts={[]} // TODO: Cargar posts reales del usuario
+            <ProfileFeed
               isOwnProfile={false}
               username={user.username}
             />

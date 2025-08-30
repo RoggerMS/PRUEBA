@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Composer } from '@/components/feed/Composer';
 import { useSession } from 'next-auth/react';
+import { useQuery } from '@tanstack/react-query';
 
 interface Post {
   id: string;
@@ -22,13 +23,37 @@ interface Post {
 }
 
 interface ProfileFeedProps {
-  posts?: Post[];
   isOwnProfile?: boolean;
   username?: string;
 }
 
-export function ProfileFeed({ posts = [], isOwnProfile = false, username }: ProfileFeedProps) {
+export function ProfileFeed({ isOwnProfile = false, username }: ProfileFeedProps) {
   const { data: session } = useSession();
+
+  const { data: posts = [], isLoading } = useQuery<Post[]>({
+    queryKey: ['feed', username],
+    queryFn: async (): Promise<Post[]> => {
+      const res = await fetch(`/api/feed${username ? `?author=${username}` : ''}`);
+      if (!res.ok) {
+        throw new Error('Failed to load posts');
+      }
+      const data = await res.json();
+      return (data.posts || []).map((post: any) => ({
+        id: post.id,
+        content: post.text || '',
+        author: {
+          name: post.author?.name || '',
+          username: post.author?.username || '',
+          avatar: post.author?.avatar || '/default-avatar.png'
+        },
+        createdAt: new Date(post.createdAt).toLocaleString(),
+        likes: post.stats?.fires || 0,
+        comments: post.stats?.comments || 0,
+        shares: post.stats?.saves || 0,
+        isLiked: post.viewerState?.fired || false
+      }));
+    }
+  });
 
   return (
     <div className="space-y-6">
@@ -47,7 +72,11 @@ export function ProfileFeed({ posts = [], isOwnProfile = false, username }: Prof
           <h2 className="text-xl font-semibold">Publicaciones</h2>
         </CardHeader>
         <CardContent>
-          {posts.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12 text-gray-500">
+              Cargando publicaciones...
+            </div>
+          ) : posts.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg mb-2">No hay publicaciones aún</p>

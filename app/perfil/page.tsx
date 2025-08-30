@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { ProfileHeader } from '@/components/perfil/ProfileHeader'
 import { ProfileFeed } from '@/components/perfil/ProfileFeed'
-import { AchievementCard } from '@/components/perfil/AchievementCard'
+import AchievementCard from '@/components/perfil/AchievementCard'
 import { Trophy, Users, FileText, BarChart3, Award, Heart } from 'lucide-react'
 
 const mockUser = {
@@ -327,8 +327,7 @@ export default function PerfilPage() {
           {/* Right Column - Feed and Achievements */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Feed */}
-            <ProfileFeed 
-              posts={[]} // TODO: Cargar posts reales del usuario
+            <ProfileFeed
               isOwnProfile={true}
               username={user.username}
             />
