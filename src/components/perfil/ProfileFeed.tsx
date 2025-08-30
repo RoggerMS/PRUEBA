@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { MessageCircle, Heart, Share, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';

@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { ProfileHeader } from '@/components/perfil/ProfileHeader'
+import ProfileHeader from '@/components/perfil/ProfileHeader'
 import { ProfileFeed } from '@/components/perfil/ProfileFeed'
-import { AchievementCard } from '@/components/perfil/AchievementCard'
+import AchievementCard from '@/components/perfil/AchievementCard'
 import { Trophy, Users, FileText, BarChart3, Award, Heart } from 'lucide-react'
 
 const mockUser = {
@@ -172,6 +172,36 @@ const mockAchievements = [
   }
 ]
 
+// Mock posts used to display sample content in the profile feed
+const mockPosts = [
+  {
+    id: '1',
+    content: '¡Hola comunidad cantutina! Este es mi primer post.',
+    author: {
+      name: mockUser.name,
+      username: mockUser.username,
+      avatar: mockUser.avatar
+    },
+    createdAt: 'Hace 2 horas',
+    likes: 12,
+    comments: 3,
+    shares: 1
+  },
+  {
+    id: '2',
+    content: 'Estudiando para el examen de cálculo. ¿Recomendaciones?',
+    author: {
+      name: 'Carlos Pérez',
+      username: 'carlosperez',
+      avatar: 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=150&h=150&fit=crop&crop=face'
+    },
+    createdAt: 'Hace 1 día',
+    likes: 8,
+    comments: 5,
+    shares: 0
+  }
+]
+
 const mockStats = {
   coursesCompleted: 23,
   challengesCompleted: 45,
@@ -327,8 +357,8 @@ export default function PerfilPage() {
           {/* Right Column - Feed and Achievements */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Feed */}
-            <ProfileFeed 
-              posts={[]} // TODO: Cargar posts reales del usuario
+            <ProfileFeed
+              posts={mockPosts}
               isOwnProfile={true}
               username={user.username}
             />
