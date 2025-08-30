@@ -1,127 +1,95 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { RedisService, RATE_LIMIT_KEYS, RATE_LIMITS } from './redis';
+import { NextRequest } from 'next/server';
 
-export interface RateLimitConfig {
-  requests: number;
-  window: number; // in seconds
-  message?: string;
+// Simple in-memory rate limiting for development
+// In production, you should use Redis or a proper rate limiting service
+
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
 }
 
-export type RateLimitType = keyof typeof RATE_LIMITS;
+const rateLimitStore = new Map<string, RateLimitEntry>();
 
-// Get client IP address
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-  
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-  
-  if (realIP) {
-    return realIP;
-  }
-
-  return 'unknown';
-}
-
-// Rate limit middleware
-export async function rateLimit(
-  request: NextRequest,
-  type: RateLimitType,
-  identifier?: string
-): Promise<{ success: boolean; response?: NextResponse }> {
-  try {
-    const config = RATE_LIMITS[type];
-    const ip = getClientIP(request);
-    const key = getKeyForType(type, identifier || ip);
-    
-    const result = await RedisService.checkRateLimit(
-      key,
-      config.requests,
-      config.window
-    );
-    
-    if (!result.allowed) {
-      const response = NextResponse.json(
-        {
-          error: 'Rate limit exceeded',
-          message: `Too many requests. Try again in ${Math.ceil((result.resetTime - Date.now()) / 1000)} seconds.`,
-          retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000)
-        },
-        { status: 429 }
-      );
-      
-      // Add rate limit headers
-      response.headers.set('X-RateLimit-Limit', config.requests.toString());
-      response.headers.set('X-RateLimit-Remaining', result.remaining.toString());
-      response.headers.set('X-RateLimit-Reset', result.resetTime.toString());
-      response.headers.set('Retry-After', Math.ceil((result.resetTime - Date.now()) / 1000).toString());
-      
-      return { success: false, response };
+// Clean up expired entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore.entries()) {
+    if (now > entry.resetTime) {
+      rateLimitStore.delete(key);
     }
-    
-    return { success: true };
-  } catch (error) {
-    console.error('Rate limit error:', error);
-    // Allow request if Redis is down
-    return { success: true };
   }
+}, 5 * 60 * 1000);
+
+function getRateLimitKey(request: NextRequest, userId: string, action: string): string {
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  return `${action}:${userId}:${ip}`;
 }
 
-// Get the appropriate Redis key for the rate limit type
-function getKeyForType(type: RateLimitType, identifier: string): string {
-  switch (type) {
-    case 'API_GENERAL':
-      return RATE_LIMIT_KEYS.API_GENERAL(identifier);
-    case 'LOGIN_ATTEMPTS':
-      return RATE_LIMIT_KEYS.LOGIN_ATTEMPTS(identifier);
-    case 'POST_CREATION':
-      return RATE_LIMIT_KEYS.POST_CREATION(identifier);
-    case 'COMMENT_CREATION':
-      return RATE_LIMIT_KEYS.COMMENT_CREATION(identifier);
-    case 'UPLOAD_FILES':
-      return RATE_LIMIT_KEYS.UPLOAD_FILES(identifier);
-    case 'SEARCH_QUERIES':
-      return RATE_LIMIT_KEYS.SEARCH_QUERIES(identifier);
-    default:
-      return RATE_LIMIT_KEYS.API_GENERAL(identifier);
-  }
-}
+function checkRateLimit(
+  key: string,
+  maxRequests: number,
+  windowMs: number
+): { success: boolean; remaining: number; resetTime: number } {
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
 
-// Higher-order function to wrap API routes with rate limiting
-export function withRateLimit(
-  handler: (request: NextRequest) => Promise<NextResponse>,
-  type: RateLimitType,
-  getIdentifier?: (request: NextRequest) => string
-) {
-  return async (request: NextRequest): Promise<NextResponse> => {
-    const identifier = getIdentifier ? getIdentifier(request) : undefined;
-    const rateLimitResult = await rateLimit(request, type, identifier);
-    
-    if (!rateLimitResult.success && rateLimitResult.response) {
-      return rateLimitResult.response;
-    }
-    
-    return handler(request);
+  if (!entry || now > entry.resetTime) {
+    // First request or window expired
+    const resetTime = now + windowMs;
+    rateLimitStore.set(key, { count: 1, resetTime });
+    return {
+      success: true,
+      remaining: maxRequests - 1,
+      resetTime
+    };
+  }
+
+  if (entry.count >= maxRequests) {
+    // Rate limit exceeded
+    return {
+      success: false,
+      remaining: 0,
+      resetTime: entry.resetTime
+    };
+  }
+
+  // Increment count
+  entry.count++;
+  rateLimitStore.set(key, entry);
+
+  return {
+    success: true,
+    remaining: maxRequests - entry.count,
+    resetTime: entry.resetTime
   };
 }
 
-// Specific rate limit functions for common use cases
-export const rateLimitAPI = (request: NextRequest) => 
-  rateLimit(request, 'API_GENERAL');
+// Rate limit for creating posts: 10 posts per hour
+export function rateLimitPost(request: NextRequest, userId: string) {
+  const key = getRateLimitKey(request, userId, 'post');
+  return checkRateLimit(key, 10, 60 * 60 * 1000); // 10 requests per hour
+}
 
-export const rateLimitLogin = (request: NextRequest) => 
-  rateLimit(request, 'LOGIN_ATTEMPTS');
+// Rate limit for reactions: 100 reactions per hour
+export function rateLimitReaction(request: NextRequest, userId: string) {
+  const key = getRateLimitKey(request, userId, 'reaction');
+  return checkRateLimit(key, 100, 60 * 60 * 1000); // 100 requests per hour
+}
 
-export const rateLimitPost = (request: NextRequest, userId: string) => 
-  rateLimit(request, 'POST_CREATION', userId);
+// Rate limit for comments: 50 comments per hour
+export function rateLimitComment(request: NextRequest, userId: string) {
+  const key = getRateLimitKey(request, userId, 'comment');
+  return checkRateLimit(key, 50, 60 * 60 * 1000); // 50 requests per hour
+}
 
-export const rateLimitComment = (request: NextRequest, userId: string) => 
-  rateLimit(request, 'COMMENT_CREATION', userId);
+// Rate limit for saves: 200 saves per hour
+export function rateLimitSave(request: NextRequest, userId: string) {
+  const key = getRateLimitKey(request, userId, 'save');
+  return checkRateLimit(key, 200, 60 * 60 * 1000); // 200 requests per hour
+}
 
-export const rateLimitUpload = (request: NextRequest, userId: string) => 
-  rateLimit(request, 'UPLOAD_FILES', userId);
-
-export const rateLimitSearch = (request: NextRequest, userId: string) => 
-  rateLimit(request, 'SEARCH_QUERIES', userId);
+// Rate limit for settings updates: 20 updates per hour
+export function rateLimitSettings(request: NextRequest, userId: string) {
+  const key = getRateLimitKey(request, userId, 'settings');
+  return checkRateLimit(key, 20, 60 * 60 * 1000); // 20 requests per hour
+}

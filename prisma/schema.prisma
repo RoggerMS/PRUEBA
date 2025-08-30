@@ -83,6 +83,13 @@ model User {
   emailNotifications Boolean @default(true)
   pushNotifications Boolean @default(true)
   
+  // Configuraciones de privacidad adicionales
+  showAchievements Boolean @default(true)
+  showActivity     Boolean @default(true)
+  
+  // Configuraciones de notificaciones adicionales
+  forumNotifications Boolean @default(true)
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -118,6 +125,7 @@ model User {
   referredBy    Referral[] @relation("ReferredUser")
   personalSpace PersonalSpace?
   workspaceBoards WorkspaceBoard[]
+  postReactions PostReaction[]
   
   @@map("users")
 }
@@ -157,7 +165,13 @@ model Post {
   likes       Like[]
   bookmarks   Bookmark[]
   reports     Report[]
+  reactions   PostReaction[]
   
+  // Índices para performance
+  @@index([createdAt(sort: Desc)])
+  @@index([authorId])
+  @@index([type])
+  @@index([visibility])
   @@map("posts")
 }
 
@@ -185,6 +199,9 @@ model Comment {
   likes     Like[]
   reports   Report[]
   
+  // Índices para performance
+  @@index([postId])
+  @@index([createdAt])
   @@map("comments")
 }
 
@@ -209,6 +226,25 @@ model Like {
   @@unique([userId, commentId])
   @@unique([userId, answerId])
   @@map("likes")
+}
+
+// Nueva tabla para tracking individual de reacciones
+model PostReaction {
+  id     String @id @default(cuid())
+  userId String
+  postId String
+  type   String @default("fire") // fire, love, etc.
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  // Índices para performance
+  @@index([postId])
+  @@index([userId])
+  @@unique([userId, postId, type])
+  @@map("post_reactions")
 }
 
 model Bookmark {

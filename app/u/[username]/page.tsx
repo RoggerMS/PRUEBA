@@ -1,15 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Trophy, Star, Target, Zap, Calendar, BookOpen, MapPin, GraduationCap } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { MapPin, Calendar, GraduationCap, Users, FileText, Trophy, BarChart3, Star, Award, Heart } from 'lucide-react'
 import { ProfileHeader } from '@/components/perfil/ProfileHeader'
 import { ProfileFeed } from '@/components/perfil/ProfileFeed'
 import AchievementCard from '@/components/perfil/AchievementCard'
-import { toast } from 'sonner'
 
 interface PublicUser {
   id: string
@@ -175,32 +174,26 @@ export default function PublicProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Profile Header */}
         <ProfileHeader 
           user={headerUser}
           mode="public"
         />
 
-        {/* Content */}
-        <div className="mt-6 space-y-6">
-          {/* Feed de Publicaciones */}
-          <ProfileFeed 
-            posts={[]} // TODO: Cargar posts reales del usuario
-            isOwnProfile={false}
-            username={user.username}
-          />
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Intereses */}
+        {/* Profile Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Info Cards */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Interests */}
             <Card>
               <CardHeader>
-                <CardTitle>Intereses</CardTitle>
+                <CardTitle className="text-lg font-semibold">Intereses</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {user.interests.map((interest, index) => (
-                    <Badge key={index} variant="secondary">
+                    <Badge key={index} variant="secondary" className="text-xs">
                       {interest}
                     </Badge>
                   ))}
@@ -208,53 +201,52 @@ export default function PublicProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Estadísticas Adicionales */}
+            {/* Stats */}
             <Card>
               <CardHeader>
-                <CardTitle>Estadísticas</CardTitle>
+                <CardTitle className="text-lg font-semibold">Estadísticas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {mockStats.map((stat, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {getIconComponent(stat.icon)}
+                      <span className="text-sm text-gray-600">{stat.label}</span>
+                    </div>
+                    <span className="font-semibold">{stat.value}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Feed and Achievements */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Profile Feed */}
+            <ProfileFeed 
+              posts={[]} // TODO: Cargar posts reales del usuario
+              isOwnProfile={false}
+              username={user.username}
+            />
+
+            {/* Recent Achievements */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Logros Destacados</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {mockStats.map((stat, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {getIconComponent(stat.icon)}
-                        <span>{stat.label}</span>
-                      </div>
-                      <span className="font-semibold">{stat.value}</span>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {mockAchievements.map((achievement) => (
+                    <AchievementCard 
+                      key={achievement.id} 
+                      achievement={achievement} 
+                      showDetails={false}
+                    />
                   ))}
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* Logros Públicos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="w-5 h-5" />
-                Logros Destacados ({mockAchievements.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mockAchievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={`p-4 rounded-lg text-white ${getRarityColor(achievement.rarity)}`}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      {getIconComponent(achievement.icon)}
-                      <h3 className="font-semibold">{achievement.title}</h3>
-                    </div>
-                    <p className="text-sm opacity-90 mb-2">{achievement.description}</p>
-                    <p className="text-xs opacity-75">Desbloqueado: {achievement.unlockedAt}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

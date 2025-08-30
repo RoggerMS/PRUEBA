@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Camera, Edit3, MapPin, Calendar, GraduationCap } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -34,6 +35,7 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange, onAvatarChange }: ProfileHeaderProps) {
+  const router = useRouter()
   const handleBannerEdit = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -157,10 +159,16 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
                   </div>
                 </div>
 
-                {mode === 'view' && onEdit && (
+                {mode === 'view' && (
                   <Button 
                     variant="outline" 
-                    onClick={onEdit}
+                    onClick={() => {
+                      if (onEdit) {
+                        onEdit()
+                      } else {
+                        router.push('/settings')
+                      }
+                    }}
                     className="flex items-center gap-2"
                   >
                     <Edit3 className="h-4 w-4" />

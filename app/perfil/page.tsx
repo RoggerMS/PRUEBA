@@ -1,18 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import React, { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { User, Settings, Trophy, BarChart3, Edit } from 'lucide-react'
 import { toast } from 'sonner'
-import { SocialProfile } from '@/components/perfil/SocialProfile'
-import AchievementCard from '@/components/perfil/AchievementCard'
-import StatsChart from '@/components/perfil/StatsChart'
-import SettingsPanel from '@/components/perfil/SettingsPanel'
-import ProfileEditor from '@/components/perfil/ProfileEditor'
+import { ProfileHeader } from '@/components/perfil/ProfileHeader'
 import { ProfileFeed } from '@/components/perfil/ProfileFeed'
+import { AchievementCard } from '@/components/perfil/AchievementCard'
+import { Trophy, Users, FileText, BarChart3, Award, Heart } from 'lucide-react'
 
 const mockUser = {
   id: '1',
@@ -184,99 +182,186 @@ const mockStats = {
 }
 
 export default function PerfilPage() {
-  const [activeTab, setActiveTab] = useState('perfil')
-  const [isEditing, setIsEditing] = useState(false)
+  const { data: session } = useSession()
+  const router = useRouter()
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [claimedAchievements, setClaimedAchievements] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        if (!session?.user?.email) {
+          // Use mock data for development
+          setUser(mockUser)
+          setLoading(false)
+          return
+        }
+
+        const response = await fetch(`/api/users/${session.user.email}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch user profile')
+        }
+        const userData = await response.json()
+        setUser(userData)
+      } catch (err) {
+        console.error('Error fetching user profile:', err)
+        setError('Error al cargar el perfil')
+        // Fallback to mock data
+        setUser(mockUser)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserProfile()
+  }, [session])
 
   const handleClaimAchievement = (achievementId: string) => {
     setClaimedAchievements(prev => new Set([...prev, achievementId]))
     toast.success('¡Logro reclamado exitosamente!')
   }
 
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando perfil...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error || 'Error al cargar el perfil'}</p>
+          <Button onClick={() => window.location.reload()}>Reintentar</Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="perfil">Perfil</TabsTrigger>
-            <TabsTrigger value="logros">Logros</TabsTrigger>
-            <TabsTrigger value="estadisticas">Estadísticas</TabsTrigger>
-            <TabsTrigger value="configuracion">Configuración</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="perfil" className="space-y-6">
-            <SocialProfile user={mockUser} isOwnProfile={true} />
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        {/* Profile Header */}
+        <ProfileHeader 
+          user={{
+            name: user.name,
+            username: user.username,
+            avatar: user.avatar,
+            banner: user.banner,
+            bio: user.bio,
+            location: user.location,
+            university: user.university,
+            major: user.major,
+            joinDate: user.joinDate,
+            level: user.level,
+            xp: user.xp,
+            maxXp: user.maxXp,
+            interests: user.interests,
+            followers: user.followers,
+            following: user.following,
+            posts: user.posts
+          }}
+          mode="view"
+        />
+
+        {/* Profile Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Info Cards */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Interests */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Intereses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {user.interests.map((interest, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {interest}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Estadísticas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Posts</span>
+                  </div>
+                  <span className="font-semibold">{mockStats.forumPosts}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Desafíos</span>
+                  </div>
+                  <span className="font-semibold">{mockStats.challengesCompleted}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Racha</span>
+                  </div>
+                  <span className="font-semibold">{mockStats.streakDays} días</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Feed and Achievements */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Profile Feed */}
             <ProfileFeed 
               posts={[]} // TODO: Cargar posts reales del usuario
               isOwnProfile={true}
-              username="usuario_actual" // TODO: Obtener del contexto de autenticación
+              username={user.username}
             />
-          </TabsContent>
-          
-          <TabsContent value="logros" className="space-y-8">
-            {/* Header de la sección de logros */}
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Trophy className="h-6 w-6 text-white" />
+
+            {/* Recent Achievements */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg font-semibold">Logros Recientes</CardTitle>
+                <Button variant="outline" size="sm" onClick={() => router.push('/achievements')}>
+                  Ver todos
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {mockAchievements
+                    .filter(achievement => achievement.earned)
+                    .slice(0, 4)
+                    .map((achievement) => (
+                      <AchievementCard 
+                        key={achievement.id} 
+                        achievement={{
+                          ...achievement,
+                          claimed: claimedAchievements.has(achievement.id) || achievement.claimed
+                        }} 
+                        showDetails={false}
+                        onClaim={handleClaimAchievement}
+                      />
+                    ))}
                 </div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
-                  Mis Logros
-                </h2>
-              </div>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Descubre todos los logros que has desbloqueado en tu camino de aprendizaje y los desafíos que aún te esperan.
-              </p>
-              
-              {/* Estadísticas rápidas */}
-              <div className="flex items-center justify-center gap-8 mt-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-amber-600">
-                    {mockAchievements.filter(a => a.earned).length}
-                  </div>
-                  <div className="text-sm text-gray-500">Desbloqueados</div>
-                </div>
-                <div className="w-px h-8 bg-gray-300" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-600">
-                    {mockAchievements.length - mockAchievements.filter(a => a.earned).length}
-                  </div>
-                  <div className="text-sm text-gray-500">Por desbloquear</div>
-                </div>
-                <div className="w-px h-8 bg-gray-300" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {mockAchievements.filter(a => a.earned).reduce((sum, a) => sum + a.points, 0)}
-                  </div>
-                  <div className="text-sm text-gray-500">Puntos totales</div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Grid de logros mejorado */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {mockAchievements.map((achievement) => (
-                <AchievementCard 
-                  key={achievement.id} 
-                  achievement={{
-                    ...achievement,
-                    claimed: claimedAchievements.has(achievement.id) || achievement.claimed
-                  }} 
-                  showDetails={true}
-                  onClaim={handleClaimAchievement}
-                />
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="estadisticas" className="mt-6">
-            <StatsChart />
-          </TabsContent>
-          
-          <TabsContent value="configuracion" className="mt-6">
-            <SettingsPanel />
-          </TabsContent>
-        </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
