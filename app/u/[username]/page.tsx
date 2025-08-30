@@ -8,8 +8,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { ProfileHeader } from '@/components/perfil/ProfileHeader'
 import { ProfileFeed } from '@/components/perfil/ProfileFeed'
-import AchievementCard from '@/components/perfil/AchievementCard'
-import { toast } from 'sonner'
+import Link from 'next/link'
 
 interface PublicUser {
   id: string
@@ -28,34 +27,6 @@ interface PublicUser {
   following?: number
   posts?: number
 }
-
-// Mock achievements and stats for demo
-const mockAchievements = [
-  {
-    id: '1',
-    title: 'Primer Paso',
-    description: 'Completaste tu primer desafío',
-    icon: 'Trophy',
-    unlockedAt: 'Enero 2024',
-    rarity: 'common' as const
-  },
-  {
-    id: '2',
-    title: 'Estudiante Dedicado',
-    description: 'Completaste 10 desafíos',
-    icon: 'Star',
-    unlockedAt: 'Febrero 2024',
-    rarity: 'rare' as const
-  },
-  {
-    id: '3',
-    title: 'Maestro del Código',
-    description: 'Resolviste 50 problemas de programación',
-    icon: 'Target',
-    unlockedAt: 'Marzo 2024',
-    rarity: 'epic' as const
-  }
-]
 
 const mockStats = [
   { label: 'Desafíos Completados', value: '67', icon: 'Target' },
@@ -198,7 +169,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             </Card>
           </div>
 
-          {/* Right Column - Feed and Achievements */}
+          {/* Right Column - Feed */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Feed */}
             <ProfileFeed
@@ -207,23 +178,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
               isPublicView={!session}
             />
 
-            {/* Recent Achievements */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Logros Destacados</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockAchievements.map((achievement) => (
-                    <AchievementCard 
-                      key={achievement.id} 
-                      achievement={achievement} 
-                      showDetails={false}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="text-right">
+              <Button variant="outline" asChild>
+                <Link href={`/u/${user.username}/logros`}>Ver logros</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
