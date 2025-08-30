@@ -14,6 +14,10 @@ declare module 'next-auth' {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      verified?: boolean;
+      role?: string;
+      university?: string | null;
+      career?: string | null;
     };
   }
 
@@ -23,6 +27,10 @@ declare module 'next-auth' {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    verified?: boolean;
+    role?: string;
+    university?: string | null;
+    career?: string | null;
   }
 }
 
@@ -30,6 +38,10 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     username: string;
+    verified?: boolean;
+    role?: string;
+    university?: string | null;
+    career?: string | null;
   }
 }
 
@@ -64,6 +76,10 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           username: user.username,
           image: user.image,
+          verified: user.verified,
+          role: user.role,
+          university: user.university,
+          career: user.career,
         };
       }
     })
@@ -76,17 +92,47 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error'
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.username = (user as any).username;
+        token.verified = (user as any).verified;
+        token.role = (user as any).role;
+        token.university = (user as any).university;
+        token.career = (user as any).career;
       }
+      
+      // Update token when session is updated (e.g., after verification)
+      if (trigger === 'update' && session) {
+        const updatedUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: {
+            verified: true,
+            role: true,
+            university: true,
+            career: true,
+            emailVerified: true
+          }
+        });
+        
+        if (updatedUser) {
+          token.verified = updatedUser.verified;
+          token.role = updatedUser.role;
+          token.university = updatedUser.university;
+          token.career = updatedUser.career;
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
+        session.user.verified = token.verified as boolean;
+        session.user.role = token.role as string;
+        session.user.university = token.university as string | null;
+        session.user.career = token.career as string | null;
       }
       return session;
     }
@@ -157,6 +203,10 @@ export async function getUserByEmail(email: string): Promise<{
   image: string | null;
   password: string | null;
   emailVerified: Date | null;
+  verified: boolean;
+  role: string;
+  university: string | null;
+  career: string | null;
 } | null> {
   try {
     return await prisma.user.findUnique({
@@ -168,7 +218,11 @@ export async function getUserByEmail(email: string): Promise<{
         username: true,
         image: true,
         password: true,
-        emailVerified: true
+        emailVerified: true,
+        verified: true,
+        role: true,
+        university: true,
+        career: true
       }
     });
   } catch (error) {

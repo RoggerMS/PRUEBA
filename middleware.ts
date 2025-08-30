@@ -1,65 +1,9 @@
-import { withAuth } from "next-auth/middleware"
-import { NextResponse } from "next/server"
+import { NextRequest } from 'next/server';
+import { authMiddleware } from './middleware/auth';
 
-// Rutas públicas que no requieren autenticación
-const publicRoutes = [
-  '/',
-  '/feed/public',
-  '/about',
-  '/contact',
-  '/privacy',
-  '/terms',
-  '/cookies',
-  '/help'
-]
-
-// Patrones de rutas públicas (usando regex)
-const publicPatterns = [
-  /^\/auth(\/.*)?$/, // /auth/*
-  /^\/u\/[^/]+$/, // /u/[username]
-  /^\/post\/[^/]+$/, // /post/[id]
-  /^\/notes\/[^/]+$/ // /notes/[id]
-]
-
-export default withAuth(
-  function middleware(req) {
-    const { pathname } = req.nextUrl
-    
-    // Verificar si la ruta es pública
-    const isPublicRoute = publicRoutes.includes(pathname) || 
-                         publicPatterns.some(pattern => pattern.test(pathname))
-    
-    // Si es una ruta pública, permitir acceso
-    if (isPublicRoute) {
-      return NextResponse.next()
-    }
-    
-    // Para rutas protegidas, NextAuth ya maneja la redirección
-    return NextResponse.next()
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl
-        
-        // Verificar si la ruta es pública
-        const isPublicRoute = publicRoutes.includes(pathname) || 
-                             publicPatterns.some(pattern => pattern.test(pathname))
-        
-        // Si es ruta pública, siempre autorizar
-        if (isPublicRoute) {
-          return true
-        }
-        
-        // Para rutas protegidas, verificar token
-        return !!token
-      },
-    },
-    pages: {
-      signIn: "/auth/login",
-    },
-  }
-)
+export async function middleware(request: NextRequest) {
+  return await authMiddleware(request);
+}
 
 // Configurar qué rutas debe procesar el middleware
 export const config = {
@@ -70,7 +14,8 @@ export const config = {
      * - _next/static (archivos estáticos)
      * - _next/image (optimización de imágenes)
      * - favicon.ico (favicon)
+     * - public (archivos públicos)
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|public).*)',
   ],
-}
+};

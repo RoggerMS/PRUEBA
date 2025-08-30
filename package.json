@@ -9,6 +9,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-feed": "tsx scripts/seed-feed.ts",
+    "user:create:test": "tsx scripts/create-test-user.ts",
     "lint": "next lint",
     "check-workspace": "node scripts/check-workspace.js",
     "check-auth": "node scripts/check-auth.js"

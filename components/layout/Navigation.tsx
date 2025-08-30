@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { NotificationCenter } from '@/components/notifications/NotificationCenter'
+import { VerificationBadge } from '@/components/auth/VerificationStatus'
 
 interface NavigationProps {
   session: any
@@ -40,7 +42,10 @@ export function Navigation({ session, onMenuClick }: NavigationProps) {
 
           <div className="flex items-center space-x-4">
             {session ? (
-              <DropdownMenu>
+              <>
+                <VerificationBadge />
+                <NotificationCenter />
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
@@ -91,7 +96,8 @@ export function Navigation({ session, onMenuClick }: NavigationProps) {
                     <span>Cerrar sesión</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
+                </DropdownMenu>
+              </>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link href="/auth/login">
