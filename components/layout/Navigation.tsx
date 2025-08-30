@@ -68,7 +68,7 @@ export function Navigation({ session, onMenuClick }: NavigationProps) {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">
+                    <Link href="/perfil">
                       <User className="mr-2 h-4 w-4" />
                       <span>Perfil</span>
                     </Link>
