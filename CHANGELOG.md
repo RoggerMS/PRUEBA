@@ -32,4 +32,5 @@
 - Remove quick configuration card from profile page and centralize settings under `/settings`.
 - Reintroduce achievements tab and dedicated pages at `/perfil/logros` and `/u/[username]/logros`.
 - Correct camera icon alignment on profile avatar and banner.
+- Replace missing Fire icon with FlameIcon and use proper NotificationToast import to resolve development runtime errors.
 

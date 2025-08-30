@@ -6,7 +6,8 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
 import { FloatingActionButton } from './FloatingActionButton';
-import NotificationToast from '@/components/notifications/NotificationToast';
+// Use the NotificationToast component from the src tree
+import NotificationToast from '../notifications/NotificationToast';
 import { notificationService } from '@/services/notificationService';
 
 interface MainLayoutProps {

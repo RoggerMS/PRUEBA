@@ -251,7 +251,8 @@ export const gamificationWorker = GamificationWorker.getInstance();
 // Función para inicializar el worker (llamar al inicio de la aplicación)
 export function initializeGamificationWorker(): void {
   console.log('[GamificationWorker] Initializing gamification worker...');
-  gamificationWorker; // Esto inicializa el singleton
+  // Touch the singleton to ensure initialization
+  gamificationWorker.getPendingJobs();
 }
 
 // Función para detener el worker (llamar al cerrar la aplicación)

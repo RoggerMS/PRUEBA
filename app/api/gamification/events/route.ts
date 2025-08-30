@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar datos específicos según el tipo de evento
-    let eventData: any = { userId: targetUserId, ...data };
+    const eventData: any = { userId: targetUserId, ...data };
 
     switch (eventType) {
       case 'post_created':
