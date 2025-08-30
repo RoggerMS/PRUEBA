@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import {
   TrendingUpIcon,
-  FireIcon,
+  FlameIcon,
   UsersIcon,
   BookOpenIcon,
   MessageSquareIcon,
@@ -173,7 +173,8 @@ export function TrendingSidebar() {
       {/* Apuntes Trending */}
       <Card className="p-4">
         <div className="flex items-center space-x-2 mb-4">
-          <FireIcon className="h-5 w-5 text-red-500" />
+          {/* lucide-react does not export a FireIcon; use FlameIcon instead */}
+          <FlameIcon className="h-5 w-5 text-red-500" />
           <h3 className="font-semibold text-gray-800">Apuntes Populares</h3>
         </div>
         <div className="space-y-4">
