@@ -1,17 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
   User, 
-  Camera, 
   Save, 
   X, 
   Mail, 
@@ -21,13 +20,12 @@ import {
   Plus,
   Trash2,
   Eye,
-  Edit,
   GraduationCap
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { gamificationService } from '@/services/gamificationService'
-import PublicProfileView from './PublicProfileView'
 import { CANTUTA_FACULTIES, PERU_CITIES, getProgramsByFaculty, getFacultyByProgram, isValidFacultyProgramCombination } from '@/data/cantuta-data'
+import { ProfileHeader } from './ProfileHeader'
 
 interface UserProfile {
   id: string
@@ -55,12 +53,12 @@ interface ProfileEditorProps {
 }
 
 export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEditorProps) {
+  const router = useRouter()
   const [formData, setFormData] = useState<UserProfile & { faculty?: string }>({ ...profile, faculty: profile.faculty || '' })
   const [newInterest, setNewInterest] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
-  const [isPublicView, setIsPublicView] = useState(false)
 
   const handleInputChange = (field: keyof UserProfile, value: string) => {
     setFormData(prev => ({
@@ -184,152 +182,57 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
     }
   }
 
-  // Convertir el perfil al formato requerido por PublicProfileView
-  const getPublicProfileData = () => {
-    return {
-      ...formData,
-      joinDate: 'Enero 2024',
-      level: 5,
-      xp: 1250,
-      nextLevelXP: 2000,
-      achievements: [
-        {
-          id: '1',
-          title: 'Primer Paso',
-          description: 'Completaste tu primer desafío',
-          icon: 'Trophy',
-          unlockedAt: '15 Ene 2024',
-          rarity: 'common' as const
-        },
-        {
-          id: '2',
-          title: 'Estudiante Dedicado',
-          description: 'Completaste 10 lecciones',
-          icon: 'Star',
-          unlockedAt: '20 Ene 2024',
-          rarity: 'rare' as const
-        }
-      ],
-      stats: [
-        { label: 'Desafíos Completados', value: '23', icon: 'Target' },
-        { label: 'Días Activo', value: '45', icon: 'Calendar' },
-        { label: 'Puntos Totales', value: '1,250', icon: 'Zap' }
-      ]
-    }
-  }
-
-  const toggleView = () => {
-    setIsPublicView(!isPublicView)
-  }
-
-  // Si está en vista pública, mostrar el componente PublicProfileView
-  if (isPublicView) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Vista Pública del Perfil</h2>
-          <Button onClick={toggleView} variant="outline">
-            <Edit className="h-4 w-4 mr-2" />
-            Volver a Editar
-          </Button>
-        </div>
-        <PublicProfileView user={getPublicProfileData()} />
-      </div>
-    )
+  const handleViewPublic = () => {
+    // Extract username from email or use a default
+    const username = formData.email.split('@')[0] || 'usuario'
+    router.push(`/u/${username}`)
   }
 
   return (
     <div className="space-y-6">
+      {/* Profile Header */}
+      <ProfileHeader 
+        user={{
+          name: formData.name,
+          username: formData.email.split('@')[0] || 'usuario',
+          avatar: avatarPreview || formData.avatar,
+          banner: bannerPreview || formData.banner,
+          bio: formData.bio,
+          location: formData.location,
+          university: formData.university,
+          major: formData.major,
+          joinDate: 'Enero 2024', // Mock data
+          level: 1, // Mock data
+          xp: 0, // Mock data
+          maxXp: 100, // Mock data
+          interests: formData.interests,
+          followers: 0, // Mock data
+          following: 0, // Mock data
+          posts: 0 // Mock data
+        }}
+        mode="edit"
+        onViewPublic={handleViewPublic}
+        onBannerChange={(newBanner) => {
+          setBannerPreview(newBanner)
+          setFormData(prev => ({ ...prev, banner: newBanner }))
+        }}
+        onAvatarChange={(newAvatar) => {
+          setAvatarPreview(newAvatar)
+          setFormData(prev => ({ ...prev, avatar: newAvatar }))
+        }}
+      />
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Editar Perfil
-            </div>
-            <Button onClick={toggleView} variant="outline" size="sm">
-              <Eye className="h-4 w-4 mr-2" />
-              Ver como Público
-            </Button>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Editar Perfil
           </CardTitle>
           <CardDescription>
             Actualiza tu información personal y preferencias
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Banner Section */}
-          <div className="space-y-3">
-            <div className="relative">
-              <div className="w-full h-32 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg overflow-hidden">
-                {(bannerPreview || formData.banner) && (
-                  <img 
-                    src={bannerPreview || formData.banner} 
-                    alt="Banner" 
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-              <label className="absolute top-2 right-2 cursor-pointer">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-8 w-8 rounded-full p-0 bg-white/80 hover:bg-white"
-                  type="button"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBannerChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium">Banner del Perfil</h4>
-              <p className="text-xs text-gray-600">
-                Sube una imagen de hasta 10MB en formato JPG, PNG o GIF. Recomendado: 1200x300px
-              </p>
-            </div>
-          </div>
-
-          {/* Avatar Section */}
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Avatar className="h-20 w-20">
-                <AvatarImage 
-                  src={avatarPreview || formData.avatar} 
-                  alt={formData.name} 
-                />
-                <AvatarFallback className="text-lg">
-                  {formData.name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              <label className="absolute -bottom-2 -right-2 cursor-pointer">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-8 w-8 rounded-full p-0"
-                  type="button"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium">Foto de Perfil</h4>
-              <p className="text-xs text-gray-600">
-                Sube una imagen de hasta 5MB en formato JPG, PNG o GIF
-              </p>
-            </div>
-          </div>
 
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,11 +1,14 @@
-# React + TypeScript + Vite
+# CRUNEVO - Red Social Educativa Universitaria
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma educativa que conecta estudiantes universitarios mediante apuntes, recursos, foros y herramientas de IA con economía virtual Crolars.
 
-Currently, two official plugins are available:
+## Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Next.js 15 + TypeScript
+- Tailwind CSS + shadcn/ui
+- Prisma + SQLite
+- NextAuth.js
+- React Query
 
 ## Expanding the ESLint configuration
 

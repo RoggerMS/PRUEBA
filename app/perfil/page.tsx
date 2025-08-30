@@ -12,6 +12,7 @@ import AchievementCard from '@/components/perfil/AchievementCard'
 import StatsChart from '@/components/perfil/StatsChart'
 import SettingsPanel from '@/components/perfil/SettingsPanel'
 import ProfileEditor from '@/components/perfil/ProfileEditor'
+import { ProfileFeed } from '@/components/perfil/ProfileFeed'
 
 const mockUser = {
   id: '1',
@@ -203,8 +204,13 @@ export default function PerfilPage() {
             <TabsTrigger value="configuracion">Configuración</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="perfil" className="mt-6">
+          <TabsContent value="perfil" className="space-y-6">
             <SocialProfile user={mockUser} isOwnProfile={true} />
+            <ProfileFeed 
+              posts={[]} // TODO: Cargar posts reales del usuario
+              isOwnProfile={true}
+              username="usuario_actual" // TODO: Obtener del contexto de autenticación
+            />
           </TabsContent>
           
           <TabsContent value="logros" className="space-y-8">
