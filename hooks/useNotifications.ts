@@ -234,8 +234,9 @@ export function useNotifications(): UseNotificationsReturn {
         }
       };
 
-      ws.onerror = (error) => {
-        console.error('Error en WebSocket:', error);
+      ws.onerror = (event) => {
+        const message = event instanceof ErrorEvent ? event.message : 'Network error';
+        console.error('Error en WebSocket:', message);
       };
     } catch (err) {
       console.error('Error setting up WebSocket:', err);

@@ -34,3 +34,5 @@
 - Correct camera icon alignment on profile avatar and banner.
 - Replace missing Fire icon with FlameIcon and use proper NotificationToast import to resolve development runtime errors.
 
+- Ensure notification service connects correctly and improve WebSocket error handling.
+

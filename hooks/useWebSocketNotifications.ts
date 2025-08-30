@@ -92,8 +92,9 @@ export function useWebSocketNotifications() {
         }
       };
 
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+      wsRef.current.onerror = (event) => {
+        const message = event instanceof ErrorEvent ? event.message : 'Network error';
+        console.error('WebSocket error:', message);
       };
     } catch (error) {
       console.error('Error creating WebSocket connection:', error);
