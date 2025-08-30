@@ -126,3 +126,7 @@ export async function GET() {
       body: {
         eventType: 'string (required)',
         data: 'object (optional)'
+      }
+    }
+  });
+}

@@ -36,5 +36,7 @@ DATABASE_URL="file:./prisma/dev.db"
 - `GET /api/auth/session`
 - `GET /api/workspace/debug`
 - `GET /api/workspace/boards`
+- `GET /api/test/gamification`
+- `POST /api/test/gamification`
 
 En desarrollo, si no hay sesión activa, las rutas de `workspace` utilizan el primer usuario de la base de datos como sesión simulada.
