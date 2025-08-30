@@ -22,7 +22,7 @@ import {
 import { Badge as BadgeType } from '@/types/gamification'
 
 interface BadgeCollectionProps {
-  badges: BadgeType[]
+  badges?: BadgeType[]
   totalBadges?: number
   className?: string
 }
@@ -115,7 +115,7 @@ const ALL_BADGES: BadgeType[] = [
   }
 ]
 
-export default function BadgeCollection({ badges, totalBadges = 50, className = '' }: BadgeCollectionProps) {
+export default function BadgeCollection({ badges = [], totalBadges = 50, className = '' }: BadgeCollectionProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterRarity, setFilterRarity] = useState<string>('all')
