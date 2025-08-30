@@ -99,7 +99,7 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
           <Button
             variant="secondary"
             size="sm"
-            className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white border-0"
+            className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white border-0 flex items-center justify-center"
             onClick={handleBannerEdit}
           >
             <Camera className="h-4 w-4" />
@@ -123,7 +123,7 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="absolute bottom-2 right-2 h-8 w-8 rounded-full p-0 bg-white shadow-md hover:bg-gray-50"
+                  className="absolute bottom-2 right-2 h-8 w-8 rounded-full p-0 bg-white shadow-md hover:bg-gray-50 flex items-center justify-center"
                   onClick={handleAvatarEdit}
                 >
                   <Camera className="h-4 w-4" />

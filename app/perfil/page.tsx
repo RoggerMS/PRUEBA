@@ -13,7 +13,7 @@ import { ProfileFeed } from '@/components/perfil/ProfileFeed'
 import ProfileEditor from '@/components/perfil/ProfileEditor'
 import AchievementCard from '@/components/perfil/AchievementCard'
 import BadgeCollection from '@/components/gamification/BadgeCollection'
-import { Trophy, Users, FileText, BarChart3, Award, Heart, Settings, Target } from 'lucide-react'
+import { Trophy, Users, FileText, BarChart3, Award, Heart, Target } from 'lucide-react'
 
 interface UserProfile {
   name: string
@@ -323,10 +323,12 @@ export default function PerfilPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Profile Header */}
-          <ProfileHeader 
+          <ProfileHeader
             user={user}
-            mode="edit"
+            mode={isEditing ? 'edit' : 'view'}
             onEdit={handleEditProfile}
+            onBannerChange={(banner) => setUser(prev => prev ? { ...prev, banner } : prev)}
+            onAvatarChange={(avatar) => setUser(prev => prev ? { ...prev, avatar } : prev)}
           />
 
           {/* Inline Profile Editor */}
@@ -337,7 +339,7 @@ export default function PerfilPage() {
               </CardHeader>
               <CardContent>
                 <ProfileEditor
-                  user={user}
+                  profile={user}
                   onSave={handleSaveProfile}
                   onCancel={handleCancelEdit}
                 />
@@ -347,7 +349,7 @@ export default function PerfilPage() {
 
           {/* Profile Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Perfil
@@ -359,10 +361,6 @@ export default function PerfilPage() {
               <TabsTrigger value="statistics" className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
                 Estadísticas
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Configuración
               </TabsTrigger>
             </TabsList>
 
@@ -391,49 +389,23 @@ export default function PerfilPage() {
 
               {/* Profile Feed */}
               <ProfileFeed userId={user?.id} />
-
-              {/* Recent Achievements Summary */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-yellow-500" />
-                    Logros Recientes
-                  </CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => router.push('/achievements')}
-                  >
-                    Ver todos
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {mockAchievements.slice(0, 3).map((achievement) => (
-                      <AchievementCard
-                        key={achievement.id}
-                        achievement={achievement}
-                        onClaim={handleClaimAchievement}
-                        isClaimed={claimedAchievements.has(achievement.id)}
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
 
             {/* Achievements Tab Content */}
             <TabsContent value="achievements" className="space-y-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-yellow-500" />
-                    Todos los Logros
+                    Logros
                   </CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => router.push('/perfil/logros')}>
+                    Ver más
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {mockAchievements.map((achievement) => (
+                    {mockAchievements.slice(0, 6).map((achievement) => (
                       <AchievementCard
                         key={achievement.id}
                         achievement={achievement}
@@ -522,31 +494,6 @@ export default function PerfilPage() {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-
-            {/* Settings Tab Content */}
-            <TabsContent value="settings" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-gray-500" />
-                    Configuración
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Configuración del Perfil</h3>
-                    <p className="text-gray-600 mb-6">Administra tu privacidad y configuración avanzada</p>
-                    <Button 
-                      onClick={() => router.push('/settings')}
-                      className="w-full max-w-xs"
-                    >
-                      Ir a Configuración
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
         </div>
