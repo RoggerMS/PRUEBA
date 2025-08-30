@@ -6,11 +6,14 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { ProfileHeader } from '@/components/perfil/ProfileHeader'
 import { ProfileFeed } from '@/components/perfil/ProfileFeed'
+import ProfileEditor from '@/components/perfil/ProfileEditor'
 import AchievementCard from '@/components/perfil/AchievementCard'
-import { Trophy, Users, FileText, BarChart3, Award, Heart } from 'lucide-react'
+import BadgeCollection from '@/components/gamification/BadgeCollection'
+import { Trophy, Users, FileText, BarChart3, Award, Heart, Settings, Target } from 'lucide-react'
 
 interface UserProfile {
   name: string
@@ -207,6 +210,8 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [claimedAchievements, setClaimedAchievements] = useState<Set<string>>(new Set())
+  const [isEditing, setIsEditing] = useState(false)
+  const [activeTab, setActiveTab] = useState('profile')
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -262,6 +267,33 @@ export default function PerfilPage() {
     toast.success('¡Logro reclamado exitosamente!')
   }
 
+  const handleEditProfile = () => {
+    setIsEditing(true)
+  }
+
+  const handleSaveProfile = async (updatedProfile: any) => {
+    try {
+      // Here you would typically call an API to save the profile
+      // For now, we'll just update the local state
+      setUser(prev => prev ? {
+        ...prev,
+        name: updatedProfile.name,
+        bio: updatedProfile.bio,
+        location: updatedProfile.location,
+        major: updatedProfile.major,
+        interests: updatedProfile.interests
+      } : null)
+      setIsEditing(false)
+      toast.success('Perfil actualizado correctamente')
+    } catch (error) {
+      toast.error('Error al actualizar el perfil')
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+  }
+
 
 
   if (loading) {
@@ -287,118 +319,236 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        {/* Profile Header */}
-        <ProfileHeader 
-          user={{
-            name: user.name,
-            username: user.username,
-            avatar: user.avatar,
-            banner: user.banner,
-            bio: user.bio,
-            location: user.location,
-            university: user.university,
-            major: user.major,
-            joinDate: user.joinDate,
-            level: user.level,
-            xp: user.xp,
-            maxXp: user.maxXp,
-            interests: user.interests,
-            followers: user.followers,
-            following: user.following,
-            posts: user.posts
-          }}
-          mode="view"
-        />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Profile Header */}
+          <ProfileHeader 
+            user={user}
+            mode="edit"
+            onEdit={handleEditProfile}
+          />
 
-        {/* Profile Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Info Cards */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Interests */}
+          {/* Inline Profile Editor */}
+          {isEditing && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-semibold">Intereses</CardTitle>
+                <CardTitle>Editar Perfil</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {(user.interests ?? []).map((interest, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {interest}
-                    </Badge>
-                  ))}
-                </div>
+                <ProfileEditor
+                  user={user}
+                  onSave={handleSaveProfile}
+                  onCancel={handleCancelEdit}
+                />
               </CardContent>
             </Card>
+          )}
 
-            {/* Stats */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Estadísticas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Posts</span>
-                  </div>
-                  <span className="font-semibold">{mockStats.forumPosts}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Desafíos</span>
-                  </div>
-                  <span className="font-semibold">{mockStats.challengesCompleted}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">Racha</span>
-                  </div>
-                  <span className="font-semibold">{mockStats.streakDays} días</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Profile Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="profile" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Perfil
+              </TabsTrigger>
+              <TabsTrigger value="achievements" className="flex items-center gap-2">
+                <Trophy className="h-4 w-4" />
+                Logros
+              </TabsTrigger>
+              <TabsTrigger value="statistics" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Estadísticas
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Configuración
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Right Column - Feed and Achievements */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Profile Feed */}
-            <ProfileFeed
-              isOwnProfile={true}
-              username={user.username}
-            />
+            {/* Profile Tab Content */}
+            <TabsContent value="profile" className="space-y-6">
+              {/* User Interests */}
+              {user?.interests && user.interests.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Heart className="h-5 w-5 text-pink-500" />
+                      Intereses
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {user.interests.map((interest, index) => (
+                        <Badge key={index} variant="secondary" className="bg-pink-100 text-pink-700">
+                          {interest}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-            {/* Recent Achievements */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold">Logros Recientes</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => router.push('/achievements')}>
-                  Ver todos
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockAchievements
-                    .filter(achievement => achievement.earned)
-                    .slice(0, 4)
-                    .map((achievement) => (
-                      <AchievementCard 
-                        key={achievement.id} 
-                        achievement={{
-                          ...achievement,
-                          claimed: claimedAchievements.has(achievement.id) || achievement.claimed
-                        }} 
-                        showDetails={false}
+              {/* Profile Feed */}
+              <ProfileFeed userId={user?.id} />
+
+              {/* Recent Achievements Summary */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    Logros Recientes
+                  </CardTitle>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => router.push('/achievements')}
+                  >
+                    Ver todos
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {mockAchievements.slice(0, 3).map((achievement) => (
+                      <AchievementCard
+                        key={achievement.id}
+                        achievement={achievement}
                         onClaim={handleClaimAchievement}
+                        isClaimed={claimedAchievements.has(achievement.id)}
                       />
                     ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Achievements Tab Content */}
+            <TabsContent value="achievements" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    Todos los Logros
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {mockAchievements.map((achievement) => (
+                      <AchievementCard
+                        key={achievement.id}
+                        achievement={achievement}
+                        onClaim={handleClaimAchievement}
+                        isClaimed={claimedAchievements.has(achievement.id)}
+                      />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Badges Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-blue-500" />
+                    Insignias
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BadgeCollection />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Statistics Tab Content */}
+            <TabsContent value="statistics" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Seguidores</p>
+                        <p className="text-2xl font-bold text-blue-600">{user?.followers || 0}</p>
+                      </div>
+                      <Users className="h-8 w-8 text-blue-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Siguiendo</p>
+                        <p className="text-2xl font-bold text-green-600">{user?.following || 0}</p>
+                      </div>
+                      <Users className="h-8 w-8 text-green-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Publicaciones</p>
+                        <p className="text-2xl font-bold text-purple-600">{user?.posts || 0}</p>
+                      </div>
+                      <FileText className="h-8 w-8 text-purple-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Additional Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Nivel</p>
+                        <p className="text-2xl font-bold text-indigo-600">{user?.level || 1}</p>
+                      </div>
+                      <Target className="h-8 w-8 text-indigo-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">XP Total</p>
+                        <p className="text-2xl font-bold text-orange-600">{user?.xp || 0}</p>
+                      </div>
+                      <Award className="h-8 w-8 text-orange-500" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Settings Tab Content */}
+            <TabsContent value="settings" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-gray-500" />
+                    Configuración
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Configuración del Perfil</h3>
+                    <p className="text-gray-600 mb-6">Administra tu privacidad y configuración avanzada</p>
+                    <Button 
+                      onClick={() => router.push('/settings')}
+                      className="w-full max-w-xs"
+                    >
+                      Ir a Configuración
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
