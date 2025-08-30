@@ -388,7 +388,10 @@ export default function PerfilPage() {
               )}
 
               {/* Profile Feed */}
-              <ProfileFeed userId={user?.id} />
+              <ProfileFeed
+                isOwnProfile={session?.user?.id === user?.id}
+                username={user.username}
+              />
             </TabsContent>
 
             {/* Achievements Tab Content */}

@@ -184,7 +184,7 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
 
   const handleViewPublic = () => {
     // Extract username from email or use a default
-    const username = formData.email.split('@')[0] || 'usuario'
+    const username = formData.email?.split('@')[0] || 'usuario'
     router.push(`/u/${username}`)
   }
 
@@ -194,7 +194,7 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
       <ProfileHeader 
         user={{
           name: formData.name,
-          username: formData.email.split('@')[0] || 'usuario',
+          username: formData.email?.split('@')[0] || 'usuario',
           avatar: avatarPreview || formData.avatar,
           banner: bannerPreview || formData.banner,
           bio: formData.bio,
