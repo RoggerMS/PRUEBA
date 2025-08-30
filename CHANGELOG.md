@@ -25,4 +25,5 @@
 - Fetch profile feed posts from API, fix AchievementCard import, and enable publishing from user profiles.
 - Centralize route protection with middleware, isolate auth layout, and add automated checks for public/private access.
 - Replace default "U" avatar with generic user icon and direct unauthenticated profile clicks to login.
+- Guard missing profile fields and handle empty interests to prevent runtime errors on the profile page.
 

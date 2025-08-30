@@ -12,6 +12,25 @@ import { ProfileFeed } from '@/components/perfil/ProfileFeed'
 import AchievementCard from '@/components/perfil/AchievementCard'
 import { Trophy, Users, FileText, BarChart3, Award, Heart } from 'lucide-react'
 
+interface UserProfile {
+  name: string
+  username: string
+  avatar: string
+  banner?: string
+  bio?: string
+  location?: string
+  university?: string
+  major?: string
+  joinDate: string
+  level: number
+  xp: number
+  maxXp: number
+  interests: string[]
+  followers: number
+  following: number
+  posts: number
+}
+
 const mockUser = {
   id: '1',
   name: 'María Fernanda Quispe',
@@ -184,9 +203,9 @@ const mockStats = {
 export default function PerfilPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [claimedAchievements, setClaimedAchievements] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -204,12 +223,32 @@ export default function PerfilPage() {
           throw new Error('Failed to fetch user profile')
         }
         const { user: userData } = await response.json()
-        setUser(userData)
+        const profile: UserProfile = {
+          name: userData.name || '',
+          username: userData.username || '',
+          avatar: userData.image || mockUser.avatar,
+          banner: userData.banner || mockUser.banner,
+          bio: userData.bio || '',
+          location: userData.location || '',
+          university: userData.university || '',
+          major: userData.career || '',
+          joinDate: userData.createdAt
+            ? new Date(userData.createdAt).toISOString().split('T')[0]
+            : '',
+          level: userData.level ?? 0,
+          xp: userData.xp ?? 0,
+          maxXp: userData.maxXp ?? mockUser.maxXp,
+          interests: userData.interests ?? [],
+          followers: userData.followers ?? 0,
+          following: userData.following ?? 0,
+          posts: userData.stats?.posts ?? 0
+        }
+        setUser(profile)
       } catch (err) {
         console.error('Error fetching user profile:', err)
         setError('Error al cargar el perfil')
         // Fallback to mock data
-        setUser(mockUser)
+        setUser(mockUser as UserProfile)
       } finally {
         setLoading(false)
       }
@@ -284,7 +323,7 @@ export default function PerfilPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {user.interests.map((interest, index) => (
+                  {(user.interests ?? []).map((interest, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {interest}
                     </Badge>
