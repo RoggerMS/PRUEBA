@@ -128,6 +128,11 @@ model User {
   postReactions PostReaction[]
   passwordResetTokens PasswordResetToken[]
   
+  // Gamification relations
+  userBadges UserBadge[]
+  progressCounters ProgressCounter[]
+  activities Activity[]
+  
   @@map("users")
 }
 
@@ -994,6 +999,121 @@ model Report {
 }
 
 // ============================================================================
+// GAMIFICATION SYSTEM
+// ============================================================================
+
+model Badge {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  slug        String    @unique
+  name        String
+  description String?
+  rarity      BadgeRarity @default(COMMON)
+  category    String
+  iconUrl     String?
+  isActive    Boolean   @default(true)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  achievements Achievement[]
+  userBadges  UserBadge[]
+  
+  @@index([category])
+  @@index([rarity])
+  @@index([isActive])
+  @@map("badges")
+}
+
+model Achievement {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  description String?
+  ruleType    String    // e.g., "counter", "streak", "event"
+  ruleConfig  Json      // Configuration for the rule
+  
+  badgeId     String
+  badge       Badge     @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  isActive    Boolean   @default(true)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  userBadges  UserBadge[]
+  
+  @@index([ruleType])
+  @@index([badgeId])
+  @@index([isActive])
+  @@map("achievements")
+}
+
+model UserBadge {
+  id          String    @id @default(cuid())
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  badgeId     String
+  badge       Badge     @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  achievementId String?
+  achievement Achievement? @relation(fields: [achievementId], references: [id], onDelete: SetNull)
+  
+  earnedAt    DateTime  @default(now())
+  metadata    Json?     // Additional data about how the badge was earned
+  
+  createdAt   DateTime  @default(now())
+  
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([earnedAt])
+  @@index([badgeId])
+  @@map("user_badges")
+}
+
+model ProgressCounter {
+  id           String    @id @default(cuid())
+  
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  key          String    // e.g., "posts_created", "login_streak", "profile_completion"
+  currentValue Int       @default(0)
+  targetValue  Int?
+  
+  lastUpdated  DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  
+  @@unique([userId, key])
+  @@index([userId])
+  @@index([key])
+  @@index([lastUpdated])
+  @@map("progress_counters")
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // 'badge_earned', 'achievement_unlocked', 'level_up', etc.
+  description String
+  xpGained    Int?     @default(0)
+  crolars     Int?     @default(0)
+  metadata    Json?    // Datos adicionales específicos del tipo de actividad
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
+
+
+// ============================================================================
 // ENUMS
 // ============================================================================
 
@@ -1126,4 +1246,11 @@ enum ReportStatus {
   REVIEWED
   RESOLVED
   DISMISSED
+}
+
+enum BadgeRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
 }
