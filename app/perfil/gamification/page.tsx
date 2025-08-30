@@ -21,9 +21,9 @@ import {
 // Importar componentes de gamificación
 import LevelProgress from '@/components/gamification/LevelProgress'
 import BadgeCollection from '@/components/gamification/BadgeCollection'
-import GamificationNotifications from '@/components/gamification/GamificationNotifications'
-import Leaderboard from '@/components/gamification/Leaderboard'
-import AchievementSystem from '@/components/gamification/AchievementSystem'
+import { GamificationNotifications } from '@/components/gamification/GamificationNotifications'
+import { Leaderboard } from '@/components/gamification/Leaderboard'
+import { AchievementSystem } from '@/components/gamification/AchievementSystem'
 
 // Importar tipos y servicios
 import { User, UserStats, Notification, Leaderboard as LeaderboardType } from '@/types/gamification'

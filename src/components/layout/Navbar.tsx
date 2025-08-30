@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import NotificationCenter from '@/components/notifications/NotificationCenter';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 export function Navbar() {
   const { data: session } = useSession();
