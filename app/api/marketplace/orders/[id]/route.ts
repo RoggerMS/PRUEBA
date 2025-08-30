@@ -86,7 +86,7 @@ export async function GET(
     }
 
     // Parsear dirección de envío si existe
-    let parsedOrder = {
+    const parsedOrder = {
       ...order,
       shippingAddress: order.shippingAddress 
         ? JSON.parse(order.shippingAddress) 
@@ -168,7 +168,7 @@ export async function PUT(
     }
 
     // Si se cancela la orden, restaurar stock y Crolars
-    let updateData: any = {
+    const updateData: any = {
       status,
       trackingNumber,
       notes

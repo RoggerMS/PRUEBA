@@ -192,18 +192,18 @@ export default function PerfilPage() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        if (!session?.user?.email) {
+        if (!session?.user?.id) {
           // Use mock data for development
           setUser(mockUser)
           setLoading(false)
           return
         }
 
-        const response = await fetch(`/api/users/${session.user.email}`)
+        const response = await fetch('/api/user/profile')
         if (!response.ok) {
           throw new Error('Failed to fetch user profile')
         }
-        const userData = await response.json()
+        const { user: userData } = await response.json()
         setUser(userData)
       } catch (err) {
         console.error('Error fetching user profile:', err)

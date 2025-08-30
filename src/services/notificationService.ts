@@ -17,10 +17,10 @@ class NotificationService {
     // No inicializar automáticamente, esperar a que el usuario se conecte
   }
 
-  private async initializeSSE() {
+  private async initializeSSE(userId: string) {
     try {
       // Conectar a Server-Sent Events
-      this.eventSource = new EventSource('/api/notifications/stream');
+      this.eventSource = new EventSource(`/api/notifications/stream?userId=${userId}`);
 
       this.eventSource.onopen = () => {
         console.log('Connected to notification stream');
@@ -48,7 +48,7 @@ class NotificationService {
         // Intentar reconectar después de 5 segundos
         setTimeout(() => {
           if (this.eventSource?.readyState === EventSource.CLOSED) {
-            this.initializeSSE();
+            this.initializeSSE(userId);
           }
         }, 5000);
       };
@@ -59,9 +59,9 @@ class NotificationService {
     }
   }
 
-  async connect() {
+  async connect(userId: string) {
     if (!this.isConnected) {
-      await this.initializeSSE();
+      await this.initializeSSE(userId);
       // Cargar notificaciones existentes
       await this.loadNotifications();
     }
