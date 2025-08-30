@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { MapPin, Calendar, GraduationCap, Users, MessageSquare, Heart, Share2, Trophy, Zap, Target, BookOpen } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { ProfileHeader } from '@/components/perfil/ProfileHeader'
-import { ProfileFeed } from '@/components/perfil/ProfileFeed'
+import { ProfileHeader } from '@/components/profile/ProfileHeader'
+import { ProfileFeed } from '@/components/profile/ProfileFeed'
 import Link from 'next/link'
 
 interface PublicUser {
