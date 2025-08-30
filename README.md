@@ -73,3 +73,14 @@ export default tseslint.config({
 ## Linting
 
 Para facilitar el proceso de compilación se desactivaron las reglas `no-unused-vars`, `no-explicit-any`, `no-empty-object-type` y `no-case-declarations` en `eslint.config.js`. Estas reglas pueden reactivarse una vez que el código esté depurado.
+
+### Verificación de Workspace
+
+Con el servidor en ejecución, puedes validar rápidamente que la API y la página de Workspace respondan ejecutando:
+
+```bash
+npm run check-workspace
+```
+
+Este comando realiza peticiones a `/api/workspace/debug`, `/api/workspace/boards` y `/workspace` y finaliza con estado exitoso si todas responden correctamente.
+

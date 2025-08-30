@@ -8,7 +8,8 @@
     "start": "next start -H 0.0.0.0 -p 3000",
     "db:push": "prisma db push",
     "db:seed": "tsx scripts/seed.ts",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check-workspace": "node scripts/check-workspace.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

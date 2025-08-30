@@ -54,7 +54,7 @@ const MIN_BLOCK_SIZE = { width: 300, height: 200 };
 const MAX_BLOCK_SIZE = { width: 800, height: 600 };
 
 export default function WorkspacePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [boards, setBoards] = useState<WorkspaceBoard[]>([]);
   const [currentBoard, setCurrentBoard] = useState<WorkspaceBoard | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -191,12 +191,12 @@ export default function WorkspacePage() {
   };
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (status !== 'loading') {
       loadBoards();
     }
   }, [status, loadBoards]);
 
-  if (status === 'loading' || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-500">Cargando...</div>
@@ -204,38 +204,48 @@ export default function WorkspacePage() {
     );
   }
 
-    if (status === 'unauthenticated') {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <Card className="p-8 text-center">
-            <h1 className="text-2xl font-bold mb-4">Acceso Requerido</h1>
-            <p className="text-gray-600 mb-4">Debes iniciar sesión para acceder al Workspace</p>
-            <Button onClick={() => window.location.href = '/auth/login'}>
-              Iniciar Sesión
-            </Button>
-          </Card>
-        </div>
-      );
-    }
+  if (status === 'unauthenticated' && process.env.NODE_ENV !== 'development') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 text-center">
+          <h1 className="text-2xl font-bold mb-4">Acceso Requerido</h1>
+          <p className="text-gray-600 mb-4">Debes iniciar sesión para acceder al Workspace</p>
+          <Button onClick={() => (window.location.href = '/auth/login')}>
+            Iniciar Sesión
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
-    if (error) {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <Card className="p-8 text-center">
-            <p className="mb-4 text-red-500">{error}</p>
-            <Button onClick={loadBoards}>Reintentar</Button>
-          </Card>
-        </div>
-      );
-    }
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 text-center">
+          <p className="mb-4 text-red-500">{error}</p>
+          <Button onClick={loadBoards}>Reintentar</Button>
+        </Card>
+      </div>
+    );
+  }
 
-    if (!isLoading && !currentBoard) {
-      return (
-        <div className="flex items-center justify-center min-h-screen text-gray-500">
-          No tienes pizarras aún.
-        </div>
-      );
-    }
+  if (!currentBoard) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="p-8 text-center">
+          <p className="mb-4 text-gray-600">Aún no tienes pizarras.</p>
+          <Button
+            onClick={() => {
+              const name = prompt('Nombre de la pizarra');
+              if (name) createBoard(name);
+            }}
+          >
+            Crear pizarra
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
 
   return (
