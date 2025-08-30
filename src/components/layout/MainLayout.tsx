@@ -14,13 +14,13 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (status !== 'authenticated' || !session?.user?.id) return;
 
     // Initialize notification service only when authenticated
-    notificationService.connect();
+    notificationService.connect(session.user.id);
 
     // Request notification permissions
     notificationService.requestNotificationPermission();
@@ -29,7 +29,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     return () => {
       notificationService.disconnect();
     };
-  }, [status]);
+  }, [status, session?.user?.id]);
   
   return (
     <div className="min-h-screen bg-crunevo-gradient">

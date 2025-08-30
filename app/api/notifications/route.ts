@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const queryParams = {
       page: searchParams.get('page') || '1',
       limit: searchParams.get('limit') || '20',
-      type: searchParams.get('type'),
+      type: searchParams.get('type') || undefined,
       unreadOnly: searchParams.get('unreadOnly') === 'true'
     };
 
