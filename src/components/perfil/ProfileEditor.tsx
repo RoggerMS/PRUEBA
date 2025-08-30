@@ -54,7 +54,12 @@ interface ProfileEditorProps {
 
 export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEditorProps) {
   const router = useRouter()
-  const [formData, setFormData] = useState<UserProfile & { faculty?: string }>({ ...profile, faculty: profile.faculty || '' })
+  // Initialize socialLinks to an empty object to avoid undefined errors when editing
+  const [formData, setFormData] = useState<UserProfile & { faculty?: string }>({
+    ...profile,
+    faculty: profile.faculty || '',
+    socialLinks: profile.socialLinks || {}
+  })
   const [newInterest, setNewInterest] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -71,7 +76,7 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
     setFormData(prev => ({
       ...prev,
       socialLinks: {
-        ...prev.socialLinks,
+        ...(prev.socialLinks || {}),
         [platform]: value
       }
     }))
