@@ -3,18 +3,22 @@ import { NextResponse } from "next/server"
 
 // Rutas públicas que no requieren autenticación
 const publicRoutes = [
-  "/",
-  "/auth/login",
-  "/auth/register", 
-  "/auth/forgot-password",
-  "/auth/reset-password"
+  '/',
+  '/feed/public',
+  '/about',
+  '/contact',
+  '/privacy',
+  '/terms',
+  '/cookies',
+  '/help'
 ]
 
 // Patrones de rutas públicas (usando regex)
 const publicPatterns = [
+  /^\/auth(\/.*)?$/, // /auth/*
   /^\/u\/[^/]+$/, // /u/[username]
   /^\/post\/[^/]+$/, // /post/[id]
-  /^\/notes\/[^/]+$/ // /notes/[id] (solo si la nota es pública)
+  /^\/notes\/[^/]+$/ // /notes/[id]
 ]
 
 export default withAuth(
