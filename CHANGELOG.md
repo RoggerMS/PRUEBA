@@ -23,4 +23,5 @@
 - Wrap root layout with SessionProvider and improve workspace board loading to prevent endless "Cargando..." state.
 - Move SessionProvider into client Providers and add development session fallback so workspace loads without RSC errors.
 - Fetch profile feed posts from API, fix AchievementCard import, and enable publishing from user profiles.
+- Centralize route protection with middleware, isolate auth layout, and add automated checks for public/private access.
 

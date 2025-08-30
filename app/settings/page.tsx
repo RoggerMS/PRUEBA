@@ -75,15 +75,6 @@ export default function SettingsPage() {
     delete: false
   });
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === 'loading') return;
-    if (status === 'unauthenticated') {
-      router.push('/auth/login');
-      return;
-    }
-  }, [status, router]);
-
   // Load user settings
   useEffect(() => {
     const loadSettings = async () => {
@@ -107,6 +98,11 @@ export default function SettingsPage() {
       loadSettings();
     }
   }, [status]);
+
+  // Middleware handles redirects; do not render for unauthenticated users
+  if (status === 'unauthenticated') {
+    return null;
+  }
 
   const handleSettingsUpdate = async (section: keyof UserSettings, data: any) => {
     setSaving(true);

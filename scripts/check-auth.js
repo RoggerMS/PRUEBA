@@ -21,6 +21,7 @@ class AuthChecker {
   constructor() {
     this.results = [];
     this.errors = [];
+    this.firstPostId = null;
   }
 
   async makeRequest(path, options = {}) {
@@ -113,7 +114,7 @@ class AuthChecker {
   async checkProtectedRouteRedirection() {
     this.log('Checking protected route redirection...');
     
-    const protectedRoutes = ['/feed', '/workspace', '/settings'];
+    const protectedRoutes = ['/feed', '/workspace', '/settings', '/perfil'];
     
     for (const route of protectedRoutes) {
       try {
@@ -197,6 +198,80 @@ class AuthChecker {
     }
   }
 
+  async checkApiFeed() {
+    this.log('Checking /api/feed without session...');
+    try {
+      const response = await this.makeRequest('/api/feed');
+      if (response.statusCode === 200) {
+        try {
+          const data = JSON.parse(response.body);
+          const posts = data.posts || [];
+          const hasNonPublic = posts.some(p => p.visibility !== 'public');
+          if (!hasNonPublic) {
+            this.log('Feed returns only public posts', 'success');
+          } else {
+            this.log('Feed returned non-public posts', 'error');
+            this.errors.push('Feed exposes non-public posts');
+          }
+          this.firstPostId = posts[0]?.id || null;
+        } catch (e) {
+          this.log('Failed to parse feed response', 'error');
+          this.errors.push('Feed parse error');
+        }
+      } else {
+        this.log(`/api/feed returned ${response.statusCode}`, 'error');
+        this.errors.push(`Feed API error: ${response.statusCode}`);
+      }
+    } catch (error) {
+      this.log(`Failed to check feed API: ${error.message}`, 'error');
+      this.errors.push(`Feed API error: ${error.message}`);
+    }
+  }
+
+  async checkPublicPost() {
+    if (!this.firstPostId) {
+      this.log('Skipping public post check - no post id', 'warning');
+      return;
+    }
+    this.log('Checking public post accessibility...');
+    try {
+      const response = await this.makeRequest(`/post/${this.firstPostId}`);
+      if (response.statusCode === 200) {
+        this.log(`/post/${this.firstPostId} accessible (200)`, 'success');
+      } else {
+        this.log(`/post/${this.firstPostId} returned ${response.statusCode}`, 'error');
+        this.errors.push(`Public post error: ${response.statusCode}`);
+      }
+    } catch (error) {
+      this.log(`Failed to check public post: ${error.message}`, 'error');
+      this.errors.push(`Public post error: ${error.message}`);
+    }
+  }
+
+  async checkReactEndpoint() {
+    if (!this.firstPostId) {
+      this.log('Skipping reaction endpoint test - no post id', 'warning');
+      return;
+    }
+    this.log('Checking reaction endpoint without session...');
+    try {
+      const response = await this.makeRequest(`/api/feed/${this.firstPostId}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      if (response.statusCode === 401) {
+        this.log('React endpoint correctly requires authentication', 'success');
+      } else {
+        this.log(`React endpoint returned ${response.statusCode}`, 'error');
+        this.errors.push(`React endpoint unauthorized check failed: ${response.statusCode}`);
+      }
+    } catch (error) {
+      this.log(`Failed to check reaction endpoint: ${error.message}`, 'error');
+      this.errors.push(`React endpoint error: ${error.message}`);
+    }
+  }
+
   async checkServer() {
     this.log('Checking if server is running...');
     
@@ -227,6 +302,9 @@ class AuthChecker {
     await this.checkPublicRoutes();
     await this.checkProtectedRouteRedirection();
     await this.checkPublicProfile();
+    await this.checkApiFeed();
+    await this.checkPublicPost();
+    await this.checkReactEndpoint();
 
     this.generateReport();
   }

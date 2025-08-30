@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
 import { Plus, Edit3, Check, Grid3X3, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -204,18 +203,9 @@ export default function WorkspacePage() {
     );
   }
 
-  if (status === 'unauthenticated' && process.env.NODE_ENV !== 'development') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Acceso Requerido</h1>
-          <p className="text-gray-600 mb-4">Debes iniciar sesión para acceder al Workspace</p>
-          <Button onClick={() => (window.location.href = '/auth/login')}>
-            Iniciar Sesión
-          </Button>
-        </Card>
-      </div>
-    );
+  // Middleware already protects this route; render nothing for unauthenticated users
+  if (status === 'unauthenticated') {
+    return null
   }
 
   if (error) {

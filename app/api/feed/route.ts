@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       author: searchParams.get('author'),
     });
 
-    let where: any = {};
+    const where: any = {};
 
     if (!session?.user?.id) {
       // For unauthenticated users, only show PUBLIC posts
