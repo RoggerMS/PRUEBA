@@ -27,13 +27,35 @@ export async function POST(
     const body = await request.json();
     const { type, action } = reactionSchema.parse(body);
 
-    // Check if post exists
+    // Check if post exists and user can access it
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      select: { id: true, authorId: true }
+      select: { 
+        id: true, 
+        authorId: true,
+        visibility: true,
+        author: {
+          select: {
+            followers: {
+              where: { followerId: session.user.id },
+              select: { id: true }
+            }
+          }
+        }
+      }
     });
 
     if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Check visibility permissions
+    if (post.visibility === 'PRIVATE' && post.authorId !== session.user.id) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+    if (post.visibility === 'FOLLOWERS' && 
+        post.authorId !== session.user.id && 
+        post.author.followers.length === 0) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 

@@ -93,3 +93,33 @@ export function rateLimitSettings(request: NextRequest, userId: string) {
   const key = getRateLimitKey(request, userId, 'settings');
   return checkRateLimit(key, 20, 60 * 60 * 1000); // 20 requests per hour
 }
+
+// Rate limit for authentication endpoints by IP
+function getAuthRateLimitKey(request: NextRequest, action: string): string {
+  const ip = request.ip || request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  return `auth:${action}:${ip}`;
+}
+
+// Rate limit for login attempts: 5 attempts per 15 minutes
+export function rateLimitLogin(request: NextRequest) {
+  const key = getAuthRateLimitKey(request, 'login');
+  return checkRateLimit(key, 5, 15 * 60 * 1000); // 5 requests per 15 minutes
+}
+
+// Rate limit for registration: 3 attempts per 15 minutes
+export function rateLimitRegister(request: NextRequest) {
+  const key = getAuthRateLimitKey(request, 'register');
+  return checkRateLimit(key, 3, 15 * 60 * 1000); // 3 requests per 15 minutes
+}
+
+// Rate limit for forgot password: 3 attempts per 15 minutes
+export function rateLimitForgotPassword(request: NextRequest) {
+  const key = getAuthRateLimitKey(request, 'forgot-password');
+  return checkRateLimit(key, 3, 15 * 60 * 1000); // 3 requests per 15 minutes
+}
+
+// Rate limit for reset password: 5 attempts per 15 minutes
+export function rateLimitResetPassword(request: NextRequest) {
+  const key = getAuthRateLimitKey(request, 'reset-password');
+  return checkRateLimit(key, 5, 15 * 60 * 1000); // 5 requests per 15 minutes
+}

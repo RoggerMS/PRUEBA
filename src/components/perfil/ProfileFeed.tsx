@@ -25,9 +25,10 @@ interface Post {
 interface ProfileFeedProps {
   isOwnProfile?: boolean;
   username?: string;
+  isPublicView?: boolean;
 }
 
-export function ProfileFeed({ isOwnProfile = false, username }: ProfileFeedProps) {
+export function ProfileFeed({ isOwnProfile = false, username, isPublicView = false }: ProfileFeedProps) {
   const { data: session } = useSession();
 
   const { data: posts = [], isLoading } = useQuery<Post[]>({
@@ -57,8 +58,8 @@ export function ProfileFeed({ isOwnProfile = false, username }: ProfileFeedProps
 
   return (
     <div className="space-y-6">
-      {/* Post Composer - Solo para perfil propio autenticado */}
-      {isOwnProfile && session && (
+      {/* Post Composer - Solo para perfil propio autenticado y no en vista pública */}
+      {isOwnProfile && session && !isPublicView && (
         <Card>
           <CardContent className="p-0">
             <Composer />
@@ -104,9 +105,11 @@ export function ProfileFeed({ isOwnProfile = false, username }: ProfileFeedProps
                         <p className="text-gray-500 text-xs">@{post.author.username} · {post.createdAt}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    {!isPublicView && (
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
 
                   {/* Post Content */}

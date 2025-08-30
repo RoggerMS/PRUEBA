@@ -20,9 +20,6 @@ export async function GET(
 ) {
   try {
     const session = await getSession();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const postId = params.id;
     const { searchParams } = new URL(request.url);
@@ -32,14 +29,45 @@ export async function GET(
       sort: searchParams.get('sort')
     });
 
-    // Check if post exists
+    // Check if post exists and user can access it
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      select: { id: true }
+      select: { 
+        id: true, 
+        visibility: true, 
+        authorId: true,
+        author: {
+          select: {
+            id: true,
+            followers: session?.user?.id ? {
+              where: { followerId: session.user.id },
+              select: { id: true }
+            } : false
+          }
+        }
+      }
     });
 
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    // Check visibility permissions
+    if (!session?.user?.id) {
+      // Unauthenticated users can only see PUBLIC posts
+      if (post.visibility !== 'PUBLIC') {
+        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      }
+    } else {
+      // Authenticated users visibility rules
+      if (post.visibility === 'PRIVATE' && post.authorId !== session.user.id) {
+        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      }
+      if (post.visibility === 'FOLLOWERS' && 
+          post.authorId !== session.user.id && 
+          (!post.author.followers || post.author.followers.length === 0)) {
+        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      }
     }
 
     const where: any = {
@@ -79,10 +107,10 @@ export async function GET(
             likes: true
           }
         },
-        likes: {
+        likes: session?.user?.id ? {
           where: { userId: session.user.id },
           select: { id: true }
-        },
+        } : false,
         replies: {
           take: 3, // Show first 3 replies
           include: {
@@ -100,10 +128,10 @@ export async function GET(
                 likes: true
               }
             },
-            likes: {
+            likes: session?.user?.id ? {
               where: { userId: session.user.id },
               select: { id: true }
-            }
+            } : false
           },
           orderBy: { createdAt: 'asc' }
         }
@@ -133,7 +161,7 @@ export async function GET(
         replies: comment._count.replies
       },
       viewerState: {
-        liked: comment.likes.length > 0
+        liked: session?.user?.id ? (comment.likes && comment.likes.length > 0) : false
       },
       replies: comment.replies.map(reply => ({
         id: reply.id,
@@ -151,7 +179,7 @@ export async function GET(
           replies: 0 // Nested replies not supported for now
         },
         viewerState: {
-          liked: reply.likes.length > 0
+          liked: session?.user?.id ? (reply.likes && reply.likes.length > 0) : false
         },
         parentId: comment.id
       }))

@@ -30,10 +30,6 @@ const feedQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const query = feedQuerySchema.parse({
       cursor: searchParams.get('cursor'),
@@ -43,27 +39,32 @@ export async function GET(request: NextRequest) {
       author: searchParams.get('author'),
     });
 
-    const where: any = {
-      // Only show public posts or posts from followed users
-      OR: [
+    let where: any = {};
+
+    if (!session?.user?.id) {
+      // For unauthenticated users, only show PUBLIC posts
+      where.visibility = 'PUBLIC';
+    } else {
+      // For authenticated users, show public posts and posts from followed users
+      where.OR = [
         { visibility: 'PUBLIC' },
         {
           AND: [
-            { visibility: 'UNIVERSITY' },
+            { visibility: 'FOLLOWERS' },
             {
-              author: {
-                university: {
-                  equals: (await prisma.user.findUnique({
-                    where: { id: session.user.id },
-                    select: { university: true }
-                  }))?.university
-                }
-              }
+              // TODO: Add follower relationship check
+              authorId: session.user.id // For now, show own FOLLOWERS posts
             }
           ]
+        },
+        {
+          AND: [
+            { visibility: 'PRIVATE' },
+            { authorId: session.user.id } // Only show own private posts
+          ]
         }
-      ]
-    };
+      ];
+    }
 
     // Add filters
     if (query.kind) {
@@ -106,18 +107,18 @@ export async function GET(request: NextRequest) {
             reactions: true
           }
         },
-        reactions: {
+        reactions: session?.user?.id ? {
           where: { userId: session.user.id },
           select: { type: true }
-        },
-        likes: {
+        } : false,
+        likes: session?.user?.id ? {
           where: { userId: session.user.id },
           select: { id: true }
-        },
-        bookmarks: {
+        } : false,
+        bookmarks: session?.user?.id ? {
           where: { userId: session.user.id },
           select: { id: true }
-        }
+        } : false
       },
       orderBy: query.ranking === 'recent' ? { createdAt: 'desc' } : { createdAt: 'desc' }, // TODO: implement trending logic
       take: query.limit + 1, // Take one extra to check if there are more
@@ -149,8 +150,8 @@ export async function GET(request: NextRequest) {
         saves: post._count.bookmarks
       },
       viewerState: {
-        fired: post.reactions.length > 0,
-        saved: post.bookmarks.length > 0
+        fired: session?.user?.id ? (post.reactions?.length > 0) : false,
+        saved: session?.user?.id ? (post.bookmarks?.length > 0) : false
       }
     }));
 

@@ -126,6 +126,7 @@ model User {
   personalSpace PersonalSpace?
   workspaceBoards WorkspaceBoard[]
   postReactions PostReaction[]
+  passwordResetTokens PasswordResetToken[]
   
   @@map("users")
 }
@@ -137,6 +138,18 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("password_reset_tokens")
 }
 
 // ============================================================================
@@ -1013,9 +1026,8 @@ enum PostType {
 
 enum Visibility {
   PUBLIC
+  FOLLOWERS
   PRIVATE
-  FRIENDS
-  UNIVERSITY
 }
 
 enum NoteStatus {

@@ -1,11 +1,11 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import React from 'react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { MapPin, Calendar, GraduationCap, Users, FileText, Trophy, BarChart3, Star, Award, Heart, Target, Zap, BookOpen } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { MapPin, Calendar, GraduationCap, Users, MessageSquare, Heart, Share2, Trophy, Zap, Target, BookOpen } from 'lucide-react'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { ProfileHeader } from '@/components/perfil/ProfileHeader'
 import { ProfileFeed } from '@/components/perfil/ProfileFeed'
 import AchievementCard from '@/components/perfil/AchievementCard'
@@ -64,45 +64,37 @@ const mockStats = [
   { label: 'Materias Favoritas', value: '3', icon: 'BookOpen' }
 ]
 
-export default function PublicProfilePage() {
-  const params = useParams()
-  const username = params.username as string
-  const [user, setUser] = useState<PublicUser | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface PageProps {
+  params: Promise<{ username: string }>
+}
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`/api/users/${username}`)
-        
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('Usuario no encontrado')
-          } else if (response.status === 403) {
-            setError('Este perfil es privado')
-          } else {
-            setError('Error al cargar el perfil')
-          }
-          return
-        }
-
-        const userData = await response.json()
-        setUser(userData)
-      } catch (err) {
-        console.error('Error fetching user:', err)
-        setError('Error al cargar el perfil')
-        toast.error('Error al cargar el perfil del usuario')
-      } finally {
-        setLoading(false)
+export default async function PublicProfilePage({ params }: PageProps) {
+  const { username } = await params
+  const session = await getServerSession(authOptions)
+  
+  // Fetch user data server-side
+  let user = null
+  let error = null
+  
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/users/${username}`, {
+      cache: 'no-store'
+    })
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        error = 'Usuario no encontrado'
+      } else if (response.status === 403) {
+        error = 'Este perfil es privado'
+      } else {
+        error = 'Error al cargar el perfil'
       }
+    } else {
+      user = await response.json()
     }
-
-    if (username) {
-      fetchUser()
-    }
-  }, [username])
+  } catch (err) {
+    error = 'Error de conexión'
+  }
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -121,33 +113,18 @@ export default function PublicProfilePage() {
     return <IconComponent className="w-4 h-4" />
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando perfil...</p>
-        </div>
-      </div>
-    )
-  }
-
   if (error || !user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {error || 'Usuario no encontrado'}
-          </h1>
+          <div className="text-6xl mb-4">{error === 'Usuario no encontrado' ? '👤' : '😔'}</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">{error || 'Usuario no encontrado'}</h1>
           <p className="text-gray-600 mb-4">
-            El perfil que buscas no existe o no está disponible públicamente.
+            {error === 'Usuario no encontrado' 
+              ? 'Este usuario no existe o su perfil es privado'
+              : 'No pudimos cargar este perfil'
+            }
           </p>
-          <a 
-            href="/" 
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            Volver al inicio
-          </a>
         </div>
       </div>
     )
@@ -227,6 +204,7 @@ export default function PublicProfilePage() {
             <ProfileFeed
               isOwnProfile={false}
               username={user.username}
+              isPublicView={!session}
             />
 
             {/* Recent Achievements */}
