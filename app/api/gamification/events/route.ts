@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     // Emitir el evento
     try {
-      gamificationEventBus.emit(eventType, eventData);
+      gamificationEventBus.emitGamificationEvent(eventType as keyof import('@/lib/eventBus').GamificationEvents, eventData);
       
       // Registrar el evento emitido para auditoría
       await prisma.activity.create({

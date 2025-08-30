@@ -29,58 +29,51 @@ export async function POST(request: NextRequest) {
     // Emitir diferentes tipos de eventos de prueba
     switch (eventType) {
       case 'post_created':
-        gamificationEventBus.emit('post_created', {
+        gamificationEventBus.emitGamificationEvent('post_created', {
           userId,
-          postId: data?.postId || 'test-post-' + Date.now(),
-          ...data
+          postId: data?.postId || 'test-post-' + Date.now()
         });
         break;
 
       case 'user_followed':
-        gamificationEventBus.emit('user_followed', {
+        gamificationEventBus.emitGamificationEvent('user_followed', {
           userId,
-          followedUserId: data?.followedUserId || 'test-user-' + Date.now(),
-          ...data
+          followedUserId: data?.followedUserId || 'test-user-' + Date.now()
         });
         break;
 
       case 'user_gained_follower':
-        gamificationEventBus.emit('user_gained_follower', {
+        gamificationEventBus.emitGamificationEvent('user_gained_follower', {
           userId,
-          followerId: data?.followerId || 'test-follower-' + Date.now(),
-          ...data
+          followerId: data?.followerId || 'test-follower-' + Date.now()
         });
         break;
 
       case 'comment_created':
-        gamificationEventBus.emit('comment_created', {
+        gamificationEventBus.emitGamificationEvent('comment_created', {
           userId,
           commentId: data?.commentId || 'test-comment-' + Date.now(),
-          postId: data?.postId || 'test-post-' + Date.now(),
-          ...data
+          postId: data?.postId || 'test-post-' + Date.now()
         });
         break;
 
       case 'like_given':
-        gamificationEventBus.emit('like_given', {
+        gamificationEventBus.emitGamificationEvent('like_given', {
           userId,
-          postId: data?.postId || 'test-post-' + Date.now(),
-          ...data
+          postId: data?.postId || 'test-post-' + Date.now()
         });
         break;
 
       case 'profile_updated':
-        gamificationEventBus.emit('profile_updated', {
-          userId,
-          ...data
+        gamificationEventBus.emitGamificationEvent('profile_updated', {
+          userId
         });
         break;
 
       case 'login_streak':
-        gamificationEventBus.emit('login_streak', {
+        gamificationEventBus.emitGamificationEvent('login_streak', {
           userId,
-          streakDays: data?.streakDays || 1,
-          ...data
+          streakDays: data?.streakDays || 1
         });
         break;
 
