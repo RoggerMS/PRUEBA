@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
+import { debugFetch } from '@/lib/debugFetch';
 
 interface Notification {
   id: string;
@@ -55,7 +56,7 @@ export function useNotifications(): UseNotificationsReturn {
     setError(null);
 
     try {
-      const response = await fetch(`/api/notifications?page=${pageNum}&limit=20`);
+      const response = await debugFetch(`/api/notifications?page=${pageNum}&limit=20`);
       
       if (!response.ok) {
         throw new Error('Error al cargar notificaciones');
@@ -89,7 +90,7 @@ export function useNotifications(): UseNotificationsReturn {
   // Marcar notificación como leída
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const response = await fetch('/api/notifications', {
+      const response = await debugFetch('/api/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationIds: [notificationId] })
@@ -117,7 +118,7 @@ export function useNotifications(): UseNotificationsReturn {
   // Marcar todas como leídas
   const markAllAsRead = useCallback(async () => {
     try {
-      const response = await fetch('/api/notifications', {
+      const response = await debugFetch('/api/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ markAllAsRead: true })
@@ -141,7 +142,7 @@ export function useNotifications(): UseNotificationsReturn {
   // Eliminar notificación
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
-      const response = await fetch(`/api/notifications?ids=${notificationId}`, {
+      const response = await debugFetch(`/api/notifications?ids=${notificationId}`, {
         method: 'DELETE'
       });
 
@@ -167,7 +168,7 @@ export function useNotifications(): UseNotificationsReturn {
   // Limpiar todas las notificaciones
   const clearAll = useCallback(async () => {
     try {
-      const response = await fetch('/api/notifications?all=true', {
+      const response = await debugFetch('/api/notifications?all=true', {
         method: 'DELETE'
       });
 
@@ -303,7 +304,7 @@ export function useUnreadNotificationCount() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/notifications?limit=1&unreadOnly=true');
+      const response = await debugFetch('/api/notifications?limit=1&unreadOnly=true');
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.unreadCount);
