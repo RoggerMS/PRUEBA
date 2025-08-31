@@ -41,11 +41,14 @@ export function useNotifications(): UseNotificationsReturn {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
+  // Track loading state separately to avoid refetch loops
+  const isLoadingRef = useRef(false);
 
   // Cargar notificaciones desde la API
   const loadNotifications = useCallback(async (pageNum = 1, reset = false) => {
-    if (!session?.user?.id || isLoading) return;
+    if (!session?.user?.id || isLoadingRef.current) return;
 
+    isLoadingRef.current = true;
     setIsLoading(true);
     setError(null);
 
@@ -76,9 +79,10 @@ export function useNotifications(): UseNotificationsReturn {
       setError(errorMessage);
       console.error('Error loading notifications:', err);
     } finally {
+      isLoadingRef.current = false;
       setIsLoading(false);
     }
-  }, [session?.user?.id, isLoading]);
+  }, [session?.user?.id]);
 
   // Marcar notificación como leída
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -251,6 +255,8 @@ export function useNotifications(): UseNotificationsReturn {
   }, []);
 
   // Efectos
+  // Ejecutar solo cuando cambia el usuario de la sesión para no reabrir la SSE
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (session?.user?.id) {
       loadNotifications(1, true);
@@ -258,7 +264,7 @@ export function useNotifications(): UseNotificationsReturn {
     }
 
     return cleanupSSE;
-  }, [session?.user?.id, loadNotifications, setupSSE, cleanupSSE]);
+  }, [session?.user?.id]);
 
   // Limpiar al desmontar
   useEffect(() => {
