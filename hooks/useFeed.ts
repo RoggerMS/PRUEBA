@@ -324,6 +324,95 @@ export function useSavedPosts() {
   });
 }
 
+// Hook for bookmark toggle
+export function useBookmark() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (postId: string) => {
+      const response = await fetch(`/api/feed/${postId}/bookmark`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle bookmark');
+      }
+      
+      return response.json();
+    },
+    onMutate: async (postId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['post', postId] });
+      
+      // Snapshot the previous value
+      const previousPost = queryClient.getQueryData<FeedPost>(['post', postId]);
+      
+      // Optimistically update the post
+      if (previousPost) {
+        const newSaved = !previousPost.viewerState.saved;
+        const newBookmarkCount = previousPost.stats.bookmarks + (newSaved ? 1 : -1);
+        
+        queryClient.setQueryData<FeedPost>(['post', postId], {
+          ...previousPost,
+          stats: {
+            ...previousPost.stats,
+            bookmarks: Math.max(0, newBookmarkCount)
+          },
+          viewerState: {
+            ...previousPost.viewerState,
+            saved: newSaved
+          }
+        });
+        
+        // Also update in feed queries
+        queryClient.setQueriesData(
+          { queryKey: ['feed'] },
+          (oldData: any) => {
+            if (!oldData) return oldData;
+            
+            return {
+              ...oldData,
+              pages: oldData.pages.map((page: any) => ({
+                ...page,
+                posts: page.posts.map((post: FeedPost) => 
+                  post.id === postId
+                    ? {
+                        ...post,
+                        stats: {
+                          ...post.stats,
+                          bookmarks: Math.max(0, newBookmarkCount)
+                        },
+                        viewerState: {
+                          ...post.viewerState,
+                          saved: newSaved
+                        }
+                      }
+                    : post
+                )
+              }))
+            };
+          }
+        );
+      }
+      
+      return { previousPost };
+    },
+    onError: (err, postId, context) => {
+      // Revert optimistic update
+      if (context?.previousPost) {
+        queryClient.setQueryData(['post', postId], context.previousPost);
+      }
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      
+      toast.error('Error al guardar el post');
+    },
+    onSettled: (data, error, postId) => {
+      // Always refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+    }
+  });
+}
+
 // Hook for trending topics
 export function useTrendingTopics() {
   return useQuery({

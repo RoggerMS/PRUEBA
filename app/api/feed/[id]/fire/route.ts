@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-// POST /api/feed/[id]/bookmark - Toggle bookmark (save) on a post
+// POST /api/feed/[id]/fire - Toggle fire reaction (like) on a post
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -32,8 +32,8 @@ export async function POST(
       )
     }
 
-    // Check if user already bookmarked this post
-    const existingBookmark = await prisma.bookmark.findUnique({
+    // Check if user already liked (fired) this post
+    const existingLike = await prisma.like.findUnique({
       where: {
         userId_postId: {
           userId,
@@ -42,12 +42,12 @@ export async function POST(
       }
     })
 
-    let saved = false
-    let bookmarkCount = 0
+    let fired = false
+    let fireCount = 0
 
-    if (existingBookmark) {
-      // Remove bookmark (unsave)
-      await prisma.bookmark.delete({
+    if (existingLike) {
+      // Remove like (unfire)
+      await prisma.like.delete({
         where: {
           userId_postId: {
             userId,
@@ -55,32 +55,32 @@ export async function POST(
           }
         }
       })
-      saved = false
+      fired = false
     } else {
-      // Add bookmark (save)
-      await prisma.bookmark.create({
+      // Add like (fire)
+      await prisma.like.create({
         data: {
           userId,
           postId
         }
       })
-      saved = true
+      fired = true
     }
 
-    // Get updated bookmark count
-    bookmarkCount = await prisma.bookmark.count({
+    // Get updated fire count
+    fireCount = await prisma.like.count({
       where: { postId }
     })
 
     return NextResponse.json({
-      saved,
-      bookmarkCount,
-      message: saved ? 'Post saved!' : 'Bookmark removed'
+      fired,
+      fireCount,
+      message: fired ? 'Post fired!' : 'Fire removed'
     })
   } catch (error) {
-    console.error('Error toggling bookmark:', error)
+    console.error('Error toggling fire reaction:', error)
     return NextResponse.json(
-      { error: 'Failed to toggle bookmark' },
+      { error: 'Failed to toggle fire reaction' },
       { status: 500 }
     )
   }

@@ -66,14 +66,23 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Transform posts to include interaction flags
+    // Transform posts to include interaction flags and viewerState
     const transformedPosts = posts.map(post => ({
       ...post,
-      isLiked: userId ? post.likes?.length > 0 : false,
-      isBookmarked: userId ? post.bookmarks?.length > 0 : false,
-      likesCount: post._count.likes,
-      commentsCount: post._count.comments,
-      bookmarksCount: post._count.bookmarks,
+      viewerState: {
+        fired: userId ? post.likes?.length > 0 : false, // Using likes as "fired" for now
+        saved: userId ? post.bookmarks?.length > 0 : false,
+        shared: false // Default to false, can be implemented later
+      },
+      stats: {
+        fires: post._count.likes, // Using likes count as fires count
+        comments: post._count.comments,
+        bookmarks: post._count.bookmarks
+      },
+      author: {
+        ...post.author,
+        avatar: post.author.image // Map image to avatar for consistency
+      },
       likes: undefined, // Remove the likes array from response
       bookmarks: undefined, // Remove the bookmarks array from response
       _count: undefined // Remove the _count object
@@ -137,14 +146,23 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Transform the response
+    // Transform the response to match expected structure
     const transformedPost = {
       ...post,
-      isLiked: false,
-      isBookmarked: false,
-      likesCount: post._count.likes,
-      commentsCount: post._count.comments,
-      bookmarksCount: post._count.bookmarks,
+      viewerState: {
+        fired: false, // New posts start unfired
+        saved: false, // New posts start unsaved
+        shared: false // New posts start unshared
+      },
+      stats: {
+        fires: post._count.likes,
+        comments: post._count.comments,
+        bookmarks: post._count.bookmarks
+      },
+      author: {
+        ...post.author,
+        avatar: post.author.image // Map image to avatar for consistency
+      },
       _count: undefined
     }
 

@@ -17,7 +17,7 @@ import {
   LoaderIcon,
   FlameIcon
 } from 'lucide-react';
-import { useFeed, useFireReaction } from '@/hooks/useFeed';
+import { useFeed, useFireReaction, useBookmark } from '@/hooks/useFeed';
 import { FeedPost } from '@/types/feed';
 import { toast } from 'sonner';
 
@@ -34,6 +34,7 @@ const formatTimeAgo = (dateString: string) => {
 
 function PostCard({ post }: { post: FeedPost }) {
   const fireReaction = useFireReaction();
+  const bookmarkMutation = useBookmark();
 
   const handleFire = async () => {
     try {
@@ -45,15 +46,7 @@ function PostCard({ post }: { post: FeedPost }) {
 
   const handleBookmark = async () => {
     try {
-      const response = await fetch(`/api/feed/${post.id}/bookmark`, {
-        method: 'POST',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to bookmark post');
-      }
-      
-      toast.success(post.viewerState.saved ? 'Post removido de guardados' : 'Post guardado');
+      await bookmarkMutation.mutateAsync(post.id);
     } catch (error) {
       toast.error('Error al guardar el post');
     }
@@ -201,6 +194,7 @@ function PostCard({ post }: { post: FeedPost }) {
           size="sm" 
           onClick={handleBookmark}
           className={`${post.viewerState.saved ? 'text-blue-600' : 'text-gray-600'}`}
+          disabled={bookmarkMutation.isPending}
         >
           <BookmarkIcon className={`h-4 w-4 ${post.viewerState.saved ? 'fill-blue-600' : ''}`} />
         </Button>
