@@ -54,7 +54,7 @@ const trendingNotes: TrendingNote[] = [
     id: '1',
     title: 'Algoritmos de Ordenamiento - Guía Completa',
     author: 'María González',
-    authorAvatar: '/avatars/maria.jpg',
+    authorAvatar: 'https://i.pravatar.cc/150?u=maria',
     subject: 'Algoritmos',
     views: 1234,
     likes: 89,
@@ -64,7 +64,7 @@ const trendingNotes: TrendingNote[] = [
     id: '2',
     title: 'Cálculo Diferencial - Ejercicios Resueltos',
     author: 'Carlos Ruiz',
-    authorAvatar: '/avatars/carlos.jpg',
+    authorAvatar: 'https://i.pravatar.cc/150?u=carlos',
     subject: 'Matemáticas',
     views: 987,
     likes: 67
@@ -73,7 +73,7 @@ const trendingNotes: TrendingNote[] = [
     id: '3',
     title: 'Base de Datos - Normalización',
     author: 'Ana López',
-    authorAvatar: '/avatars/ana.jpg',
+    authorAvatar: 'https://i.pravatar.cc/150?u=ana',
     subject: 'Base de Datos',
     views: 756,
     likes: 45,
@@ -86,7 +86,7 @@ const trendingQuestions: TrendingQuestion[] = [
     id: '1',
     title: '¿Cómo optimizar consultas SQL complejas?',
     author: 'Pedro Martín',
-    authorAvatar: '/avatars/pedro.jpg',
+    authorAvatar: 'https://i.pravatar.cc/150?u=pedro',
     answers: 12,
     votes: 34,
     tags: ['SQL', 'Optimización', 'Base de Datos']
@@ -95,7 +95,7 @@ const trendingQuestions: TrendingQuestion[] = [
     id: '2',
     title: 'Diferencias entre React y Vue.js',
     author: 'Laura Silva',
-    authorAvatar: '/avatars/laura.jpg',
+    authorAvatar: 'https://i.pravatar.cc/150?u=laura',
     answers: 8,
     votes: 28,
     tags: ['React', 'Vue', 'Frontend']
@@ -104,7 +104,7 @@ const trendingQuestions: TrendingQuestion[] = [
     id: '3',
     title: 'Mejores prácticas en Machine Learning',
     author: 'Diego Torres',
-    authorAvatar: '/avatars/diego.jpg',
+    authorAvatar: 'https://i.pravatar.cc/150?u=diego',
     answers: 15,
     votes: 42,
     tags: ['ML', 'Python', 'IA']
@@ -115,7 +115,7 @@ const popularUsers: PopularUser[] = [
   {
     id: '1',
     name: 'Dr. Roberto Vega',
-    avatar: '/avatars/roberto.jpg',
+    avatar: 'https://i.pravatar.cc/150?u=roberto',
     reputation: 2340,
     specialty: 'Algoritmos y Estructuras de Datos',
     isFollowing: false
@@ -123,7 +123,7 @@ const popularUsers: PopularUser[] = [
   {
     id: '2',
     name: 'Ing. Sofia Mendez',
-    avatar: '/avatars/sofia.jpg',
+    avatar: 'https://i.pravatar.cc/150?u=sofia',
     reputation: 1890,
     specialty: 'Desarrollo Web',
     isFollowing: true
@@ -131,7 +131,7 @@ const popularUsers: PopularUser[] = [
   {
     id: '3',
     name: 'Lic. Miguel Castro',
-    avatar: '/avatars/miguel.jpg',
+    avatar: 'https://i.pravatar.cc/150?u=miguel',
     reputation: 1567,
     specialty: 'Machine Learning',
     isFollowing: false

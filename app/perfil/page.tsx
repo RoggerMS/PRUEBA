@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react'
 export default function PerfilPage() {
   const { status } = useSession()
   const [profile, setProfile] = useState<User | null>(null)
+  const [error, setError] = useState<string>('')
 
   useEffect(() => {
     if (status !== 'authenticated') return
@@ -36,16 +37,20 @@ export default function PerfilPage() {
             following: 0,
             posts: user.stats?.posts || 0
           })
+        } else {
+          const data = await res.json().catch(() => ({}))
+          setError(data.error || 'No se pudo cargar el perfil')
         }
-      } catch (error) {
-        console.error('Error loading profile', error)
+      } catch (err) {
+        console.error('Error loading profile', err)
+        setError('No se pudo cargar el perfil')
       }
     }
 
     loadProfile()
   }, [status])
 
-  if (status === 'loading' || !profile) {
+  if (status === 'loading' || (!profile && !error)) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -53,6 +58,14 @@ export default function PerfilPage() {
     )
   }
 
-  return <SocialProfile user={profile} isOwnProfile />
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-sm text-red-500">{error}</p>
+      </div>
+    )
+  }
+
+  return <SocialProfile user={profile!} isOwnProfile />
 }
 

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Add user stats and trending topics API endpoints to resolve profile and feed 404 errors.
+- Provide default and placeholder avatars to eliminate broken image requests.
+- Handle profile loading failures gracefully and display an error message instead of an endless spinner.
 - Add Jest and React Testing Library tests for notifications hook to ensure single load and EventSource instance.
 - Wrap notifications API calls with a development debug fetch that counts usage.
 - Add global error boundary to log errors and offer reload or home navigation.
