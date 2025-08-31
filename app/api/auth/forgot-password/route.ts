@@ -11,7 +11,7 @@ const forgotPasswordSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting más estricto para forgot password
-    const rateLimitResult = rateLimitForgotPassword(request);
+    const rateLimitResult = await rateLimitForgotPassword(request);
     if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },

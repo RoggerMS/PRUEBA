@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import BadgeCollection from '@/components/gamification/BadgeCollection'
-import AchievementCard from '@/components/perfil/AchievementCard'
+import BadgeCollection, { BadgeData } from '@/components/gamification/BadgeCollection'
+import AchievementCard, { AchievementData } from '@/components/perfil/AchievementCard'
 import { Trophy, Search, Filter, ArrowLeft, Award, Target, Star, Zap } from 'lucide-react'
 
 // Mock data for achievements
-const mockAchievements = [
+const mockAchievements: AchievementData[] = [
   {
     id: '1',
     title: 'Primer Post',
@@ -98,7 +98,7 @@ const mockAchievements = [
 ]
 
 // Mock badges data
-const mockBadges = [
+const mockBadges: BadgeData[] = [
   {
     id: '1',
     title: 'Creador Novato',
@@ -304,7 +304,6 @@ export default function AchievementsPage() {
                 <AchievementCard
                   key={achievement.id}
                   achievement={achievement}
-                  showProgress={true}
                 />
               ))}
             </div>
@@ -318,11 +317,7 @@ export default function AchievementsPage() {
           </TabsContent>
 
           <TabsContent value="badges" className="mt-6">
-            <BadgeCollection 
-              badges={filteredBadges}
-              totalBadges={mockBadges.length}
-              className=""
-            />
+            <BadgeCollection badges={filteredBadges} />
             {filteredBadges.length === 0 && (
               <div className="text-center py-12">
                 <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />

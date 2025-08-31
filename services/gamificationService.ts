@@ -1,4 +1,5 @@
 import { gamificationEventBus, GamificationEvents } from '@/lib/eventBus';
+export { LEVELS, calculateUserLevel } from '@/src/services/gamificationService';
 
 export interface GamificationEvent {
   type: 'xp_gained' | 'badge_earned' | 'level_up' | 'achievement_unlocked' | 'streak_updated';

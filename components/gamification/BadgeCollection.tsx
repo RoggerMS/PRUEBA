@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Star, Award, Crown } from 'lucide-react';
 
-interface BadgeData {
+export interface BadgeData {
   id: string;
   title: string;
   description: string;

@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Fix TypeScript build errors across project.
+- Resolve component import mismatches and add API rate limiting helpers.
 - Correct Feed import in App.tsx to use named export.
 - Fix NotificationCenter and gamification component imports to prevent invalid element type errors.
 - Replace NotificationCenter context usage with dedicated hook to avoid runtime type errors.

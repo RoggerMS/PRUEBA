@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Trophy, Star, Award, Crown, CheckCircle } from 'lucide-react';
 
-interface AchievementData {
+export interface AchievementData {
   id: string;
   title: string;
   description: string;

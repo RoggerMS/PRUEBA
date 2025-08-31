@@ -14,8 +14,8 @@ import {
   Gift,
   Zap
 } from 'lucide-react';
-import { ProductCard } from '@/components/marketplace/ProductCard';
-import { ProductDetail } from '@/components/marketplace/ProductDetail';
+import ProductCard from '@/components/marketplace/ProductCard';
+import ProductDetail from '@/components/marketplace/ProductDetail';
 
 // Mock data para productos del marketplace
 const mockProducts = [

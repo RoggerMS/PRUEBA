@@ -113,3 +113,23 @@ export async function applyRateLimit(
 
 export { RateLimiter }
 export type { RateLimitOptions, RateLimitResult }
+
+export async function rateLimitForgotPassword(request: NextRequest) {
+  return applyRateLimit(request, strictRateLimit)
+}
+
+export async function rateLimitRegister(request: NextRequest) {
+  return applyRateLimit(request, strictRateLimit)
+}
+
+export async function rateLimitResetPassword(request: NextRequest) {
+  return applyRateLimit(request, strictRateLimit)
+}
+
+export async function rateLimitComment(request: NextRequest, _userId?: string) {
+  return applyRateLimit(request, apiRateLimit)
+}
+
+export async function rateLimitPost(request: NextRequest, _userId?: string) {
+  return applyRateLimit(request, apiRateLimit)
+}
