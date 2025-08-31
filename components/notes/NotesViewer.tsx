@@ -23,8 +23,10 @@ import {
   Calendar,
   Eye,
   Star,
-  Send
+  Send,
+  LoaderIcon
 } from 'lucide-react';
+import { useNote, useLikeNote, useAddComment, useDownloadNote } from '@/hooks/useNotes';
 import { toast } from 'sonner';
 
 interface Note {
@@ -64,7 +66,7 @@ interface Note {
 }
 
 interface NotesViewerProps {
-  note: Note;
+  noteId: string;
   onClose: () => void;
 }
 
@@ -93,7 +95,7 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export function NotesViewer({ note, onClose }: NotesViewerProps) {
+export function NotesViewer({ noteId, onClose }: NotesViewerProps) {
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
@@ -102,6 +104,33 @@ export function NotesViewer({ note, onClose }: NotesViewerProps) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
+  
+  const { data: note, isLoading, error } = useNote(noteId);
+  const likeNoteMutation = useLikeNote();
+  const addCommentMutation = useAddComment();
+  const downloadNoteMutation = useDownloadNote();
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 flex items-center gap-3">
+          <LoaderIcon className="w-6 h-6 animate-spin" />
+          <span>Loading note...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !note) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 text-center">
+          <p className="text-gray-500 mb-4">Error loading note</p>
+          <Button onClick={onClose}>Close</Button>
+        </div>
+      </div>
+    );
+  }
 
   const currentFile = note.files[currentFileIndex];
   const totalPages = currentFile?.pages || 1;
@@ -137,17 +166,22 @@ export function NotesViewer({ note, onClose }: NotesViewerProps) {
   };
 
   const handleDownload = () => {
-    toast.success('Descarga iniciada');
+    downloadNoteMutation.mutate(noteId);
   };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast.success('Enlace copiado al portapapeles');
+    toast.success('Link copied to clipboard!');
   };
 
   const handleLike = () => {
-    setIsLiked(!isLiked);
-    toast.success(isLiked ? 'Eliminado de favoritos' : 'Agregado a favoritos');
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+    likeNoteMutation.mutate({ noteId, liked: !newLikedState }, {
+      onError: () => {
+        setIsLiked(!newLikedState);
+      }
+    });
   };
 
   const handleSubmitComment = () => {
@@ -156,9 +190,17 @@ export function NotesViewer({ note, onClose }: NotesViewerProps) {
       return;
     }
     
-    toast.success('Comentario agregado');
-    setNewComment('');
-    setNewRating(5);
+    addCommentMutation.mutate({
+      noteId,
+      content: newComment,
+      rating: newRating
+    }, {
+      onSuccess: () => {
+        setNewComment('');
+        setNewRating(5);
+        toast.success('Comment added successfully!');
+      }
+    });
   };
 
   return (

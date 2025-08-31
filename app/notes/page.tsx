@@ -1,14 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
+import { Search, Filter, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Upload, Filter } from 'lucide-react';
 import { NotesGrid } from '@/components/notes/NotesGrid';
-import { NotesFilters } from '@/components/notes/NotesFilters';
 import { NotesViewer } from '@/components/notes/NotesViewer';
+import { NotesFilters } from '@/components/notes/NotesFilters';
+import { NotesUpload } from '@/components/notes/NotesUpload';
 
 // Mock data for selected note
 const mockNote = {
@@ -77,14 +76,18 @@ const mockNote = {
 export default function NotesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<typeof mockNote | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedCareer, setSelectedCareer] = useState('all');
+  const [showUpload, setShowUpload] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCareer, setSelectedCareer] = useState('');
   const [sortBy, setSortBy] = useState('recent');
 
   const handleNoteSelect = (noteId: string) => {
-    // In a real app, fetch the note data by ID
-    setSelectedNote(mockNote);
+    setSelectedNote(noteId);
+  };
+
+  const handleCloseViewer = () => {
+    setSelectedNote(null);
   };
 
   const router = useRouter();
@@ -127,7 +130,7 @@ export default function NotesPage() {
                   Filtros
                 </Button>
                 <Button
-                  onClick={() => router.push('/notes/upload')}
+                  onClick={() => setShowUpload(true)}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
                   <Upload className="w-4 h-4 mr-2" />
@@ -154,18 +157,25 @@ export default function NotesPage() {
 
         {/* Notes Grid */}
         <NotesGrid 
-          searchQuery={searchQuery} 
+          searchQuery={searchQuery}
+          selectedCategory={selectedCategory}
+          selectedCareer={selectedCareer}
+          sortBy={sortBy}
           onNoteSelect={handleNoteSelect}
         />
-      </div>
 
-      {/* Viewer Modal */}
-      {selectedNote && (
-        <NotesViewer
-          note={selectedNote}
-          onClose={() => setSelectedNote(null)}
-        />
-      )}
+        {/* Notes Viewer Modal */}
+        {selectedNote && (
+          <NotesViewer 
+            noteId={selectedNote}
+            onClose={handleCloseViewer}
+          />
+        )}
+
+        {/* Notes Upload Modal */}
+        {showUpload && (
+          <NotesUpload onClose={() => setShowUpload(false)} />
+        )}
     </div>
   );
 }

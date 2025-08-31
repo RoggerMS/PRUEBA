@@ -22,10 +22,14 @@ import {
   Share2,
   Bookmark,
   Edit,
-  MoreHorizontal
+  MoreHorizontal,
+  LoaderIcon
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { gamificationService } from '@/lib/gamification';
+import { useQuestion, useAnswers, useCreateAnswer, useVoteQuestion, useVoteAnswer, useAcceptAnswer } from '@/hooks/useForum';
 
 interface Author {
   id: string;
@@ -66,149 +70,25 @@ interface QuestionDetailProps {
   onBack: () => void;
 }
 
-// Mock data for the question and answers
-const mockQuestion: Question = {
-  id: '1',
-  title: '¿Cómo resolver ecuaciones cuadráticas paso a paso?',
-  content: `Necesito ayuda para entender el método de factorización y la fórmula cuadrática. 
 
-Estoy trabajando con la ecuación: **x² - 5x + 6 = 0**
-
-He intentado factorizar pero no estoy seguro de los pasos. ¿Podrían explicarme:
-
-1. Cómo identificar si una ecuación se puede factorizar
-2. Los pasos para factorizar
-3. Cuándo usar la fórmula cuadrática
-4. Ejemplos prácticos
-
-¡Gracias por su ayuda!`,
-  author: {
-    id: '1',
-    name: 'María González',
-    avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=female%20student%20avatar%20smiling%20portrait&image_size=square',
-    level: 'Estudiante',
-    points: 150
-  },
-  subject: 'Matemáticas',
-  career: 'Ingeniería',
-  tags: ['álgebra', 'ecuaciones', 'matemáticas'],
-  votes: 12,
-  answers: 3,
-  views: 45,
-  createdAt: new Date('2024-01-15T10:30:00'),
-  hasAcceptedAnswer: true,
-  bounty: 50
-};
-
-const mockAnswers: Answer[] = [
-  {
-    id: '1',
-    content: `¡Excelente pregunta! Te explico paso a paso cómo resolver ecuaciones cuadráticas:
-
-## Método de Factorización
-
-Para tu ecuación **x² - 5x + 6 = 0**:
-
-1. **Identificar los coeficientes**: a=1, b=-5, c=6
-2. **Buscar dos números que multiplicados den 6 y sumados den -5**
-   - Los números son -2 y -3 porque: (-2) × (-3) = 6 y (-2) + (-3) = -5
-3. **Factorizar**: (x - 2)(x - 3) = 0
-4. **Resolver**: x = 2 o x = 3
-
-## Fórmula Cuadrática
-
-Cuando no se puede factorizar fácilmente, usa:
-**x = (-b ± √(b² - 4ac)) / 2a**
-
-Para verificar: x = (5 ± √(25 - 24)) / 2 = (5 ± 1) / 2
-Resultado: x = 3 o x = 2 ✓
-
-¡Espero que te ayude!`,
-    author: {
-      id: '2',
-      name: 'Prof. Carlos Mendoza',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=male%20professor%20avatar%20smiling%20portrait&image_size=square',
-      level: 'Experto',
-      points: 2450
-    },
-    votes: 18,
-    createdAt: new Date('2024-01-15T11:15:00'),
-    isAccepted: true,
-    isEdited: false
-  },
-  {
-    id: '2',
-    content: `Complementando la respuesta anterior, aquí tienes algunos consejos adicionales:
-
-**Cuándo usar cada método:**
-
-- **Factorización**: Cuando el discriminante (b² - 4ac) es un cuadrado perfecto
-- **Fórmula cuadrática**: Siempre funciona, especialmente cuando la factorización es difícil
-- **Completar el cuadrado**: Útil para entender la forma vértice
-
-**Ejemplo adicional:**
-Para x² + 4x + 3 = 0:
-- Factores de 3 que sumen 4: 3 y 1
-- Factorización: (x + 3)(x + 1) = 0
-- Soluciones: x = -3 o x = -1
-
-¡Practica con diferentes ejemplos!`,
-    author: {
-      id: '3',
-      name: 'Ana López',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=female%20student%20avatar%20smiling%20portrait&image_size=square',
-      level: 'Avanzado',
-      points: 320
-    },
-    votes: 8,
-    createdAt: new Date('2024-01-15T12:30:00'),
-    isAccepted: false,
-    isEdited: true
-  },
-  {
-    id: '3',
-    content: `Te recomiendo esta herramienta online para practicar: [Calculadora de ecuaciones cuadráticas]
-
-También puedes verificar tus respuestas sustituyendo los valores encontrados en la ecuación original.
-
-Por ejemplo, para x = 2 en x² - 5x + 6 = 0:
-2² - 5(2) + 6 = 4 - 10 + 6 = 0 ✓`,
-    author: {
-      id: '4',
-      name: 'Diego Ramírez',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=male%20student%20avatar%20smiling%20portrait&image_size=square',
-      level: 'Estudiante',
-      points: 89
-    },
-    votes: 3,
-    createdAt: new Date('2024-01-15T14:20:00'),
-    isAccepted: false,
-    isEdited: false
-  }
-];
 
 export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
-  const [question] = useState(mockQuestion);
-  const [answers, setAnswers] = useState(mockAnswers);
   const [newAnswer, setNewAnswer] = useState('');
-  const [questionVotes, setQuestionVotes] = useState(question.votes);
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
+  
+  const { data: question, isLoading: questionLoading, error: questionError } = useQuestion(questionId);
+  const { data: answers = [], isLoading: answersLoading, error: answersError } = useAnswers(questionId);
+  const createAnswerMutation = useCreateAnswer(questionId);
+  const voteQuestionMutation = useVoteQuestion();
+  const voteAnswerMutation = useVoteAnswer();
+  const acceptAnswerMutation = useAcceptAnswer();
 
   const handleVote = async (type: 'up' | 'down', answerId?: string) => {
-    if (answerId) {
-      // Vote on answer
-      setAnswers(prev => prev.map(answer => {
-        if (answer.id === answerId) {
-          let newVotes = answer.votes;
-          if (type === 'up') newVotes += 1;
-          else newVotes -= 1;
-          return { ...answer, votes: newVotes };
-        }
-        return answer;
-      }));
-      
-      // Grant XP for voting on answer
-      try {
+    try {
+      if (answerId) {
+        await voteAnswerMutation.mutateAsync({ answerId, data: { type } });
+        
+        // Grant XP for voting on answer
         await gamificationService.grantXP(
           'current-user',
           2,
@@ -216,47 +96,37 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
           answerId,
           `Voto ${type === 'up' ? 'positivo' : 'negativo'} en respuesta`
         );
-      } catch (error) {
-        console.error('Error granting XP for answer vote:', error);
-      }
-    } else {
-      // Vote on question
-      if (userVote === type) {
-        setUserVote(null);
-        setQuestionVotes(prev => type === 'up' ? prev - 1 : prev + 1);
       } else {
-        const adjustment = userVote ? (type === 'up' ? 2 : -2) : (type === 'up' ? 1 : -1);
-        setUserVote(type);
-        setQuestionVotes(prev => prev + adjustment);
+        const newVote = userVote === type ? null : type;
+        setUserVote(newVote);
+        
+        if (newVote) {
+          await voteQuestionMutation.mutateAsync({ questionId, data: { type: newVote } });
+        }
         
         // Grant XP for voting on question
-        try {
-          await gamificationService.grantXP(
-            'current-user',
-            2,
-            'forum_vote',
-            questionId,
-            `Voto ${type === 'up' ? 'positivo' : 'negativo'} en pregunta`
-          );
-        } catch (error) {
-          console.error('Error granting XP for question vote:', error);
-        }
+        await gamificationService.grantXP(
+          'current-user',
+          2,
+          'forum_vote',
+          questionId,
+          `Voto ${type === 'up' ? 'positivo' : 'negativo'} en pregunta`
+        );
       }
+      
+      toast.success(`Voto ${type === 'up' ? 'positivo' : 'negativo'} registrado`);
+    } catch (error) {
+      console.error('Error voting:', error);
     }
   };
 
   const handleAcceptAnswer = async (answerId: string) => {
-    const targetAnswer = answers.find(answer => answer.id === answerId);
-    const wasAccepted = targetAnswer?.isAccepted;
-    
-    setAnswers(prev => prev.map(answer => ({
-      ...answer,
-      isAccepted: answer.id === answerId ? !answer.isAccepted : false
-    })));
-    
-    // Grant XP for accepting an answer (only when accepting, not when removing acceptance)
-    if (!wasAccepted && targetAnswer) {
-      try {
+    try {
+      await acceptAnswerMutation.mutateAsync({ questionId, answerId });
+      
+      // Grant XP for accepting an answer
+      const targetAnswer = answers.find(answer => answer.id === answerId);
+      if (targetAnswer) {
         await gamificationService.grantXP(
           targetAnswer.author.id,
           25,
@@ -264,46 +134,54 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
           answerId,
           'Respuesta aceptada como correcta'
         );
-      } catch (error) {
-        console.error('Error granting XP for accepted answer:', error);
       }
+      
+      toast.success('Respuesta marcada como aceptada');
+    } catch (error) {
+      console.error('Error accepting answer:', error);
     }
   };
 
   const handleSubmitAnswer = async () => {
-    if (newAnswer.trim()) {
-      const answer: Answer = {
-        id: Date.now().toString(),
-        content: newAnswer,
-        author: {
-          id: 'current-user',
-          name: 'Usuario Actual',
-          avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20avatar%20smiling%20portrait&image_size=square',
-          level: 'Estudiante',
-          points: 100
-        },
-        votes: 0,
-        createdAt: new Date(),
-        isAccepted: false,
-        isEdited: false
-      };
-      setAnswers(prev => [...prev, answer]);
+    if (!newAnswer.trim()) return;
+    
+    try {
+      await createAnswerMutation.mutateAsync({ content: newAnswer });
       setNewAnswer('');
       
       // Grant XP for answering a question
-      try {
-        await gamificationService.grantXP(
-          'current-user',
-          15,
-          'forum_answer',
-          answer.id,
-          'Respuesta publicada en el foro'
-        );
-      } catch (error) {
-        console.error('Error granting XP for answer:', error);
-      }
+      await gamificationService.grantXP(
+        'current-user',
+        15,
+        'forum_answer',
+        questionId,
+        'Respuesta publicada en el foro'
+      );
+      
+      toast.success('Respuesta enviada exitosamente');
+    } catch (error) {
+      console.error('Error submitting answer:', error);
     }
   };
+
+  if (questionLoading || answersLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6 flex items-center justify-center">
+        <LoaderIcon className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    );
+  }
+
+  if (questionError || answersError || !question) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error al cargar la pregunta</p>
+          <Button onClick={onBack}>Volver</Button>
+        </div>
+      </div>
+    );
+  }
 
   const timeAgo = formatDistanceToNow(question.createdAt, { 
     addSuffix: true, 
@@ -361,7 +239,7 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
                 >
                   <ArrowUp className="w-5 h-5" />
                 </Button>
-                <span className="font-bold text-xl text-gray-700">{questionVotes}</span>
+                <span className="font-bold text-xl text-gray-700">{question.votes}</span>
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -591,6 +469,7 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
               onChange={(e) => setNewAnswer(e.target.value)}
               rows={6}
               className="mb-4"
+              disabled={createAnswerMutation.isPending}
             />
             <div className="flex justify-between items-center">
               <p className="text-sm text-gray-500">
@@ -598,10 +477,17 @@ export function QuestionDetail({ questionId, onBack }: QuestionDetailProps) {
               </p>
               <Button 
                 onClick={handleSubmitAnswer}
-                disabled={!newAnswer.trim()}
+                disabled={!newAnswer.trim() || createAnswerMutation.isPending}
                 className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               >
-                Publicar Respuesta
+                {createAnswerMutation.isPending ? (
+                  <>
+                    <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
+                    Publicando...
+                  </>
+                ) : (
+                  'Publicar Respuesta'
+                )}
               </Button>
             </div>
           </CardContent>

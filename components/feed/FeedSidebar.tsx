@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useTrendingTopics } from '@/hooks/useFeed';
+import { useQuery } from '@tanstack/react-query';
 import {
   HomeIcon,
   BookOpenIcon,
@@ -31,15 +33,19 @@ interface UserStats {
   reputation: number;
 }
 
-// Mock data del usuario
-const mockUserStats: UserStats = {
-  crolars: 1250,
-  level: 8,
-  xp: 2340,
-  xpToNext: 3000,
-  notesShared: 23,
-  questionsAnswered: 47,
-  reputation: 892
+// Hook para obtener estadísticas del usuario
+const useUserStats = () => {
+  return useQuery({
+    queryKey: ['userStats'],
+    queryFn: async () => {
+      const response = await fetch('/api/user/stats');
+      if (!response.ok) {
+        throw new Error('Failed to fetch user stats');
+      }
+      return response.json();
+    },
+    enabled: true,
+  });
 };
 
 const navigationItems = [
@@ -60,6 +66,8 @@ const quickActions = [
 
 export function FeedSidebar() {
   const { data: session } = useSession();
+  const { data: userStats, isLoading: statsLoading } = useUserStats();
+  const { data: trendingTopics, isLoading: trendingLoading } = useTrendingTopics();
 
   return (
     <div className="space-y-6">
@@ -93,7 +101,7 @@ export function FeedSidebar() {
                 <span className="text-sm font-medium">Crolars</span>
               </div>
               <Badge className="bg-orange-100 text-orange-800">
-                {mockUserStats.crolars.toLocaleString()}
+                {statsLoading ? '...' : (userStats?.crolars || 0).toLocaleString()}
               </Badge>
             </div>
 
@@ -102,14 +110,16 @@ export function FeedSidebar() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <StarIcon className="h-4 w-4 text-yellow-500" />
-                  <span className="text-sm font-medium">Nivel {mockUserStats.level}</span>
+                  <span className="text-sm font-medium">
+                    Nivel {statsLoading ? '...' : userStats?.level || 1}
+                  </span>
                 </div>
                 <span className="text-xs text-gray-500">
-                  {mockUserStats.xp}/{mockUserStats.xpToNext} XP
+                  {statsLoading ? '...' : `${userStats?.xp || 0}/${userStats?.xpToNext || 100} XP`}
                 </span>
               </div>
               <Progress 
-                value={(mockUserStats.xp / mockUserStats.xpToNext) * 100} 
+                value={statsLoading ? 0 : ((userStats?.xp || 0) / (userStats?.xpToNext || 100)) * 100} 
                 className="h-2"
               />
             </div>
@@ -117,11 +127,15 @@ export function FeedSidebar() {
             {/* Estadísticas rápidas */}
             <div className="grid grid-cols-2 gap-2 pt-2 border-t">
               <div className="text-center">
-                <p className="text-lg font-bold text-blue-600">{mockUserStats.notesShared}</p>
+                <p className="text-lg font-bold text-blue-600">
+                  {statsLoading ? '...' : userStats?.notesShared || 0}
+                </p>
                 <p className="text-xs text-gray-500">Apuntes</p>
               </div>
               <div className="text-center">
-                <p className="text-lg font-bold text-green-600">{mockUserStats.questionsAnswered}</p>
+                <p className="text-lg font-bold text-green-600">
+                  {statsLoading ? '...' : userStats?.questionsAnswered || 0}
+                </p>
                 <p className="text-xs text-gray-500">Respuestas</p>
               </div>
             </div>
@@ -198,22 +212,25 @@ export function FeedSidebar() {
           <h3 className="font-semibold text-sm text-gray-700">Trending</h3>
         </div>
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">#algoritmos</span>
-            <Badge variant="outline" className="text-xs">234 posts</Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">#examenes</span>
-            <Badge variant="outline" className="text-xs">189 posts</Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">#proyectos</span>
-            <Badge variant="outline" className="text-xs">156 posts</Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">#tutorias</span>
-            <Badge variant="outline" className="text-xs">98 posts</Badge>
-          </div>
+          {trendingLoading ? (
+            <div className="space-y-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="h-3 bg-gray-200 rounded w-16 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-12 animate-pulse" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            trendingTopics?.map((topic: any, index: number) => (
+              <div key={index} className="flex items-center justify-between">
+                <span className="text-xs text-gray-600">#{topic.name}</span>
+                <Badge variant="outline" className="text-xs">
+                  {topic.count} posts
+                </Badge>
+              </div>
+            ))
+          )}
         </div>
       </Card>
     </div>

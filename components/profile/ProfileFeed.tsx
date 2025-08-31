@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { LoaderIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { 
   Heart, 
   MessageCircle, 
@@ -70,7 +73,7 @@ interface FeedItem {
 }
 
 interface ProfileFeedProps {
-  feedItems?: FeedItem[];
+  userId?: string;
   isOwnProfile?: boolean;
   onLike?: (itemId: string) => void;
   onComment?: (itemId: string, comment: string) => void;
@@ -79,176 +82,58 @@ interface ProfileFeedProps {
   onPin?: (itemId: string) => void;
 }
 
-const mockFeedItems: FeedItem[] = [
-  {
-    id: '1',
-    type: 'achievement',
-    author: {
-      id: '1',
-      name: 'María González',
-      username: 'maria_gonzalez',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20portrait%20of%20a%20young%20latina%20woman%20student%20smiling%20friendly%20university%20setting&image_size=square',
-      level: 15
-    },
-    content: '¡Acabo de desbloquear un nuevo logro!',
-    timestamp: '2024-01-20T14:30:00Z',
-    stats: {
-      likes: 45,
-      comments: 12,
-      shares: 8
-    },
-    achievement: {
-      name: 'Mentor Dedicado',
-      icon: '🏆',
-      rarity: 'epic',
-      xp: 500
-    }
-  },
-  {
-    id: '2',
-    type: 'note',
-    author: {
-      id: '1',
-      name: 'María González',
-      username: 'maria_gonzalez',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20portrait%20of%20a%20young%20latina%20woman%20student%20smiling%20friendly%20university%20setting&image_size=square',
-      level: 15
-    },
-    title: 'Algoritmos de Ordenamiento - Guía Completa',
-    content: 'He creado una guía completa sobre algoritmos de ordenamiento con ejemplos prácticos en Python. Incluye análisis de complejidad temporal y espacial.',
-    timestamp: '2024-01-19T16:45:00Z',
-    stats: {
-      likes: 89,
-      comments: 23,
-      shares: 34,
-      views: 456,
-      downloads: 78
-    },
-    tags: ['Algoritmos', 'Python', 'Programación'],
-    category: 'Programación',
-    isPinned: true,
-    attachments: [
-      {
-        type: 'file',
-        name: 'algoritmos_ordenamiento.pdf',
-        url: '#',
-        size: '2.3 MB'
+// Hook for fetching profile feed data
+const useProfileFeed = (userId?: string) => {
+  return useQuery({
+    queryKey: ['profile-feed', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/feed?userId=${userId || 'me'}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile feed');
       }
-    ]
-  },
-  {
-    id: '3',
-    type: 'question',
-    author: {
-      id: '1',
-      name: 'María González',
-      username: 'maria_gonzalez',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20portrait%20of%20a%20young%20latina%20woman%20student%20smiling%20friendly%20university%20setting&image_size=square',
-      level: 15
+      return response.json();
     },
-    title: '¿Cuál es la diferencia entre REST y GraphQL?',
-    content: 'Estoy trabajando en un proyecto y necesito decidir entre usar REST o GraphQL para mi API. ¿Cuáles son las principales diferencias y cuándo usar cada uno?',
-    timestamp: '2024-01-18T11:20:00Z',
-    stats: {
-      likes: 34,
-      comments: 18,
-      shares: 12,
-      views: 234
-    },
-    tags: ['API', 'REST', 'GraphQL', 'Backend'],
-    category: 'Desarrollo Web'
-  },
-  {
-    id: '4',
-    type: 'post',
-    author: {
-      id: '1',
-      name: 'María González',
-      username: 'maria_gonzalez',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20portrait%20of%20a%20young%20latina%20woman%20student%20smiling%20friendly%20university%20setting&image_size=square',
-      level: 15
-    },
-    content: '¡Excelente sesión de estudio grupal hoy! Logramos resolver todos los ejercicios de cálculo diferencial. El trabajo en equipo realmente hace la diferencia. 💪📚',
-    timestamp: '2024-01-17T19:15:00Z',
-    stats: {
-      likes: 67,
-      comments: 15,
-      shares: 9
-    },
-    tags: ['Estudio', 'Matemáticas', 'Trabajo en Equipo']
-  },
-  {
-    id: '5',
-    type: 'answer',
-    author: {
-      id: '1',
-      name: 'María González',
-      username: 'maria_gonzalez',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20portrait%20of%20a%20young%20latina%20woman%20student%20smiling%20friendly%20university%20setting&image_size=square',
-      level: 15
-    },
-    title: 'Respondió: "¿Cómo optimizar consultas SQL?"',
-    content: 'Para optimizar consultas SQL, te recomiendo: 1) Usar índices apropiados, 2) Evitar SELECT *, 3) Usar LIMIT cuando sea posible, 4) Analizar el plan de ejecución. También es importante normalizar bien la base de datos.',
-    timestamp: '2024-01-16T13:40:00Z',
-    stats: {
-      likes: 52,
-      comments: 8,
-      shares: 15
-    },
-    tags: ['SQL', 'Base de Datos', 'Optimización']
-  }
-];
+    enabled: !!userId || userId === undefined
+  });
+};
 
+// Format time ago helper
+const formatTimeAgo = (timestamp: string): string => {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return 'hace un momento';
+  if (diffInSeconds < 3600) return `hace ${Math.floor(diffInSeconds / 60)}m`;
+  if (diffInSeconds < 86400) return `hace ${Math.floor(diffInSeconds / 3600)}h`;
+  if (diffInSeconds < 604800) return `hace ${Math.floor(diffInSeconds / 86400)}d`;
+  return time.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+};
+
+// Helper functions
 const getTypeIcon = (type: FeedItem['type']) => {
   switch (type) {
-    case 'post':
-      return MessageCircle;
-    case 'note':
-      return FileText;
-    case 'question':
-      return HelpCircle;
-    case 'achievement':
-      return Trophy;
-    case 'answer':
-      return MessageCircle;
-    default:
-      return MessageCircle;
+    case 'post': return MessageCircle;
+    case 'note': return FileText;
+    case 'question': return HelpCircle;
+    case 'achievement': return Trophy;
+    case 'answer': return MessageCircle;
+    default: return MessageCircle;
   }
 };
 
 const getTypeLabel = (type: FeedItem['type']) => {
   switch (type) {
-    case 'post':
-      return 'Publicación';
-    case 'note':
-      return 'Apunte';
-    case 'question':
-      return 'Pregunta';
-    case 'achievement':
-      return 'Logro';
-    case 'answer':
-      return 'Respuesta';
-    default:
-      return 'Publicación';
+    case 'post': return 'Post';
+    case 'note': return 'Apunte';
+    case 'question': return 'Pregunta';
+    case 'achievement': return 'Logro';
+    case 'answer': return 'Respuesta';
+    default: return 'Contenido';
   }
 };
 
-const formatTimeAgo = (timestamp: string) => {
-  const now = new Date();
-  const time = new Date(timestamp);
-  const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'hace unos segundos';
-  if (diffInSeconds < 3600) return `hace ${Math.floor(diffInSeconds / 60)} min`;
-  if (diffInSeconds < 86400) return `hace ${Math.floor(diffInSeconds / 3600)} h`;
-  if (diffInSeconds < 604800) return `hace ${Math.floor(diffInSeconds / 86400)} d`;
-  
-  return time.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
+
 
 const formatNumber = (num: number): string => {
   if (num >= 1000) {
@@ -258,7 +143,7 @@ const formatNumber = (num: number): string => {
 };
 
 export function ProfileFeed({
-  feedItems = mockFeedItems,
+  userId,
   isOwnProfile = true,
   onLike,
   onComment,
@@ -270,9 +155,11 @@ export function ProfileFeed({
   const [commentDialogOpen, setCommentDialogOpen] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
 
+  const { data: feedItems = [], isLoading, error, refetch } = useProfileFeed(userId);
+
   const filteredItems = activeTab === 'all' 
     ? feedItems 
-    : feedItems.filter(item => item.type === activeTab);
+    : feedItems.filter((item: FeedItem) => item.type === activeTab);
 
   const handleLike = (itemId: string) => {
     if (onLike) {
@@ -339,7 +226,42 @@ export function ProfileFeed({
 
         <TabsContent value={activeTab} className="mt-6">
           <div className="space-y-4">
-            {filteredItems.length === 0 ? (
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+                          <div className="h-3 bg-gray-200 rounded w-1/6 animate-pulse" />
+                          <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                          <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : error ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-red-400 mb-4">
+                    <MessageCircle className="w-12 h-12 mx-auto" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Error al cargar el contenido
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    No se pudo cargar la actividad del perfil.
+                  </p>
+                  <Button onClick={() => refetch()} variant="outline">
+                    Intentar de nuevo
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : filteredItems.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
                   <div className="text-gray-400 mb-4">

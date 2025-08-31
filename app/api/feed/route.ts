@@ -1,94 +1,38 @@
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
 
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/session';
-import { z } from 'zod';
-import { rateLimitPost } from '@/lib/rate-limit';
-
-// Validation schemas
+// Schema for creating a new post
 const createPostSchema = z.object({
-  kind: z.enum(['post', 'photo', 'video', 'question', 'note']),
-  text: z.string().optional(),
-  title: z.string().optional(),
-  visibility: z.enum(['public', 'university', 'friends', 'private']).default('public'),
-  hashtags: z.array(z.string()).optional(),
-  media: z.array(z.string()).optional(), // URLs of uploaded media
-});
+  content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),
+  type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'POLL', 'QUESTION']).default('TEXT'),
+  imageUrl: z.string().url().optional(),
+  videoUrl: z.string().url().optional(),
+  tags: z.string().optional(),
+  visibility: z.enum(['PUBLIC', 'FOLLOWERS', 'PRIVATE']).default('PUBLIC')
+})
 
-const feedQuerySchema = z.object({
-  cursor: z.string().nullable().optional(),
-  limit: z.coerce.number().min(1).max(50).default(20),
-  ranking: z.enum(['recent', 'trending', 'following']).nullable().default('recent'),
-  kind: z.enum(['post', 'photo', 'video', 'question', 'note']).nullable().optional(),
-  author: z.string().nullable().optional(),
-});
-
-// GET /api/feed - Fetch feed posts
+// GET /api/feed - Get feed posts with pagination
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    const { searchParams } = new URL(request.url);
-    const query = feedQuerySchema.parse({
-      cursor: searchParams.get('cursor'),
-      limit: searchParams.get('limit'),
-      ranking: searchParams.get('ranking'),
-      kind: searchParams.get('kind'),
-      author: searchParams.get('author'),
-    });
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const skip = (page - 1) * limit
 
-    const where: any = {};
+    const session = await getServerSession(authOptions)
+    const userId = session?.user?.id
 
-    if (!session?.user?.id) {
-      // For unauthenticated users, only show PUBLIC posts
-      where.visibility = 'PUBLIC';
-    } else {
-      // For authenticated users, show public posts and posts from followed users
-      where.OR = [
-        { visibility: 'PUBLIC' },
-        {
-          AND: [
-            { visibility: 'FOLLOWERS' },
-            {
-              // TODO: Add follower relationship check
-              authorId: session.user.id // For now, show own FOLLOWERS posts
-            }
-          ]
-        },
-        {
-          AND: [
-            { visibility: 'PRIVATE' },
-            { authorId: session.user.id } // Only show own private posts
-          ]
-        }
-      ];
-    }
-
-    // Add filters
-    if (query.kind) {
-      const postTypeMap: Record<string, string> = {
-        'post': 'TEXT',
-        'photo': 'IMAGE',
-        'video': 'VIDEO',
-        'question': 'QUESTION',
-        'note': 'TEXT'
-      };
-      where.type = postTypeMap[query.kind];
-    }
-
-    if (query.author) {
-      where.author = { username: query.author };
-    }
-
-    // Cursor pagination
-    if (query.cursor) {
-      where.id = { lt: query.cursor };
-    }
-
+    // Get posts with author info, counts, and user interactions
     const posts = await prisma.post.findMany({
-      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      where: {
+        visibility: 'PUBLIC' // For now, only show public posts
+      },
       include: {
         author: {
           select: {
@@ -96,123 +40,79 @@ export async function GET(request: NextRequest) {
             name: true,
             username: true,
             image: true,
+            university: true,
+            career: true,
             verified: true
           }
         },
         _count: {
           select: {
-            comments: true,
             likes: true,
-            bookmarks: true,
-            reactions: true
+            comments: true,
+            bookmarks: true
           }
         },
-        reactions: session?.user?.id ? {
-          where: { userId: session.user.id },
-          select: { type: true }
-        } : false,
-        likes: session?.user?.id ? {
-          where: { userId: session.user.id },
-          select: { id: true }
-        } : false,
-        bookmarks: session?.user?.id ? {
-          where: { userId: session.user.id },
-          select: { id: true }
-        } : false
-      },
-      orderBy: query.ranking === 'recent' ? { createdAt: 'desc' } : { createdAt: 'desc' }, // TODO: implement trending logic
-      take: query.limit + 1, // Take one extra to check if there are more
-    });
-
-    const hasMore = posts.length > query.limit;
-    const postsToReturn = hasMore ? posts.slice(0, -1) : posts;
-    const nextCursor = hasMore ? postsToReturn[postsToReturn.length - 1]?.id : null;
-
-    // Transform posts to match frontend expectations
-    const transformedPosts = postsToReturn.map(post => ({
-      id: post.id,
-      kind: post.type.toLowerCase(),
-      text: post.content,
-      media: post.imageUrl ? [{ id: '1', type: 'image', url: post.imageUrl }] : [],
-      visibility: post.visibility.toLowerCase(),
-      hashtags: post.tags || [],
-      author: {
-        id: post.author.id,
-        name: post.author.name || '',
-        username: post.author.username || '',
-        avatar: post.author.image || '/default-avatar.png',
-        verified: post.author.verified || false
-      },
-      createdAt: post.createdAt.toISOString(),
-      stats: {
-        fires: post._count.reactions,
-        comments: post._count.comments,
-        saves: post._count.bookmarks
-      },
-      viewerState: {
-        fired: session?.user?.id ? (post.reactions?.length > 0) : false,
-        saved: session?.user?.id ? (post.bookmarks?.length > 0) : false
+        // Include user's interactions if logged in
+        ...(userId && {
+          likes: {
+            where: { userId },
+            select: { id: true }
+          },
+          bookmarks: {
+            where: { userId },
+            select: { id: true }
+          }
+        })
       }
-    }));
+    })
+
+    // Transform posts to include interaction flags
+    const transformedPosts = posts.map(post => ({
+      ...post,
+      isLiked: userId ? post.likes?.length > 0 : false,
+      isBookmarked: userId ? post.bookmarks?.length > 0 : false,
+      likesCount: post._count.likes,
+      commentsCount: post._count.comments,
+      bookmarksCount: post._count.bookmarks,
+      likes: undefined, // Remove the likes array from response
+      bookmarks: undefined, // Remove the bookmarks array from response
+      _count: undefined // Remove the _count object
+    }))
 
     return NextResponse.json({
       posts: transformedPosts,
-      nextCursor,
-      hasMore
-    });
-
+      pagination: {
+        page,
+        limit,
+        hasMore: posts.length === limit
+      }
+    })
   } catch (error) {
-    console.error('Feed API error:', error);
+    console.error('Error fetching feed:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch feed' },
       { status: 500 }
-    );
+    )
   }
 }
 
-// POST /api/feed - Create new post
+// POST /api/feed - Create a new post
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Rate limiting
-    const rateLimitResult = await rateLimitPost(request, session.user.id);
-    if (!rateLimitResult.success) {
       return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      );
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
     }
 
-    const body = await request.json();
-    const data = createPostSchema.parse(body);
-
-    // Map frontend types to database types
-    const postTypeMap: Record<string, string> = {
-      'post': 'TEXT',
-      'photo': 'IMAGE',
-      'video': 'VIDEO',
-      'question': 'QUESTION',
-      'note': 'TEXT'
-    };
-
-    const visibilityMap: Record<string, string> = {
-      'public': 'PUBLIC',
-      'university': 'UNIVERSITY',
-      'friends': 'FRIENDS',
-      'private': 'PRIVATE'
-    };
+    const body = await request.json()
+    const validatedData = createPostSchema.parse(body)
 
     const post = await prisma.post.create({
       data: {
-        content: data.text || '',
-        type: postTypeMap[data.kind] as any,
-        visibility: visibilityMap[data.visibility] as any,
-        tags: data.hashtags,
-        imageUrl: data.media?.[0], // For now, just take the first media URL
+        ...validatedData,
         authorId: session.user.id
       },
       include: {
@@ -222,60 +122,45 @@ export async function POST(request: NextRequest) {
             name: true,
             username: true,
             image: true,
+            university: true,
+            career: true,
             verified: true
           }
         },
         _count: {
           select: {
-            comments: true,
             likes: true,
-            bookmarks: true,
-            reactions: true
+            comments: true,
+            bookmarks: true
           }
         }
       }
-    });
+    })
 
-    // Transform response
+    // Transform the response
     const transformedPost = {
-      id: post.id,
-      kind: post.type.toLowerCase(),
-      text: post.content,
-      media: post.imageUrl ? [{ id: '1', type: 'image', url: post.imageUrl }] : [],
-      visibility: post.visibility.toLowerCase(),
-      hashtags: post.tags || [],
-      author: {
-        id: post.author.id,
-        name: post.author.name || '',
-        username: post.author.username || '',
-        avatar: post.author.image || '/default-avatar.png',
-        verified: post.author.verified || false
-      },
-      createdAt: post.createdAt.toISOString(),
-      stats: {
-        fires: 0,
-        comments: 0,
-        saves: 0
-      },
-      viewerState: {
-        fired: false,
-        saved: false
-      }
-    };
+      ...post,
+      isLiked: false,
+      isBookmarked: false,
+      likesCount: post._count.likes,
+      commentsCount: post._count.comments,
+      bookmarksCount: post._count.bookmarks,
+      _count: undefined
+    }
 
-    return NextResponse.json(transformedPost, { status: 201 });
-
+    return NextResponse.json(transformedPost, { status: 201 })
   } catch (error) {
-    console.error('Create post error:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Validation failed', details: error.errors },
         { status: 400 }
-      );
+      )
     }
+
+    console.error('Error creating post:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to create post' },
       { status: 500 }
-    );
+    )
   }
 }

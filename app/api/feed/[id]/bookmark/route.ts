@@ -4,11 +4,11 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
-const reactSchema = z.object({
-  action: z.enum(['like', 'unlike'])
+const bookmarkSchema = z.object({
+  action: z.enum(['bookmark', 'unbookmark'])
 })
 
-// POST /api/feed/[id]/react - Like or unlike a post
+// POST /api/feed/[id]/bookmark - Bookmark or unbookmark a post
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -24,7 +24,7 @@ export async function POST(
 
     const postId = params.id
     const body = await request.json()
-    const { action } = reactSchema.parse(body)
+    const { action } = bookmarkSchema.parse(body)
 
     // Check if post exists
     const post = await prisma.post.findUnique({
@@ -41,9 +41,9 @@ export async function POST(
 
     const userId = session.user.id
 
-    if (action === 'like') {
-      // Create like if it doesn't exist
-      await prisma.like.upsert({
+    if (action === 'bookmark') {
+      // Create bookmark if it doesn't exist
+      await prisma.bookmark.upsert({
         where: {
           userId_postId: {
             userId,
@@ -57,8 +57,8 @@ export async function POST(
         }
       })
     } else {
-      // Remove like if it exists
-      await prisma.like.deleteMany({
+      // Remove bookmark if it exists
+      await prisma.bookmark.deleteMany({
         where: {
           userId,
           postId
@@ -66,15 +66,15 @@ export async function POST(
       })
     }
 
-    // Get updated like count
-    const likesCount = await prisma.like.count({
+    // Get updated bookmark count
+    const bookmarksCount = await prisma.bookmark.count({
       where: { postId }
     })
 
     return NextResponse.json({
       success: true,
-      likesCount,
-      isLiked: action === 'like'
+      bookmarksCount,
+      isBookmarked: action === 'bookmark'
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -84,9 +84,9 @@ export async function POST(
       )
     }
 
-    console.error('Error reacting to post:', error)
+    console.error('Error bookmarking post:', error)
     return NextResponse.json(
-      { error: 'Failed to react to post' },
+      { error: 'Failed to bookmark post' },
       { status: 500 }
     )
   }

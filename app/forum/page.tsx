@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,116 +11,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuestionCard } from '@/components/forum/QuestionCard';
 import { AskQuestion } from '@/components/forum/AskQuestion';
 import { QuestionDetail } from '@/components/forum/QuestionDetail';
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  TrendingUp, 
-  Clock, 
-  Award, 
+import {
+  Search,
+  Filter,
+  TrendingUp,
+  Award,
+  Plus,
+  MessageSquare,
   Users,
-  BookOpen,
-  MessageCircle
+  CheckCircle,
+  Clock,
+  LoaderIcon
 } from 'lucide-react';
-
-// Mock data for questions
-const mockQuestions = [
-  {
-    id: '1',
-    title: '¿Cómo resolver ecuaciones cuadráticas paso a paso?',
-    content: 'Necesito ayuda para entender el método de factorización y la fórmula cuadrática. ¿Podrían explicarme con ejemplos?',
-    author: {
-      id: '1',
-      name: 'María González',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=female%20student%20avatar%20smiling%20portrait&image_size=square',
-      level: 'Estudiante',
-      points: 150
-    },
-    subject: 'Matemáticas',
-    career: 'Ingeniería',
-    tags: ['álgebra', 'ecuaciones', 'matemáticas'],
-    votes: 12,
-    answers: 3,
-    views: 45,
-    createdAt: new Date('2024-01-15T10:30:00'),
-    hasAcceptedAnswer: true,
-    bounty: 50
-  },
-  {
-    id: '2',
-    title: '¿Cuál es la diferencia entre mitosis y meiosis?',
-    content: 'Estoy confundido con los procesos de división celular. ¿Podrían ayudarme a entender las diferencias principales?',
-    author: {
-      id: '2',
-      name: 'Carlos Ruiz',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=male%20student%20avatar%20smiling%20portrait&image_size=square',
-      level: 'Estudiante',
-      points: 89
-    },
-    subject: 'Biología',
-    career: 'Medicina',
-    tags: ['biología', 'células', 'división celular'],
-    votes: 8,
-    answers: 2,
-    views: 32,
-    createdAt: new Date('2024-01-14T15:45:00'),
-    hasAcceptedAnswer: false,
-    bounty: 0
-  },
-  {
-    id: '3',
-    title: '¿Cómo calcular la derivada de funciones compuestas?',
-    content: 'Tengo problemas con la regla de la cadena. ¿Podrían mostrarme algunos ejemplos prácticos?',
-    author: {
-      id: '3',
-      name: 'Ana López',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=female%20student%20avatar%20smiling%20portrait&image_size=square',
-      level: 'Avanzado',
-      points: 320
-    },
-    subject: 'Cálculo',
-    career: 'Ingeniería',
-    tags: ['cálculo', 'derivadas', 'regla de la cadena'],
-    votes: 15,
-    answers: 4,
-    views: 67,
-    createdAt: new Date('2024-01-13T09:20:00'),
-    hasAcceptedAnswer: true,
-    bounty: 0
-  }
-];
+import { useQuestions } from '@/hooks/useForum';
 
 const subjects = ['Todas', 'Matemáticas', 'Física', 'Química', 'Biología', 'Historia', 'Literatura', 'Inglés'];
 const careers = ['Todas', 'Ingeniería', 'Medicina', 'Derecho', 'Administración', 'Psicología', 'Educación'];
 
 export default function ForumPage() {
-  const [questions, setQuestions] = useState(mockQuestions);
   const [showAskQuestion, setShowAskQuestion] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('Todas');
   const [selectedCareer, setSelectedCareer] = useState('Todas');
-  const [sortBy, setSortBy] = useState('recent');
+  const [sortBy, setSortBy] = useState<'recent' | 'votes' | 'answers' | 'views'>('recent');
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
 
-  const handleAskQuestion = (questionData: any) => {
-    const newQuestion = {
-      id: Date.now().toString(),
-      ...questionData,
-      author: {
-        id: 'current-user',
-        name: 'Usuario Actual',
-        avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20avatar%20smiling%20portrait&image_size=square',
-        level: 'Estudiante',
-        points: 100
-      },
-      votes: 0,
-      answers: 0,
-      views: 0,
-      createdAt: new Date(),
-      hasAcceptedAnswer: false,
-      bounty: questionData.bounty || 0
-    };
-    setQuestions([newQuestion, ...questions]);
+  const { data: questions = [], isLoading, error } = useQuestions({
+    search: searchQuery || undefined,
+    subject: selectedSubject !== 'Todas' ? selectedSubject : undefined,
+    career: selectedCareer !== 'Todas' ? selectedCareer : undefined,
+    sortBy
+  });
+
+  const handleAskQuestion = () => {
     setShowAskQuestion(false);
   };
 
@@ -131,32 +55,8 @@ export default function ForumPage() {
     setSelectedQuestionId(null);
   };
 
-  const filteredQuestions = questions.filter(question => {
-    const matchesSearch = searchQuery === '' || 
-      question.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      question.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      question.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesSubject = selectedSubject === 'Todas' || question.subject === selectedSubject;
-    const matchesCareer = selectedCareer === 'Todas' || question.career === selectedCareer;
-    
-    return matchesSearch && matchesSubject && matchesCareer;
-  });
-
-  const sortedQuestions = [...filteredQuestions].sort((a, b) => {
-    switch (sortBy) {
-      case 'recent':
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      case 'votes':
-        return b.votes - a.votes;
-      case 'answers':
-        return b.answers - a.answers;
-      case 'views':
-        return b.views - a.views;
-      default:
-        return 0;
-    }
-  });
+  // Questions are already filtered and sorted by the API based on the query parameters
+  const sortedQuestions = questions;
 
   if (selectedQuestionId) {
     const selectedQuestion = questions.find(q => q.id === selectedQuestionId);
@@ -378,33 +278,54 @@ export default function ForumPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {sortedQuestions.map(question => (
-                <QuestionCard
-                  key={question.id}
-                  question={question}
-                  onClick={() => handleQuestionSelect(question.id)}
-                />
-              ))}
-              
-              {sortedQuestions.length === 0 && (
+              {isLoading ? (
                 <div className="p-12 text-center">
-                  <div className="text-gray-400 mb-4">
+                  <LoaderIcon className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-600" />
+                  <p className="text-gray-500">Cargando preguntas...</p>
+                </div>
+              ) : error ? (
+                <div className="p-12 text-center">
+                  <div className="text-red-400 mb-4">
                     <Search className="w-12 h-12 mx-auto" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                    No se encontraron preguntas
+                  <h3 className="text-lg font-semibold text-red-600 mb-2">
+                    Error al cargar preguntas
                   </h3>
                   <p className="text-gray-500">
-                    Intenta ajustar tus filtros de búsqueda o haz la primera pregunta.
+                    Hubo un problema al cargar las preguntas. Intenta recargar la página.
                   </p>
-                  <Button 
-                    onClick={() => setShowAskQuestion(true)}
-                    className="mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Hacer Pregunta
-                  </Button>
                 </div>
+              ) : (
+                <>
+                  {sortedQuestions.map(question => (
+                    <QuestionCard
+                      key={question.id}
+                      question={question}
+                      onClick={() => handleQuestionSelect(question.id)}
+                    />
+                  ))}
+                  
+                  {sortedQuestions.length === 0 && (
+                    <div className="p-12 text-center">
+                      <div className="text-gray-400 mb-4">
+                        <Search className="w-12 h-12 mx-auto" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                        No se encontraron preguntas
+                      </h3>
+                      <p className="text-gray-500">
+                        Intenta ajustar tus filtros de búsqueda o haz la primera pregunta.
+                      </p>
+                      <Button 
+                        onClick={() => setShowAskQuestion(true)}
+                        className="mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Hacer Pregunta
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </CardContent>

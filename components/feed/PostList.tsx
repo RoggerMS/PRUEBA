@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -9,145 +9,64 @@ import {
   HeartIcon, 
   MessageCircleIcon, 
   ShareIcon, 
-  BookmarkIcon,
+  BookmarkIcon, 
   MoreHorizontalIcon,
-  TrendingUpIcon,
-  DownloadIcon
+  FileTextIcon,
+  DownloadIcon,
+  StarIcon,
+  LoaderIcon,
+  FlameIcon
 } from 'lucide-react';
+import { useFeed, useFireReaction } from '@/hooks/useFeed';
+import { FeedPost } from '@/types/feed';
+import { toast } from 'sonner';
 
-interface Post {
-  id: string;
-  type: 'text' | 'note' | 'question';
-  content: string;
-  author: {
-    id: string;
-    name: string;
-    avatar: string;
-    university: string;
-    career: string;
-  };
-  createdAt: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
-  isBookmarked: boolean;
-  // Para posts de tipo 'note'
-  noteData?: {
-    title: string;
-    subject: string;
-    fileType: string;
-    downloads: number;
-    rating: number;
-  };
-  // Para posts de tipo 'question'
-  questionData?: {
-    title: string;
-    tags: string[];
-    isSolved: boolean;
-  };
-}
+// Helper function to format time ago
+const formatTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  
+  if (diffInHours < 1) return 'Hace unos minutos';
+  if (diffInHours < 24) return `Hace ${diffInHours}h`;
+  return `Hace ${Math.floor(diffInHours / 24)}d`;
+};
 
-// Mock data basado en el esquema de la base de datos
-const mockPosts: Post[] = [
-  {
-    id: '1',
-    type: 'note',
-    content: 'Acabo de subir mis apuntes de Algoritmos y Estructuras de Datos. Incluye ejemplos prácticos y ejercicios resueltos. ¡Espero que les sea útil! 📚',
-    author: {
-      id: 'user1',
-      name: 'María González',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20female%20latina%20university&image_size=square',
-      university: 'Universidad Nacional Mayor de San Marcos',
-      career: 'Ingeniería de Sistemas'
-    },
-    createdAt: '2024-01-20T10:30:00Z',
-    likes: 24,
-    comments: 8,
-    shares: 3,
-    isLiked: false,
-    isBookmarked: true,
-    noteData: {
-      title: 'Algoritmos y Estructuras de Datos - Semana 5',
-      subject: 'Algoritmos',
-      fileType: 'PDF',
-      downloads: 156,
-      rating: 4.8
+function PostCard({ post }: { post: FeedPost }) {
+  const fireReaction = useFireReaction();
+
+  const handleFire = async () => {
+    try {
+      await fireReaction.mutateAsync(post.id);
+    } catch (error) {
+      toast.error('Error al reaccionar al post');
     }
-  },
-  {
-    id: '2',
-    type: 'question',
-    content: '¿Alguien puede explicarme la diferencia entre herencia y composición en POO? Tengo examen mañana y no logro entender bien el concepto 😅',
-    author: {
-      id: 'user2',
-      name: 'Carlos Mendoza',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20male%20latino%20university&image_size=square',
-      university: 'Universidad Católica del Perú',
-      career: 'Ingeniería de Sistemas'
-    },
-    createdAt: '2024-01-20T09:15:00Z',
-    likes: 12,
-    comments: 15,
-    shares: 2,
-    isLiked: true,
-    isBookmarked: false,
-    questionData: {
-      title: 'Herencia vs Composición en POO',
-      tags: ['programacion', 'poo', 'java'],
-      isSolved: true
-    }
-  },
-  {
-    id: '3',
-    type: 'text',
-    content: '¡Acabo de terminar mi proyecto final de Bases de Datos! 🎉 Fue un sistema de gestión para bibliotecas universitarias. Aprendí mucho sobre normalización y optimización de consultas.',
-    author: {
-      id: 'user3',
-      name: 'Ana Rodríguez',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20female%20latina%20university%20happy&image_size=square',
-      university: 'Universidad de Lima',
-      career: 'Ingeniería de Sistemas'
-    },
-    createdAt: '2024-01-20T08:45:00Z',
-    likes: 31,
-    comments: 6,
-    shares: 4,
-    isLiked: false,
-    isBookmarked: false
-  }
-];
-
-function PostCard({ post }: { post: Post }) {
-  const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked);
-  const [likes, setLikes] = useState(post.likes);
-
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikes(prev => isLiked ? prev - 1 : prev + 1);
   };
 
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
+  const handleBookmark = async () => {
+    try {
+      const response = await fetch(`/api/feed/${post.id}/bookmark`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to bookmark post');
+      }
+      
+      toast.success(post.viewerState.saved ? 'Post removido de guardados' : 'Post guardado');
+    } catch (error) {
+      toast.error('Error al guardar el post');
+    }
   };
 
   const getPostIcon = () => {
-    switch (post.type) {
+    switch (post.kind) {
       case 'note': return '📚';
       case 'question': return '❓';
+      case 'photo': return '📷';
+      case 'video': return '🎥';
       default: return '💬';
     }
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Hace unos minutos';
-    if (diffInHours < 24) return `Hace ${diffInHours}h`;
-    return `Hace ${Math.floor(diffInHours / 24)}d`;
   };
 
   return (
@@ -156,7 +75,7 @@ function PostCard({ post }: { post: Post }) {
       <div className="flex items-start space-x-3 mb-4">
         <Avatar className="h-10 w-10">
           <img 
-            src={post.author.avatar} 
+            src={post.author.avatar || '/default-avatar.png'} 
             alt={post.author.name}
             className="rounded-full"
           />
@@ -165,12 +84,14 @@ function PostCard({ post }: { post: Post }) {
           <div className="flex items-center space-x-2">
             <h3 className="font-semibold text-sm truncate">{post.author.name}</h3>
             <span className="text-xs">{getPostIcon()}</span>
-            <Badge variant="outline" className="text-xs">
-              {post.author.career}
-            </Badge>
+            {post.author.verified && (
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                ✓ Verificado
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-gray-500 truncate">
-            {post.author.university} • {formatTimeAgo(post.createdAt)}
+            @{post.author.username} • {formatTimeAgo(post.createdAt)}
           </p>
         </div>
         <Button variant="ghost" size="sm">
@@ -216,30 +137,62 @@ function PostCard({ post }: { post: Post }) {
 
       {/* Contenido del post */}
       <div className="mb-4">
-        <p className="text-gray-800 leading-relaxed">{post.content}</p>
+        <p className="text-sm text-gray-800 mb-3">{post.content}</p>
+        
+        {/* Media content */}
+        {post.media && post.media.length > 0 && (
+          <div className="mt-3 rounded-lg overflow-hidden">
+            {post.media[0].type === 'image' && (
+              <img 
+                src={post.media[0].url} 
+                alt="Post image" 
+                className="w-full max-h-96 object-cover"
+              />
+            )}
+            {post.media[0].type === 'video' && (
+              <video 
+                src={post.media[0].url} 
+                controls 
+                className="w-full max-h-96"
+              />
+            )}
+          </div>
+        )}
+        
+        {/* Tags */}
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-3">
+            {post.tags.map((tag, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                #{tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Acciones del post */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="flex space-x-6">
+      <div className="flex items-center justify-between pt-3 border-t">
+        <div className="flex items-center space-x-4">
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={handleLike}
-            className={`flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'text-gray-500'}`}
+            onClick={handleFire}
+            className={`flex items-center space-x-1 ${post.viewerState.fired ? 'text-orange-600' : 'text-gray-600'}`}
+            disabled={fireReaction.isPending}
           >
-            <HeartIcon className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-            <span className="text-sm">{likes}</span>
+            <FlameIcon className={`h-4 w-4 ${post.viewerState.fired ? 'fill-orange-600' : ''}`} />
+            <span className="text-xs">{post.stats.fires}</span>
           </Button>
           
-          <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-500">
+          <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-600">
             <MessageCircleIcon className="h-4 w-4" />
-            <span className="text-sm">{post.comments}</span>
+            <span className="text-xs">{post.stats.comments}</span>
           </Button>
           
-          <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-500">
+          <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-600">
             <ShareIcon className="h-4 w-4" />
-            <span className="text-sm">{post.shares}</span>
+            <span className="text-xs">Compartir</span>
           </Button>
         </div>
         
@@ -247,58 +200,49 @@ function PostCard({ post }: { post: Post }) {
           variant="ghost" 
           size="sm" 
           onClick={handleBookmark}
-          className={`${isBookmarked ? 'text-blue-500' : 'text-gray-500'}`}
+          className={`${post.viewerState.saved ? 'text-blue-600' : 'text-gray-600'}`}
         >
-          <BookmarkIcon className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+          <BookmarkIcon className={`h-4 w-4 ${post.viewerState.saved ? 'fill-blue-600' : ''}`} />
         </Button>
       </div>
     </Card>
   );
 }
 
-export function PostList() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function PostList() {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error
+  } = useFeed();
 
-  useEffect(() => {
-    // Simular carga de datos
-    const loadPosts = async () => {
-      setLoading(true);
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setPosts(mockPosts);
-      setLoading(false);
-    };
-
-    loadPosts();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="space-y-6">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="p-6 animate-pulse">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="h-10 w-10 bg-gray-200 rounded-full" />
-              <div className="space-y-2 flex-1">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-3 bg-gray-200 rounded w-1/4" />
-              </div>
-            </div>
-            <div className="space-y-2 mb-4">
-              <div className="h-4 bg-gray-200 rounded" />
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-            </div>
-            <div className="flex space-x-4">
-              <div className="h-8 bg-gray-200 rounded w-16" />
-              <div className="h-8 bg-gray-200 rounded w-16" />
-              <div className="h-8 bg-gray-200 rounded w-16" />
-            </div>
-          </Card>
-        ))}
+      <div className="flex justify-center items-center py-8">
+        <LoaderIcon className="h-6 w-6 animate-spin" />
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600">Error al cargar los posts</p>
+        <Button 
+          variant="outline" 
+          onClick={() => window.location.reload()}
+          className="mt-2"
+        >
+          Reintentar
+        </Button>
+      </div>
+    );
+  }
+
+  const posts = data?.pages.flatMap(page => page.posts) || [];
 
   return (
     <div className="space-y-6">
@@ -306,13 +250,26 @@ export function PostList() {
         <PostCard key={post.id} post={post} />
       ))}
       
-      {/* Load more button */}
-      <div className="text-center py-6">
-        <Button variant="outline" className="flex items-center space-x-2">
-          <TrendingUpIcon className="h-4 w-4" />
-          <span>Cargar más posts</span>
-        </Button>
-      </div>
+      {/* Botón para cargar más posts */}
+      {hasNextPage && (
+        <div className="flex justify-center pt-6">
+          <Button 
+            variant="outline" 
+            className="w-full max-w-xs"
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+          >
+            {isFetchingNextPage ? (
+              <>
+                <LoaderIcon className="h-4 w-4 animate-spin mr-2" />
+                Cargando...
+              </>
+            ) : (
+              'Cargar más posts'
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

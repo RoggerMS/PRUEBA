@@ -14,8 +14,11 @@ import {
   Calendar, 
   User,
   Heart,
-  Share2
+  Share2,
+  LoaderIcon
 } from 'lucide-react';
+import { useNotes, useLikeNote, useDownloadNote } from '@/hooks/useNotes';
+import { toast } from 'sonner';
 
 interface Note {
   id: string;
@@ -45,136 +48,45 @@ interface Note {
 
 interface NotesGridProps {
   searchQuery: string;
+  selectedCategory: string;
+  selectedCareer: string;
+  sortBy: string;
   onNoteSelect: (noteId: string) => void;
 }
 
-// Mock data for notes
-const mockNotes: Note[] = [
-  {
-    id: '1',
-    title: 'Cálculo Diferencial - Límites y Continuidad',
-    description: 'Apuntes completos sobre límites, continuidad y derivadas. Incluye ejemplos prácticos y ejercicios resueltos paso a paso.',
-    author: {
-      name: 'María González',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20female%20smiling&image_size=square',
-      verified: true
-    },
-    career: 'Ingeniería de Sistemas',
-    category: 'Matemáticas',
-    tags: ['cálculo', 'límites', 'derivadas', 'continuidad'],
-    price: 0,
-    rating: 4.8,
-    downloads: 1250,
-    views: 3420,
-    createdAt: '2024-01-15T10:00:00Z',
-    files: [
-      {
-        id: '1',
-        name: 'Calculo_Diferencial_Limites.pdf',
-        type: 'pdf',
-        url: 'https://example.com/file1.pdf',
-        pages: 25
-      },
-      {
-        id: '2',
-        name: 'Ejercicios_Resueltos.pdf',
-        type: 'pdf',
-        url: 'https://example.com/file2.pdf',
-        pages: 15
-      }
-    ]
-  },
-  {
-    id: '2',
-    title: 'Química Orgánica - Reacciones y Mecanismos',
-    description: 'Guía completa de reacciones orgánicas con mecanismos detallados y ejemplos de síntesis.',
-    author: {
-      name: 'Carlos Ruiz',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20avatar%20male%20friendly%20chemistry&image_size=square',
-      verified: false
-    },
-    career: 'Química',
-    category: 'Química',
-    tags: ['química orgánica', 'reacciones', 'mecanismos', 'síntesis'],
-    price: 150,
-    rating: 4.6,
-    downloads: 890,
-    views: 2150,
-    createdAt: '2024-01-12T14:30:00Z',
-    files: [
-      {
-        id: '3',
-        name: 'Quimica_Organica_Reacciones.pdf',
-        type: 'pdf',
-        url: 'https://example.com/file3.pdf',
-        pages: 45
-      }
-    ]
-  },
-  {
-    id: '3',
-    title: 'Física Cuántica - Fundamentos',
-    description: 'Introducción a los principios de la mecánica cuántica con ejercicios y aplicaciones.',
-    author: {
-      name: 'Ana López',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=student%20avatar%20female%20studying%20physics&image_size=square',
-      verified: true
-    },
-    career: 'Física',
-    category: 'Física',
-    tags: ['física cuántica', 'mecánica cuántica', 'fundamentos'],
-    price: 200,
-    rating: 4.9,
-    downloads: 650,
-    views: 1800,
-    createdAt: '2024-01-10T09:15:00Z',
-    files: [
-      {
-        id: '4',
-        name: 'Fisica_Cuantica_Fundamentos.pdf',
-        type: 'pdf',
-        url: 'https://example.com/file4.pdf',
-        pages: 60
-      },
-      {
-        id: '5',
-        name: 'Ejercicios_Cuantica.pdf',
-        type: 'pdf',
-        url: 'https://example.com/file5.pdf',
-        pages: 20
-      }
-    ]
-  }
-];
-
-export function NotesGrid({ searchQuery, onNoteSelect }: NotesGridProps) {
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>(mockNotes);
+export function NotesGrid({ searchQuery, selectedCategory, selectedCareer, sortBy, onNoteSelect }: NotesGridProps) {
   const [likedNotes, setLikedNotes] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    const filtered = mockNotes.filter(note => {
-      const searchLower = searchQuery.toLowerCase();
-      return (
-        note.title.toLowerCase().includes(searchLower) ||
-        note.description.toLowerCase().includes(searchLower) ||
-        note.category.toLowerCase().includes(searchLower) ||
-        note.career.toLowerCase().includes(searchLower) ||
-        note.author.name.toLowerCase().includes(searchLower) ||
-        note.tags.some(tag => tag.toLowerCase().includes(searchLower))
-      );
-    });
-    setFilteredNotes(filtered);
-  }, [searchQuery]);
+  
+  const { data: notes = [], isLoading, error, refetch } = useNotes({
+    search: searchQuery,
+    category: selectedCategory,
+    career: selectedCareer,
+    sortBy: sortBy
+  });
+  
+  const likeNoteMutation = useLikeNote();
+  const downloadNoteMutation = useDownloadNote();
 
   const handleLike = (noteId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const isLiked = likedNotes.has(noteId);
+    
+    // Optimistic update
     const newLikedNotes = new Set(likedNotes);
-    if (likedNotes.has(noteId)) {
+    if (isLiked) {
       newLikedNotes.delete(noteId);
     } else {
       newLikedNotes.add(noteId);
     }
     setLikedNotes(newLikedNotes);
+    
+    // API call
+    likeNoteMutation.mutate({ noteId, liked: isLiked }, {
+      onError: () => {
+        // Revert optimistic update on error
+        setLikedNotes(likedNotes);
+      }
+    });
   };
 
   const handleShare = (noteId: string, e: React.MouseEvent) => {
@@ -210,7 +122,48 @@ export function NotesGrid({ searchQuery, onNoteSelect }: NotesGridProps) {
     }
   };
 
-  if (filteredNotes.length === 0) {
+  const handleDownload = (noteId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    downloadNoteMutation.mutate(noteId);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded mb-4"></div>
+            <div className="h-3 bg-gray-200 rounded mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded mb-4 w-3/4"></div>
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+              <div className="h-3 bg-gray-200 rounded w-20"></div>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="h-3 bg-gray-200 rounded w-16"></div>
+              <div className="h-8 bg-gray-200 rounded w-20"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500 mb-4">Error loading notes</p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (notes.length === 0) {
     return (
       <div className="text-center py-12">
         <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -226,7 +179,7 @@ export function NotesGrid({ searchQuery, onNoteSelect }: NotesGridProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {filteredNotes.map((note) => (
+      {notes.map((note) => (
         <Card 
           key={note.id}
           className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden"

@@ -1,97 +1,51 @@
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
 
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/session';
-import { z } from 'zod';
-
-const commentsQuerySchema = z.object({
-  cursor: z.string().optional(),
-  limit: z.coerce.number().min(1).max(50).default(20),
-  sort: z.enum(['recent', 'oldest', 'popular']).default('recent')
-});
+const createCommentSchema = z.object({
+  content: z.string().min(1, 'Comment content is required').max(500, 'Comment too long'),
+  parentId: z.string().optional() // For reply comments
+})
 
 // GET /api/feed/[id]/comments - Get comments for a post
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
-    const session = await getSession();
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const skip = (page - 1) * limit
 
-    const postId = id;
-    const { searchParams } = new URL(request.url);
-    const query = commentsQuerySchema.parse({
-      cursor: searchParams.get('cursor'),
-      limit: searchParams.get('limit'),
-      sort: searchParams.get('sort')
-    });
+    const postId = params.id
+    const session = await getServerSession(authOptions)
+    const userId = session?.user?.id
 
-    // Check if post exists and user can access it
+    // Check if post exists
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      select: { 
-        id: true, 
-        visibility: true, 
-        authorId: true,
-        author: {
-          select: {
-            id: true,
-            followers: session?.user?.id ? {
-              where: { followerId: session.user.id },
-              select: { id: true }
-            } : false
-          }
-        }
-      }
-    });
+      select: { id: true }
+    })
 
     if (!post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Post not found' },
+        { status: 404 }
+      )
     }
 
-    // Check visibility permissions
-    if (!session?.user?.id) {
-      // Unauthenticated users can only see PUBLIC posts
-      if (post.visibility !== 'PUBLIC') {
-        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
-      }
-    } else {
-      // Authenticated users visibility rules
-      if (post.visibility === 'PRIVATE' && post.authorId !== session.user.id) {
-        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
-      }
-      if (post.visibility === 'FOLLOWERS' && 
-          post.authorId !== session.user.id && 
-          (!post.author.followers || post.author.followers.length === 0)) {
-        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
-      }
-    }
-
-    const where: any = {
-      postId: postId,
-      parentId: null // Only get top-level comments
-    };
-
-    // Cursor pagination
-    if (query.cursor) {
-      where.id = { lt: query.cursor };
-    }
-
-    // Determine sort order
-    let orderBy: any = { createdAt: 'desc' }; // recent
-    if (query.sort === 'oldest') {
-      orderBy = { createdAt: 'asc' };
-    } else if (query.sort === 'popular') {
-      // TODO: Implement proper popularity sorting based on likes
-      orderBy = { createdAt: 'desc' };
-    }
-
+    // Get top-level comments (no parent)
     const comments = await prisma.comment.findMany({
-      where,
+      where: {
+        postId,
+        parentId: null // Only top-level comments
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
       include: {
         author: {
           select: {
@@ -104,16 +58,21 @@ export async function GET(
         },
         _count: {
           select: {
-            replies: true,
-            likes: true
+            likes: true,
+            replies: true
           }
         },
-        likes: session?.user?.id ? {
-          where: { userId: session.user.id },
-          select: { id: true }
-        } : false,
+        // Include user's likes if logged in
+        ...(userId && {
+          likes: {
+            where: { userId },
+            select: { id: true }
+          }
+        }),
+        // Include some replies (limited)
         replies: {
-          take: 3, // Show first 3 replies
+          take: 3,
+          orderBy: { createdAt: 'asc' },
           include: {
             author: {
               select: {
@@ -129,80 +88,144 @@ export async function GET(
                 likes: true
               }
             },
-            likes: session?.user?.id ? {
-              where: { userId: session.user.id },
-              select: { id: true }
-            } : false
-          },
-          orderBy: { createdAt: 'asc' }
+            ...(userId && {
+              likes: {
+                where: { userId },
+                select: { id: true }
+              }
+            })
+          }
         }
-      },
-      orderBy,
-      take: query.limit + 1 // Take one extra to check if there are more
-    });
+      }
+    })
 
-    const hasMore = comments.length > query.limit;
-    const commentsToReturn = hasMore ? comments.slice(0, -1) : comments;
-    const nextCursor = hasMore ? commentsToReturn[commentsToReturn.length - 1]?.id : null;
-
-    // Transform comments
-    const transformedComments = commentsToReturn.map(comment => ({
-      id: comment.id,
-      content: comment.content,
-      author: {
-        id: comment.author.id,
-        name: comment.author.name || '',
-        username: comment.author.username || '',
-        avatar: comment.author.image || '/default-avatar.png',
-        verified: comment.author.verified || false
-      },
-      createdAt: comment.createdAt.toISOString(),
-      stats: {
-        likes: comment._count.likes,
-        replies: comment._count.replies
-      },
-      viewerState: {
-        liked: session?.user?.id ? (comment.likes && comment.likes.length > 0) : false
-      },
+    // Transform comments to include interaction flags
+    const transformedComments = comments.map(comment => ({
+      ...comment,
+      isLiked: userId ? comment.likes?.length > 0 : false,
+      likesCount: comment._count.likes,
+      repliesCount: comment._count.replies,
       replies: comment.replies.map(reply => ({
-        id: reply.id,
-        content: reply.content,
-        author: {
-          id: reply.author.id,
-          name: reply.author.name || '',
-          username: reply.author.username || '',
-          avatar: reply.author.image || '/default-avatar.png',
-          verified: reply.author.verified || false
-        },
-        createdAt: reply.createdAt.toISOString(),
-        stats: {
-          likes: reply._count.likes,
-          replies: 0 // Nested replies not supported for now
-        },
-        viewerState: {
-          liked: session?.user?.id ? (reply.likes && reply.likes.length > 0) : false
-        },
-        parentId: comment.id
-      }))
-    }));
+        ...reply,
+        isLiked: userId ? reply.likes?.length > 0 : false,
+        likesCount: reply._count.likes,
+        likes: undefined,
+        _count: undefined
+      })),
+      likes: undefined,
+      _count: undefined
+    }))
 
     return NextResponse.json({
       comments: transformedComments,
-      nextCursor,
-      hasMore
-    });
-
+      pagination: {
+        page,
+        limit,
+        hasMore: comments.length === limit
+      }
+    })
   } catch (error) {
-    console.error('Get comments error:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
-      );
-    }
+    console.error('Error fetching comments:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch comments' },
       { status: 500 }
-    );
+    )
   }
 }
+
+// POST /api/feed/[id]/comments - Create a new comment
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const postId = params.id
+    const body = await request.json()
+    const validatedData = createCommentSchema.parse(body)
+
+    // Check if post exists
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true }
+    })
+
+    if (!post) {
+      return NextResponse.json(
+        { error: 'Post not found' },
+        { status: 404 }
+      )
+    }
+
+    // If parentId is provided, check if parent comment exists
+    if (validatedData.parentId) {
+      const parentComment = await prisma.comment.findUnique({
+        where: { id: validatedData.parentId },
+        select: { id: true, postId: true }
+      })
+
+      if (!parentComment || parentComment.postId !== postId) {
+        return NextResponse.json(
+          { error: 'Parent comment not found or not in this post' },
+          { status: 404 }
+        )
+      }
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        content: validatedData.content,
+        authorId: session.user.id,
+        postId,
+        parentId: validatedData.parentId || null
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+            verified: true
+          }
+        },
+        _count: {
+          select: {
+            likes: true,
+            replies: true
+          }
+        }
+      }
+    })
+
+    // Transform the response
+    const transformedComment = {
+      ...comment,
+      isLiked: false,
+      likesCount: comment._count.likes,
+      repliesCount: comment._count.replies,
+      _count: undefined
+    }
+
+    return NextResponse.json(transformedComment, { status: 201 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    console.error('Error creating comment:', error)
+    return NextResponse.json(
+      { error: 'Failed to create comment' },
+      { status: 500 }
+    )
+  }

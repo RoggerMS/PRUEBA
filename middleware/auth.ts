@@ -9,6 +9,7 @@ const PROTECTED_ROUTES = [
   '/forum',
   '/marketplace',
   '/gamification',
+  '/api/feed',
   '/api/notes',
   '/api/forum',
   '/api/marketplace',
@@ -22,6 +23,7 @@ const UNIVERSITY_VERIFIED_ROUTES = [
   '/notes/upload',
   '/forum/create',
   '/marketplace/sell',
+  '/api/feed',
   '/api/notes',
   '/api/forum',
   '/api/marketplace'
@@ -43,6 +45,16 @@ const PUBLIC_ROUTES = [
   '/auth/register',
   '/auth/signup',
   '/auth/forgot-password',
+  '/u/',
+  '/post/',
+  '/notes/',
+  '/feed/public',
+  '/about',
+  '/contact',
+  '/privacy',
+  '/terms',
+  '/cookies',
+  '/help',
   '/api/auth',
   '/api/public'
 ];

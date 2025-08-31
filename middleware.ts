@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp } from './lib/app-initializer';
+import { authMiddleware } from './middleware/auth';
 
 // Variable para controlar si ya se inicializó
 let isInitialized = false;
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Inicializar servicios solo una vez
   if (!isInitialized) {
     try {
@@ -16,7 +17,8 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // Apply authentication middleware
+  return await authMiddleware(request);
 }
 
 // Configurar el middleware para que se ejecute en todas las rutas
@@ -24,11 +26,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * Note: We include API routes for authentication middleware
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

@@ -28,9 +28,10 @@ import {
   Plus
 } from "lucide-react";
 import { toast } from "sonner";
+import { useCreateQuestion } from '@/hooks/useForum';
 
 interface AskQuestionProps {
-  onSubmit: (question: any) => void;
+  onSubmit: () => void;
   onCancel: () => void;
 }
 
@@ -48,8 +49,9 @@ export function AskQuestion({ onSubmit, onCancel }: AskQuestionProps) {
   });
   
   const [currentTag, setCurrentTag] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const createQuestionMutation = useCreateQuestion();
 
   const subjects = [
     "Matemáticas", "Física", "Química", "Biología", 
@@ -122,35 +124,19 @@ export function AskQuestion({ onSubmit, onCancel }: AskQuestionProps) {
       return;
     }
     
-    setIsSubmitting(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await createQuestionMutation.mutateAsync({
+        title: formData.title,
+        content: formData.content,
+        subject: formData.subject,
+        career: formData.career,
+        tags: formData.tags,
+        bounty: formData.bounty
+      });
       
-      const questionData = {
-        ...formData,
-        id: Date.now().toString(),
-        author: {
-          id: "current-user",
-          name: formData.isAnonymous ? "Usuario Anónimo" : "Usuario Actual",
-          avatar: "/avatars/default.jpg",
-          level: "Intermedio",
-          points: 1250
-        },
-        votes: 0,
-        answers: 0,
-        views: 0,
-        createdAt: new Date(),
-        hasAcceptedAnswer: false
-      };
-      
-      onSubmit(questionData);
-      toast.success("¡Pregunta publicada exitosamente!");
+      onSubmit();
     } catch (error) {
-      toast.error("Error al publicar la pregunta");
-    } finally {
-      setIsSubmitting(false);
+      // Error handling is done in the mutation
     }
   };
 
@@ -428,17 +414,17 @@ export function AskQuestion({ onSubmit, onCancel }: AskQuestionProps) {
                 type="button"
                 variant="outline"
                 onClick={onCancel}
-                disabled={isSubmitting}
+                disabled={createQuestionMutation.isPending}
               >
                 Cancelar
               </Button>
               
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={createQuestionMutation.isPending}
                 className="bg-purple-600 hover:bg-purple-700"
               >
-                {isSubmitting ? "Publicando..." : "Publicar Pregunta"}
+                {createQuestionMutation.isPending ? "Publicando..." : "Publicar Pregunta"}
               </Button>
             </div>
           </form>
