@@ -142,7 +142,9 @@ export function createSSEResponse(stream: ReadableStream): Response {
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Cache-Control'
+      'Access-Control-Allow-Headers': 'Cache-Control, Authorization',
+      // Permitir el envío de cookies/sesión en conexiones de distinto origen
+      'Access-Control-Allow-Credentials': 'true'
     }
   })
 }

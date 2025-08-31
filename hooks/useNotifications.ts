@@ -192,7 +192,11 @@ export function useNotifications(): UseNotificationsReturn {
     }
 
     try {
-      const eventSource = new EventSource(`/api/notifications/stream?userId=${session.user.id}`);
+      // Incluir credenciales para que las cookies de sesión se envíen con la petición
+      const eventSource = new EventSource(
+        `/api/notifications/stream?userId=${session.user.id}`,
+        { withCredentials: true }
+      );
       eventSourceRef.current = eventSource;
 
       eventSource.onopen = () => {
@@ -227,13 +231,15 @@ export function useNotifications(): UseNotificationsReturn {
       };
 
       eventSource.onerror = (event) => {
-        console.error('Error en SSE:', event);
+        const readyState = eventSource.readyState;
+        console.error('Error en SSE:', { event, readyState });
+
         eventSource.close();
         eventSourceRef.current = null;
         setIsConnected(false);
-        
+
         // Intentar reconectar si no fue un cierre intencional
-        if (reconnectAttempts.current < maxReconnectAttempts) {
+        if (readyState === EventSource.CLOSED && reconnectAttempts.current < maxReconnectAttempts) {
           const delay = Math.pow(2, reconnectAttempts.current) * 1000; // Backoff exponencial
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttempts.current++;
