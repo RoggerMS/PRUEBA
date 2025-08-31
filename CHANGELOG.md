@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Move Cantuta university data to root data/ directory so `npm run build` succeeds.
 - Fix TypeScript build errors across project.
 - Redirect `/auth/signin` to `/auth/login` and update authentication routes.
 - Resolve component import mismatches and add API rate limiting helpers.
