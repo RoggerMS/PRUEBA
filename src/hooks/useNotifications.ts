@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
@@ -28,7 +28,8 @@ export function useNotifications(): UseNotificationsReturn {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
-  const [eventSource, setEventSource] = useState<EventSource | null>(null);
+  // Ref to persist EventSource instance without triggering re-renders
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -91,19 +92,24 @@ export function useNotifications(): UseNotificationsReturn {
   }, [session?.user?.id]);
 
   // Setup Server-Sent Events for real-time notifications
-  useEffect(() => {
+  const connect = useCallback(() => {
     if (!session?.user?.id) {
-      if (eventSource) {
-        eventSource.close();
-        setEventSource(null);
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
         setIsConnected(false);
       }
       return;
     }
 
-    // Create EventSource for real-time notifications
+    // Avoid creating a new connection if one is already active
+    if (eventSourceRef.current && eventSourceRef.current.readyState !== EventSource.CLOSED) {
+      return;
+    }
+
     const es = new EventSource(`/api/notifications/stream?userId=${session.user.id}`);
-    
+    eventSourceRef.current = es;
+
     es.onopen = () => {
       setIsConnected(true);
       console.log('Notifications stream connected');
@@ -112,14 +118,14 @@ export function useNotifications(): UseNotificationsReturn {
     es.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
+
         if (data.type === 'notification') {
           const newNotification = data.data;
-          
+
           // Add to notifications list
           setNotifications(prev => [newNotification, ...prev.slice(0, 49)]); // Keep only 50 notifications
           setUnreadCount(prev => prev + 1);
-          
+
           // Show toast notification
           toast(newNotification.title, {
             description: newNotification.message,
@@ -151,24 +157,27 @@ export function useNotifications(): UseNotificationsReturn {
     es.onerror = (error) => {
       console.error('Notifications stream error:', error);
       setIsConnected(false);
-      
+      eventSourceRef.current?.close();
+      eventSourceRef.current = null;
+
       // Attempt to reconnect after 5 seconds
       setTimeout(() => {
-        if (es.readyState === EventSource.CLOSED) {
-          // Will trigger useEffect again
-          setEventSource(null);
-        }
+        connect();
       }, 5000);
     };
+  }, [session?.user?.id, markAsRead]);
 
-    setEventSource(es);
+  useEffect(() => {
+    connect();
 
-    // Cleanup
     return () => {
-      es.close();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
       setIsConnected(false);
     };
-  }, [session?.user?.id, markAsRead, eventSource]);
+  }, [connect]);
 
   // Initial fetch of notifications
   useEffect(() => {
