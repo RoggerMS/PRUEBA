@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add global error boundary to log errors and offer reload or home navigation.
 - Guard club president access and details when data is missing to avoid runtime errors.
 - Allow optional `includeActivity` parameter in `/api/clubs/my-clubs` to prevent validation failures when omitted.
 - Prevent redundant notification fetches and SSE reconnections by refining `useNotifications` dependencies.

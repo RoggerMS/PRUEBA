@@ -37,3 +37,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+export { default as ErrorBoundary } from "./error";
