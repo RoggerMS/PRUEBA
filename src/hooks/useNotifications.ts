@@ -108,7 +108,11 @@ export function useNotifications(): UseNotificationsReturn {
       return;
     }
 
-    const es = new EventSource(`/api/notifications/stream?userId=${session.user.id}`);
+    // Incluir credenciales para que la sesión se mantenga en conexiones SSE
+    const es = new EventSource(
+      `/api/notifications/stream?userId=${session.user.id}`,
+      { withCredentials: true }
+    );
     eventSourceRef.current = es;
 
     es.onopen = () => {
@@ -155,16 +159,19 @@ export function useNotifications(): UseNotificationsReturn {
       }
     };
 
-    es.onerror = (error) => {
-      console.error('Notifications stream error:', error);
+    es.onerror = (event) => {
+      const readyState = es.readyState;
+      console.error('Notifications stream error:', { event, readyState });
       setIsConnected(false);
       eventSourceRef.current?.close();
       eventSourceRef.current = null;
 
-      // Attempt to reconnect after 5 seconds
-      setTimeout(() => {
-        connect();
-      }, 5000);
+      // Attempt to reconnect only when the connection is fully closed
+      if (readyState === EventSource.CLOSED) {
+        setTimeout(() => {
+          connect();
+        }, 5000);
+      }
     };
   }, [session?.user?.id, markAsRead]);
 
