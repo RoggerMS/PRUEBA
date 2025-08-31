@@ -159,9 +159,20 @@ export default function ForumPage() {
   });
 
   if (selectedQuestionId) {
+    const selectedQuestion = questions.find(q => q.id === selectedQuestionId);
+    if (!selectedQuestion) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Pregunta no encontrada</h2>
+            <Button onClick={handleBackToList}>Volver al foro</Button>
+          </div>
+        </div>
+      );
+    }
     return (
       <QuestionDetail 
-        questionId={selectedQuestionId}
+        question={selectedQuestion}
         onBack={handleBackToList}
       />
     );
