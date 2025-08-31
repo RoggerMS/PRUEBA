@@ -27,7 +27,7 @@ import {
   Clock
 } from 'lucide-react';
 
-interface CreateClubFormData {
+export interface CreateClubFormData {
   name: string;
   description: string;
   category: string;

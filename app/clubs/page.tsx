@@ -9,13 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, Trophy, Calendar, Plus, Filter, Loader2 } from "lucide-react";
+import { Search, Users, Trophy, Calendar, Plus, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { ClubCard } from "@/components/clubs/ClubCard";
-import { ClubDetail } from "@/components/clubs/ClubDetail";
-import { MyClubs } from "@/components/clubs/MyClubs";
-import { CreateClub } from "@/components/clubs/CreateClub";
+import ClubCard from "@/components/clubs/ClubCard";
+import ClubDetail from "@/components/clubs/ClubDetail";
+import MyClubs from "@/components/clubs/MyClubs";
+import CreateClub, { CreateClubFormData } from "@/components/clubs/CreateClub";
 import type { Club, ClubCategory } from "@/shared/types/clubs";
 
 // Interfaces for API responses
@@ -54,7 +54,7 @@ export default function ClubsPage() {
   const [selectedLevel, setSelectedLevel] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
-  const [showCreateClub, setShowCreateClub] = useState(false);
+  const [creatingClub, setCreatingClub] = useState(false);
   
   // Data state
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -152,15 +152,40 @@ export default function ClubsPage() {
   const handleBackToClubs = () => {
     setSelectedClubId(null);
   };
-
-  const handleCreateClub = () => {
-    setShowCreateClub(true);
+  
+  const openCreateTab = () => {
+    setActiveTab('create');
   };
 
-  const handleCloseCreateClub = () => {
-    setShowCreateClub(false);
-    // Refresh clubs list after creating a new club
+  const handleClubCreated = () => {
+    setActiveTab('browse');
     fetchClubs();
+  };
+
+  const handleCreateClub = async (data: CreateClubFormData) => {
+    try {
+      setCreatingClub(true);
+      const payload = {
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        tags: data.tags,
+        isPrivate: data.visibility === 'private',
+      };
+      const response = await fetch('/api/clubs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('Failed to create club');
+      handleClubCreated();
+      toast.success('Club creado exitosamente');
+    } catch (error) {
+      console.error('Error creating club:', error);
+      toast.error('Error al crear el club');
+    } finally {
+      setCreatingClub(false);
+    }
   };
 
   const handleSearchChange = (value: string) => {
@@ -205,12 +230,6 @@ export default function ClubsPage() {
         />
       );
     }
-  }
-
-  if (showCreateClub) {
-    return (
-      <CreateClub onCancel={handleCloseCreateClub} onSuccess={handleCloseCreateClub} />
-    );
   }
 
   return (
@@ -275,8 +294,8 @@ export default function ClubsPage() {
               <TabsTrigger value="create">Crear Club</TabsTrigger>
             </TabsList>
             
-            <Button 
-              onClick={handleCreateClub}
+            <Button
+              onClick={openCreateTab}
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -452,12 +471,10 @@ export default function ClubsPage() {
           </TabsContent>
 
           <TabsContent value="create" className="space-y-6">
-            <CreateClub 
-              onClose={handleCloseCreateClub}
-              onClubCreated={(club) => {
-                handleCreateClub(club);
-                toast.success('Club creado exitosamente');
-              }}
+            <CreateClub
+              onSubmit={handleCreateClub}
+              onCancel={() => setActiveTab('browse')}
+              isLoading={creatingClub}
             />
           </TabsContent>
         </Tabs>
