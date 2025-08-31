@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
+import { debugFetch } from '@/lib/debugFetch';
 
 export interface Notification {
   id: string;
@@ -36,7 +37,7 @@ export function useNotifications(): UseNotificationsReturn {
     if (!session?.user?.id) return;
 
     try {
-      const response = await fetch('/api/notifications');
+      const response = await debugFetch('/api/notifications');
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.notifications || []);
@@ -52,7 +53,7 @@ export function useNotifications(): UseNotificationsReturn {
     if (!session?.user?.id) return;
 
     try {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+      const response = await debugFetch(`/api/notifications/${notificationId}/read`, {
         method: 'PATCH'
       });
 
@@ -76,7 +77,7 @@ export function useNotifications(): UseNotificationsReturn {
     if (!session?.user?.id) return;
 
     try {
-      const response = await fetch('/api/notifications/read-all', {
+      const response = await debugFetch('/api/notifications/read-all', {
         method: 'PATCH'
       });
 
@@ -217,7 +218,7 @@ export function useNotificationPreferences() {
     if (!session?.user?.id) return;
 
     try {
-      const response = await fetch('/api/notifications/preferences');
+      const response = await debugFetch('/api/notifications/preferences');
       if (response.ok) {
         const data = await response.json();
         setPreferences(data);
@@ -232,7 +233,7 @@ export function useNotificationPreferences() {
     if (!session?.user?.id) return;
 
     try {
-      const response = await fetch('/api/notifications/preferences', {
+      const response = await debugFetch('/api/notifications/preferences', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
