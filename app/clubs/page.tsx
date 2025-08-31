@@ -18,78 +18,89 @@ import { Search, Users, Trophy, Calendar, Plus, Filter } from "lucide-react";
 // Mock data for clubs
 const mockClubs = [
   {
-    id: "1",
-    name: "Matemáticas Avanzadas",
-    description: "Club dedicado al estudio de matemáticas de nivel universitario y competencias.",
-    category: "Académico",
-    subject: "Matemáticas",
+    id: '1',
+    name: 'Matemáticas Avanzadas',
+    description:
+      'Club dedicado al estudio de matemáticas de nivel universitario y competencias.',
+    category: 'Académico',
+    subject: 'Matemáticas',
     memberCount: 156,
     isPrivate: false,
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=mathematics%20club%20students%20studying%20calculus%20equations%20blackboard%20modern%20classroom&image_size=landscape_4_3",
-    owner: {
-      id: "owner1",
-      name: "Dr. Ana García",
-      avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20female%20mathematics%20teacher%20portrait%20friendly%20smile&image_size=square",
-      role: "Profesora"
+    image:
+      'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=mathematics%20club%20students%20studying%20calculus%20equations%20blackboard%20modern%20classroom&image_size=landscape_4_3',
+    location: 'Edificio de Ciencias, aula 101',
+    meetingDay: 'Miércoles 17:00',
+    rating: 4.8,
+    isFavorite: false,
+    president: {
+      name: 'Dr. Ana García',
+      avatar:
+        'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20female%20mathematics%20teacher%20portrait%20friendly%20smile&image_size=square',
     },
-    tags: ["Cálculo", "Álgebra", "Geometría", "Competencias"],
-    level: "Avanzado",
-    createdAt: "2024-01-15",
-    lastActivity: "2024-01-20",
+    tags: ['Cálculo', 'Álgebra', 'Geometría', 'Competencias'],
+    level: 'Avanzado',
+    createdAt: '2024-01-15',
+    lastActivity: '2024-01-20',
     isJoined: true,
     achievements: [
-      { name: "Club Activo", icon: "🏆" },
-      { name: "100+ Miembros", icon: "👥" }
-    ]
+      { name: 'Club Activo', icon: '🏆' },
+      { name: '100+ Miembros', icon: '👥' },
+    ],
   },
   {
-    id: "2",
-    name: "Ciencias Naturales",
-    description: "Exploramos el mundo de la biología, química y física a través de experimentos.",
-    category: "Académico",
-    subject: "Ciencias",
+    id: '2',
+    name: 'Ciencias Naturales',
+    description:
+      'Exploramos el mundo de la biología, química y física a través de experimentos.',
+    category: 'Académico',
+    subject: 'Ciencias',
     memberCount: 89,
     isPrivate: false,
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=science%20laboratory%20students%20conducting%20experiments%20microscopes%20test%20tubes&image_size=landscape_4_3",
-    owner: {
-      id: "owner2",
-      name: "Prof. Carlos Mendez",
-      avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=male%20science%20teacher%20laboratory%20coat%20professional%20portrait&image_size=square",
-      role: "Profesor"
+    image:
+      'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=science%20laboratory%20students%20conducting%20experiments%20microscopes%20test%20tubes&image_size=landscape_4_3',
+    location: 'Laboratorio Central',
+    meetingDay: 'Viernes 15:00',
+    rating: 4.5,
+    isFavorite: false,
+    president: {
+      name: 'Prof. Carlos Mendez',
+      avatar:
+        'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=male%20science%20teacher%20laboratory%20coat%20professional%20portrait&image_size=square',
     },
-    tags: ["Biología", "Química", "Física", "Experimentos"],
-    level: "Intermedio",
-    createdAt: "2024-01-10",
-    lastActivity: "2024-01-19",
+    tags: ['Biología', 'Química', 'Física', 'Experimentos'],
+    level: 'Intermedio',
+    createdAt: '2024-01-10',
+    lastActivity: '2024-01-19',
     isJoined: false,
-    achievements: [
-      { name: "Experimentadores", icon: "🔬" }
-    ]
+    achievements: [{ name: 'Experimentadores', icon: '🔬' }],
   },
   {
-    id: "3",
-    name: "Debate y Oratoria",
-    description: "Desarrollamos habilidades de comunicación y pensamiento crítico.",
-    category: "Extracurricular",
-    subject: "Comunicación",
+    id: '3',
+    name: 'Debate y Oratoria',
+    description:
+      'Desarrollamos habilidades de comunicación y pensamiento crítico.',
+    category: 'Extracurricular',
+    subject: 'Comunicación',
     memberCount: 67,
     isPrivate: false,
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=debate%20club%20students%20public%20speaking%20podium%20audience%20formal%20setting&image_size=landscape_4_3",
-    owner: {
-      id: "owner3",
-      name: "Lic. María Torres",
-      avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=female%20debate%20coach%20professional%20confident%20portrait&image_size=square",
-      role: "Coordinadora"
+    image:
+      'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=debate%20club%20students%20public%20speaking%20podium%20audience%20formal%20setting&image_size=landscape_4_3',
+    location: 'Auditorio Principal',
+    meetingDay: 'Lunes 18:00',
+    rating: 4.2,
+    isFavorite: true,
+    president: {
+      name: 'Lic. María Torres',
+      avatar:
+        'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=female%20debate%20coach%20professional%20confident%20portrait&image_size=square',
     },
-    tags: ["Debate", "Oratoria", "Comunicación", "Liderazgo"],
-    level: "Intermedio",
-    createdAt: "2024-01-08",
-    lastActivity: "2024-01-18",
+    tags: ['Debate', 'Oratoria', 'Comunicación', 'Liderazgo'],
+    level: 'Intermedio',
+    createdAt: '2024-01-08',
+    lastActivity: '2024-01-18',
     isJoined: true,
-    achievements: [
-      { name: "Oradores Expertos", icon: "🎤" }
-    ]
-  }
+    achievements: [{ name: 'Oradores Expertos', icon: '🎤' }],
+  },
 ];
 
 const categories = ["Todos", "Académico", "Extracurricular", "Deportivo", "Arte", "Tecnología"];

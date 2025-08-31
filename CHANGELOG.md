@@ -11,6 +11,7 @@
 - Remove unsupported fields from auth registration and welcome transaction.
 - Align gamification leaderboard and achievement data with defined types.
 - Guard optional marketplace product properties to avoid undefined access.
+- Provide complete mock data for clubs, competitions, and marketplace pages and remove unsupported `useSearchParams` usage so `npm run build` succeeds.
 - Categorize gamification notifications correctly to allow local builds.
 - Add Feed page and navigation link in sidebar.
 - Correct footer links for Cookies, Privacy, Terms, and Support pages.
