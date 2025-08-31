@@ -33,7 +33,7 @@ interface Club {
     avatar: string;
     role: string;
   };
-  tags: string[];
+  tags: string[] | string;
   level: string;
   createdAt: string;
   lastActivity: string;
@@ -82,6 +82,13 @@ export function ClubCard({ club, onClick }: ClubCardProps) {
       console.error('Error granting XP for joining club:', error);
     }
   };
+
+  // Ensure tags are treated as an array
+  const tags = Array.isArray(club.tags)
+    ? club.tags
+    : typeof club.tags === 'string'
+      ? club.tags.split(',').map(tag => tag.trim())
+      : [];
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -207,14 +214,14 @@ export function ClubCard({ club, onClick }: ClubCardProps) {
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1">
-          {club.tags.slice(0, 3).map((tag, index) => (
+          {tags.slice(0, 3).map((tag, index) => (
             <Badge key={index} variant="outline" className="text-xs bg-gray-50">
               {tag}
             </Badge>
           ))}
-          {club.tags.length > 3 && (
+          {tags.length > 3 && (
             <Badge variant="outline" className="text-xs bg-gray-50">
-              +{club.tags.length - 3}
+              +{tags.length - 3}
             </Badge>
           )}
         </div>

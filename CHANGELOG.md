@@ -5,6 +5,7 @@
 - Add global error boundary to log errors and offer reload or home navigation.
 - Guard club president access and details when data is missing to avoid runtime errors.
 - Allow optional `includeActivity` parameter in `/api/clubs/my-clubs` to prevent validation failures when omitted.
+- Normalize club tag data to handle strings and prevent `slice(...).map` runtime errors in club cards and detail views.
 - Prevent redundant notification fetches and SSE reconnections by refining `useNotifications` dependencies.
 - Maintain a stable notifications stream by storing the `EventSource` in a ref and avoiding duplicate connections.
 - Guard club rating display to avoid runtime errors when rating is missing.

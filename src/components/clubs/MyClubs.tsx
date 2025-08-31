@@ -37,7 +37,7 @@ interface Club {
     avatar: string;
     role: string;
   };
-  tags: string[];
+  tags: string[] | string;
   level: string;
   createdAt: string;
   lastActivity: string;
@@ -157,11 +157,16 @@ export function MyClubs({ onClubSelect }: MyClubsProps) {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
 
+  const normalizeTags = (tags: string[] | string) =>
+    Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim());
+
   const filteredClubs = mockMyClubs
     .filter(club => {
-      const matchesSearch = club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           club.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           club.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      const clubTags = normalizeTags(club.tags);
+      const matchesSearch =
+        club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        club.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        clubTags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
       
       const matchesRole = roleFilter === "all" || club.role === roleFilter;
       const matchesCategory = categoryFilter === "all" || club.category === categoryFilter;
@@ -421,18 +426,23 @@ export function MyClubs({ onClubSelect }: MyClubsProps) {
               </div>
 
               {/* Tags */}
-              <div className="flex flex-wrap gap-1 mb-3">
-                {club.tags.slice(0, 3).map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs bg-gray-50">
-                    {tag}
-                  </Badge>
-                ))}
-                {club.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs bg-gray-50">
-                    +{club.tags.length - 3}
-                  </Badge>
-                )}
-              </div>
+              {(() => {
+                const clubTags = normalizeTags(club.tags);
+                return (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {clubTags.slice(0, 3).map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs bg-gray-50">
+                        {tag}
+                      </Badge>
+                    ))}
+                    {clubTags.length > 3 && (
+                      <Badge variant="outline" className="text-xs bg-gray-50">
+                        +{clubTags.length - 3}
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Actions */}
               <div className="flex gap-2">
