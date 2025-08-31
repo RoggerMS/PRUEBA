@@ -27,6 +27,7 @@ interface UseNotificationsReturn {
   clearAll: () => Promise<void>;
   hasMore: boolean;
   page: number;
+  isConnected: boolean;
 }
 
 export function useNotifications(): UseNotificationsReturn {
@@ -37,6 +38,7 @@ export function useNotifications(): UseNotificationsReturn {
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
+  const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
@@ -195,6 +197,7 @@ export function useNotifications(): UseNotificationsReturn {
       eventSource.onopen = () => {
         console.log('SSE conectado para notificaciones');
         reconnectAttempts.current = 0;
+        setIsConnected(true);
       };
 
       eventSource.onmessage = (event) => {
@@ -226,6 +229,7 @@ export function useNotifications(): UseNotificationsReturn {
         console.error('Error en SSE:', event);
         eventSource.close();
         eventSourceRef.current = null;
+        setIsConnected(false);
         
         // Intentar reconectar si no fue un cierre intencional
         if (reconnectAttempts.current < maxReconnectAttempts) {
@@ -247,11 +251,12 @@ export function useNotifications(): UseNotificationsReturn {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
+
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
+    setIsConnected(false);
   }, []);
 
   // Efectos
@@ -282,7 +287,8 @@ export function useNotifications(): UseNotificationsReturn {
     deleteNotification,
     clearAll,
     hasMore,
-    page
+    page,
+    isConnected
   };
 }
 

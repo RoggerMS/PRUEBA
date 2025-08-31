@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext } from 'react';
-import { useWebSocketNotifications } from '../../hooks/useWebSocketNotifications';
+// Centralized notifications provider using a single SSE connection
+import { useNotifications as useNotificationsData } from '@/hooks/useNotifications';
 
 interface Notification {
   id: string;
@@ -16,8 +17,15 @@ interface Notification {
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
+  isLoading: boolean;
+  error: string | null;
+  loadNotifications: (page?: number, reset?: boolean) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+  clearAll: () => Promise<void>;
+  hasMore: boolean;
+  page: number;
   isConnected: boolean;
   refreshNotifications: () => void;
 }
@@ -28,17 +36,32 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const {
     notifications,
     unreadCount,
-    isConnected,
+    isLoading,
+    error,
+    loadNotifications,
     markAsRead,
     markAllAsRead,
-    refreshNotifications
-  } = useWebSocketNotifications();
+    deleteNotification,
+    clearAll,
+    hasMore,
+    page,
+    isConnected
+  } = useNotificationsData();
+
+  const refreshNotifications = () => loadNotifications(1, true);
 
   const value = {
     notifications,
     unreadCount,
+    isLoading,
+    error,
+    loadNotifications,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
+    clearAll,
+    hasMore,
+    page,
     isConnected,
     refreshNotifications
   };

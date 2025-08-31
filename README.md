@@ -40,6 +40,10 @@ export default tseslint.config({
 - Various TypeScript errors were resolved and notification components were corrected for consistent behavior.
 - Gamification notifications are now categorized as `GAMIFICATION`, fixing local build errors.
 
+### Patrón de notificaciones
+
+La aplicación utiliza un `NotificationProvider` global que se basa en el hook `useNotifications` para gestionar las notificaciones en tiempo real mediante una única conexión SSE por usuario. Componentes como `MainLayout`, `NotificationCenter` y `NotificationDropdown` consumen este contexto compartido, evitando conexiones redundantes y manteniendo los datos sincronizados.
+
 ## Local Deployment
 
 To run the project locally:
