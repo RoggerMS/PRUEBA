@@ -163,13 +163,7 @@ export default function NotesPage() {
       {selectedNote && (
         <NotesViewer
           note={selectedNote}
-          isOpen={true}
           onClose={() => setSelectedNote(null)}
-          onLike={() => {}}
-          onDownload={() => {
-            const file = selectedNote.files[0];
-            if (file) window.open(file.url, '_blank');
-          }}
         />
       )}
     </div>

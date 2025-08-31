@@ -18,6 +18,7 @@
 - Provide complete mock data for clubs, competitions, and marketplace pages and remove unsupported `useSearchParams` usage so `npm run build` succeeds.
 - Categorize gamification notifications correctly to allow local builds.
 - Add Feed page and navigation link in sidebar.
+- Replace Notes viewer modal with previous implementation to support PDF and image preview.
 - Correct footer links for Cookies, Privacy, Terms, and Support pages.
 - Allow unauthenticated users to view public posts via the feed API.
 - Resolve feed API route type mismatches and enum casing errors.
