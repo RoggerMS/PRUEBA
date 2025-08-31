@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add Jest and React Testing Library tests for notifications hook to ensure single load and EventSource instance.
 - Wrap notifications API calls with a development debug fetch that counts usage.
 - Add global error boundary to log errors and offer reload or home navigation.
 - Guard club president access and details when data is missing to avoid runtime errors.
