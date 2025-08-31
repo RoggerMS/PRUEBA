@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
-import ProfileEditor from './ProfileEditor';
 import { ProfileHeader } from './ProfileHeader';
+
+const ProfileEditor = dynamic(() => import('./ProfileEditor'), { ssr: false });
 
 export interface User {
   id: string;
