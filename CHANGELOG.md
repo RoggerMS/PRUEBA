@@ -6,6 +6,7 @@
 - Guard club president access and details when data is missing to avoid runtime errors.
 - Allow optional `includeActivity` parameter in `/api/clubs/my-clubs` to prevent validation failures when omitted.
 - Prevent redundant notification fetches and SSE reconnections by refining `useNotifications` dependencies.
+- Maintain a stable notifications stream by storing the `EventSource` in a ref and avoiding duplicate connections.
 - Guard club rating display to avoid runtime errors when rating is missing.
 - Align club page sort options with API parameters and compute pagination to prevent fetch errors.
 - Redirect root `auth`, `admin`, and `profile` paths to their default pages to eliminate 404 errors.
