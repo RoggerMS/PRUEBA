@@ -38,6 +38,8 @@ npm run build
 npm start
 ```
 
+El modo de producción (`npm start`) es significativamente más rápido que `npm run dev`.
+
 ### 🌐 Acceso a la Aplicación
 - **URL Principal**: http://localhost:3000
 - **Workspace**: http://localhost:3000/workspace
@@ -90,6 +92,10 @@ npm run db:migrate   # Ejecutar migraciones
 #### Si hay errores de autenticación:
 1. Verificar que `NEXTAUTH_SECRET` esté configurado
 2. Comprobar que `NEXTAUTH_URL` apunte a localhost:3000
+
+#### Si `npm run build` falla con `Can't resolve '@/data/cantuta-data'`:
+1. Actualiza el repositorio a la última versión.
+2. Verifica que el archivo `data/cantuta-data.ts` exista en la raíz del proyecto.
 
 ### 📊 Optimizaciones Incluidas
 - Build optimizado con tree-shaking
