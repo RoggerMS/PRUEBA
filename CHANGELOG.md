@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Prevent redundant notification fetches and SSE reconnections by refining `useNotifications` dependencies.
 - Guard club rating display to avoid runtime errors when rating is missing.
 - Align club page sort options with API parameters and compute pagination to prevent fetch errors.
 - Redirect root `auth`, `admin`, and `profile` paths to their default pages to eliminate 404 errors.
