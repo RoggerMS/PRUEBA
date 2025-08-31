@@ -23,7 +23,8 @@ interface ClubsResponse {
   clubs: Club[];
   total: number;
   page: number;
-  totalPages: number;
+  limit: number;
+  hasMore: boolean;
 }
 
 interface ClubStats {
@@ -76,6 +77,13 @@ export default function ClubsPage() {
     { value: "active", label: "Más activos" },
     { value: "alphabetical", label: "Alfabético" }
   ];
+  // Map UI sort options to API parameters
+  const sortByMap: Record<string, string> = {
+    recent: "createdAt",
+    popular: "memberCount",
+    active: "updatedAt",
+    alphabetical: "name",
+  };
   
   const levelOptions = [
     { value: "ALL", label: "Todos los niveles" },
@@ -90,20 +98,23 @@ export default function ClubsPage() {
       setLoading(true);
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '12',
+        limit: "12",
         ...(searchQuery && { search: searchQuery }),
-        ...(selectedCategory !== 'Todas' && { category: selectedCategory }),
-        ...(selectedSubject !== 'Todas' && { subject: selectedSubject }),
-        ...(selectedLevel !== 'ALL' && { level: selectedLevel }),
-        ...(sortBy && { sortBy })
+        ...(selectedCategory !== "Todas" && { category: selectedCategory }),
+        ...(selectedSubject !== "Todas" && { subject: selectedSubject }),
+        ...(selectedLevel !== "ALL" && { level: selectedLevel }),
+        ...(sortBy && { sortBy: sortByMap[sortBy] })
       });
-      
+
       const response = await fetch(`/api/clubs?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch clubs');
-      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch clubs");
+      }
+
       const data: ClubsResponse = await response.json();
       setClubs(data.clubs);
-      setTotalPages(data.totalPages);
+      setTotalPages(Math.ceil(data.total / data.limit));
     } catch (error) {
       console.error('Error fetching clubs:', error);
       toast.error('Error al cargar los clubes');
@@ -135,10 +146,14 @@ export default function ClubsPage() {
     
     try {
       const response = await fetch('/api/clubs/my-clubs?includeStats=true&limit=1');
-      if (!response.ok) throw new Error('Failed to fetch my clubs count');
-      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch my clubs count');
+      }
+
       const data = await response.json();
-      setStats(prev => ({ ...prev, myClubsCount: data.total || 0 }));
+      const myClubsCount = data.stats?.totalClubs ?? data.clubs?.length ?? 0;
+      setStats(prev => ({ ...prev, myClubsCount }));
     } catch (error) {
       console.error('Error fetching my clubs count:', error);
     }
