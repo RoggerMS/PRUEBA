@@ -5,8 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 const querySchema = z.object({
-  includeStats: z.string().optional().transform(val => val === 'true'),
-  includeActivity: z.string().optional().transform(val => val === 'true'),
+  includeStats: z.string().nullish().transform(val => val === 'true'),
+  includeActivity: z.string().nullish().transform(val => val === 'true'),
 });
 
 export async function GET(request: NextRequest) {

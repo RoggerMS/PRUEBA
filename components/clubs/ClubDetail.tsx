@@ -378,15 +378,22 @@ export default function ClubDetail({
             <CardContent>
               <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={club.president.avatar} />
+                  <AvatarImage src={club.president?.avatar ?? undefined} />
                   <AvatarFallback>
-                    {club.president.name.split(' ').map(n => n[0]).join('')}
+                    {club.president?.name
+                      ? club.president.name
+                          .split(' ')
+                          .map(n => n[0])
+                          .join('')
+                      : 'NA'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h4 className="font-semibold">{club.president.name}</h4>
+                  <h4 className="font-semibold">
+                    {club.president?.name ?? 'Presidente no asignado'}
+                  </h4>
                   <p className="text-sm text-gray-600">Presidente</p>
-                  {club.president.email && (
+                  {club.president?.email && (
                     <p className="text-sm text-blue-600">{club.president.email}</p>
                   )}
                 </div>

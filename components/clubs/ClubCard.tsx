@@ -160,13 +160,20 @@ export default function ClubCard({
         {/* Presidente del Club */}
         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={club.president.avatar} />
+            <AvatarImage src={club.president?.avatar ?? undefined} />
             <AvatarFallback>
-              {club.president.name.split(' ').map(n => n[0]).join('')}
+              {club.president?.name
+                ? club.president.name
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                : 'NA'}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm font-medium">{club.president.name}</p>
+            <p className="text-sm font-medium">
+              {club.president?.name ?? 'Presidente no asignado'}
+            </p>
             <p className="text-xs text-gray-500">Presidente</p>
           </div>
         </div>
