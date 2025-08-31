@@ -50,8 +50,8 @@ export default function ClubsPage() {
   const [activeTab, setActiveTab] = useState("browse");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");
-  const [selectedSubject, setSelectedSubject] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("Todas");
+  const [selectedLevel, setSelectedLevel] = useState("ALL");
   const [sortBy, setSortBy] = useState("recent");
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const [creatingClub, setCreatingClub] = useState(false);
@@ -78,7 +78,7 @@ export default function ClubsPage() {
   ];
   
   const levelOptions = [
-    { value: "", label: "Todos los niveles" },
+    { value: "ALL", label: "Todos los niveles" },
     { value: "BEGINNER", label: "Principiante" },
     { value: "INTERMEDIATE", label: "Intermedio" },
     { value: "ADVANCED", label: "Avanzado" }
@@ -93,8 +93,8 @@ export default function ClubsPage() {
         limit: '12',
         ...(searchQuery && { search: searchQuery }),
         ...(selectedCategory !== 'Todas' && { category: selectedCategory }),
-        ...(selectedSubject && { subject: selectedSubject }),
-        ...(selectedLevel && { level: selectedLevel }),
+        ...(selectedSubject !== 'Todas' && { subject: selectedSubject }),
+        ...(selectedLevel !== 'ALL' && { level: selectedLevel }),
         ...(sortBy && { sortBy })
       });
       
@@ -335,7 +335,7 @@ export default function ClubsPage() {
                       <SelectValue placeholder="Materia" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas las materias</SelectItem>
+                      <SelectItem value="Todas">Todas las materias</SelectItem>
                       {subjects.map(subject => (
                         <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                       ))}

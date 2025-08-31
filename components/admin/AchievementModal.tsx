@@ -370,15 +370,17 @@ export function AchievementModal({ isOpen, onClose, onSave, achievement, mode, b
           {/* Badge asociado */}
           <div className="space-y-2">
             <Label htmlFor="badgeId">Badge Asociado (Opcional)</Label>
-            <Select 
-              value={formData.badgeId || ''} 
-              onValueChange={(value) => handleChange('badgeId', value || undefined)}
+            <Select
+              value={formData.badgeId ?? ''}
+              onValueChange={(value) =>
+                handleChange('badgeId', value === 'none' ? undefined : value)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar badge (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin badge asociado</SelectItem>
+                <SelectItem value="none">Sin badge asociado</SelectItem>
                 {badges.map(badge => (
                   <SelectItem key={badge.id} value={badge.id}>
                     <div className="flex items-center space-x-2">
