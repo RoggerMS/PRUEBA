@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Composer } from '@/components/feed/Composer';
-import { PostList } from '@/components/feed/PostList';
+import PostList from '@/components/feed/PostList';
 import { FeedSidebar } from '@/components/feed/FeedSidebar';
 import { TrendingSidebar } from '@/components/feed/TrendingSidebar';
 import { Card } from '@/components/ui/card';

@@ -17,7 +17,7 @@ import {
   TrendingUp,
   Award,
   Plus,
-  MessageSquare,
+  MessageCircle,
   Users,
   CheckCircle,
   Clock,

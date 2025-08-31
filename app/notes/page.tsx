@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Filter, Upload, X } from 'lucide-react';
+import { Search, Filter, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import { NotesGrid } from '@/components/notes/NotesGrid';
 import { NotesViewer } from '@/components/notes/NotesViewer';
 import { NotesFilters } from '@/components/notes/NotesFilters';
@@ -90,8 +91,6 @@ export default function NotesPage() {
     setSelectedNote(null);
   };
 
-  const router = useRouter();
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -173,9 +172,10 @@ export default function NotesPage() {
         )}
 
         {/* Notes Upload Modal */}
-        {showUpload && (
-          <NotesUpload onClose={() => setShowUpload(false)} />
-        )}
-    </div>
-  );
-}
+          {showUpload && (
+            <NotesUpload onClose={() => setShowUpload(false)} />
+          )}
+        </div>
+      </div>
+    );
+  }
