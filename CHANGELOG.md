@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add `/notes/upload` route and convert upload form to modal to avoid duplicate "Subir Apunte" buttons.
+- Wire "Ver" and "Descargar" actions in notes grid to open the viewer and download the first file.
 - Move Cantuta university data to root data/ directory so `npm run build` succeeds.
 - Fix TypeScript build errors across project.
 - Redirect `/auth/signin` to `/auth/login` and update authentication routes.

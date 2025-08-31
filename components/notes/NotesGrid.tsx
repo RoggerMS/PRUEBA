@@ -254,11 +254,26 @@ export function NotesGrid({ searchQuery, onNoteSelect }: NotesGridProps) {
             
             {/* Quick actions overlay */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-              <Button size="sm" className="bg-white text-gray-900 hover:bg-gray-100">
+              <Button
+                size="sm"
+                className="bg-white text-gray-900 hover:bg-gray-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNoteSelect(note.id);
+                }}
+              >
                 <Eye className="w-4 h-4 mr-1" />
                 Ver
               </Button>
-              <Button size="sm" className="bg-purple-600 text-white hover:bg-purple-700">
+              <Button
+                size="sm"
+                className="bg-purple-600 text-white hover:bg-purple-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const file = note.files[0];
+                  if (file) window.open(file.url, '_blank');
+                }}
+              >
                 <Download className="w-4 h-4 mr-1" />
                 Descargar
               </Button>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +13,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, X, FileText, Image, Video, File, Plus } from 'lucide-react';
 
 interface NotesUploadProps {
-  onUpload: (noteData: any) => void;
+  open: boolean;
+  onClose: () => void;
+  onSuccess: (noteData: any) => void;
 }
 
 const categories = [
@@ -61,8 +63,7 @@ const fileTypes = [
   { type: 'document', icon: File, label: 'Documento', accept: '.doc,.docx,.txt,.rtf' }
 ];
 
-export function NotesUpload({ onUpload }: NotesUploadProps) {
-  const [open, setOpen] = useState(false);
+export function NotesUpload({ open, onClose, onSuccess }: NotesUploadProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -96,8 +97,8 @@ export function NotesUpload({ onUpload }: NotesUploadProps) {
       liked: false
     };
     
-    onUpload(noteData);
-    setOpen(false);
+    onSuccess(noteData);
+    onClose();
     resetForm();
   };
 
@@ -180,13 +181,7 @@ export function NotesUpload({ onUpload }: NotesUploadProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-          <Upload className="w-4 h-4 mr-2" />
-          Subir Apuntes
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
@@ -389,11 +384,11 @@ export function NotesUpload({ onUpload }: NotesUploadProps) {
 
           {/* Submit Buttons */}
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               disabled={!formData.title || !formData.description || !formData.category || !formData.career || formData.files.length === 0}
             >

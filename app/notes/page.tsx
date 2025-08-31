@@ -1,26 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Upload, 
-  Filter,
-  FileText,
-  Image,
-  File,
-  Download,
-  Eye,
-  Star,
-  Calendar,
-  User
-} from 'lucide-react';
+import { Search, Upload, Filter } from 'lucide-react';
 import { NotesGrid } from '@/components/notes/NotesGrid';
 import { NotesFilters } from '@/components/notes/NotesFilters';
-import { NotesUpload } from '@/components/notes/NotesUpload';
 import { NotesViewer } from '@/components/notes/NotesViewer';
 
 // Mock data for selected note
@@ -90,7 +77,6 @@ const mockNote = {
 export default function NotesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
   const [selectedNote, setSelectedNote] = useState<typeof mockNote | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCareer, setSelectedCareer] = useState('all');
@@ -101,10 +87,7 @@ export default function NotesPage() {
     setSelectedNote(mockNote);
   };
 
-  const handleUploadSuccess = () => {
-    setShowUpload(false);
-    // Refresh notes list
-  };
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
@@ -143,8 +126,8 @@ export default function NotesPage() {
                   <Filter className="w-4 h-4 mr-2" />
                   Filtros
                 </Button>
-                <Button 
-                  onClick={() => setShowUpload(true)}
+                <Button
+                  onClick={() => router.push('/notes/upload')}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
                   <Upload className="w-4 h-4 mr-2" />
@@ -176,19 +159,17 @@ export default function NotesPage() {
         />
       </div>
 
-      {/* Upload Modal */}
-      {showUpload && (
-        <NotesUpload 
-          onClose={() => setShowUpload(false)}
-          onSuccess={handleUploadSuccess}
-        />
-      )}
-
       {/* Viewer Modal */}
       {selectedNote && (
-        <NotesViewer 
+        <NotesViewer
           note={selectedNote}
+          isOpen={true}
           onClose={() => setSelectedNote(null)}
+          onLike={() => {}}
+          onDownload={() => {
+            const file = selectedNote.files[0];
+            if (file) window.open(file.url, '_blank');
+          }}
         />
       )}
     </div>
