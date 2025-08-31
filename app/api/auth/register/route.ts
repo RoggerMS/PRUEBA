@@ -8,7 +8,7 @@ const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   username: z.string().min(3, 'El username debe tener al menos 3 caracteres').max(20, 'El username no puede tener más de 20 caracteres'),
-  displayName: z.string().min(1, 'El nombre es requerido').max(50, 'El nombre no puede tener más de 50 caracteres'),
+  name: z.string().min(1, 'El nombre es requerido').max(50, 'El nombre no puede tener más de 50 caracteres'),
 });
 
 export async function POST(request: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, username, displayName } = registerSchema.parse(body);
+    const { email, password, username, name } = registerSchema.parse(body);
 
     // Verificar si el email ya existe
     const existingUserByEmail = await prisma.user.findUnique({
@@ -58,14 +58,19 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         username,
-        displayName,
+        name,
         emailVerified: null, // Se puede implementar verificación por email después
+        crolars: 1000, // Welcome bonus
+        level: 1,
+        xp: 0,
+        streak: 0,
+        lastActivity: new Date()
       },
       select: {
         id: true,
         email: true,
         username: true,
-        displayName: true,
+        name: true,
         createdAt: true,
       }
     });

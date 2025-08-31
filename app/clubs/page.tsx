@@ -2,122 +2,149 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ClubCard from "@/components/clubs/ClubCard";
-import ClubDetail from "@/components/clubs/ClubDetail";
-import MyClubs from "@/components/clubs/MyClubs";
-import CreateClub from "@/components/clubs/CreateClub";
-import { Search, Users, Trophy, Calendar, Plus, Filter } from "lucide-react";
+import { Search, Users, Trophy, Calendar, Plus, Filter, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { ClubCard } from "@/components/clubs/ClubCard";
+import { ClubDetail } from "@/components/clubs/ClubDetail";
+import { MyClubs } from "@/components/clubs/MyClubs";
+import { CreateClub } from "@/components/clubs/CreateClub";
+import type { Club, ClubCategory } from "@/shared/types/clubs";
 
-// Mock data for clubs
-const mockClubs = [
-  {
-    id: '1',
-    name: 'Matemáticas Avanzadas',
-    description:
-      'Club dedicado al estudio de matemáticas de nivel universitario y competencias.',
-    category: 'Académico',
-    subject: 'Matemáticas',
-    memberCount: 156,
-    isPrivate: false,
-    image:
-      'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=mathematics%20club%20students%20studying%20calculus%20equations%20blackboard%20modern%20classroom&image_size=landscape_4_3',
-    location: 'Edificio de Ciencias, aula 101',
-    meetingDay: 'Miércoles 17:00',
-    rating: 4.8,
-    isFavorite: false,
-    president: {
-      name: 'Dr. Ana García',
-      avatar:
-        'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20female%20mathematics%20teacher%20portrait%20friendly%20smile&image_size=square',
-    },
-    tags: ['Cálculo', 'Álgebra', 'Geometría', 'Competencias'],
-    level: 'Avanzado',
-    createdAt: '2024-01-15',
-    lastActivity: '2024-01-20',
-    isJoined: true,
-    achievements: [
-      { name: 'Club Activo', icon: '🏆' },
-      { name: '100+ Miembros', icon: '👥' },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Ciencias Naturales',
-    description:
-      'Exploramos el mundo de la biología, química y física a través de experimentos.',
-    category: 'Académico',
-    subject: 'Ciencias',
-    memberCount: 89,
-    isPrivate: false,
-    image:
-      'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=science%20laboratory%20students%20conducting%20experiments%20microscopes%20test%20tubes&image_size=landscape_4_3',
-    location: 'Laboratorio Central',
-    meetingDay: 'Viernes 15:00',
-    rating: 4.5,
-    isFavorite: false,
-    president: {
-      name: 'Prof. Carlos Mendez',
-      avatar:
-        'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=male%20science%20teacher%20laboratory%20coat%20professional%20portrait&image_size=square',
-    },
-    tags: ['Biología', 'Química', 'Física', 'Experimentos'],
-    level: 'Intermedio',
-    createdAt: '2024-01-10',
-    lastActivity: '2024-01-19',
-    isJoined: false,
-    achievements: [{ name: 'Experimentadores', icon: '🔬' }],
-  },
-  {
-    id: '3',
-    name: 'Debate y Oratoria',
-    description:
-      'Desarrollamos habilidades de comunicación y pensamiento crítico.',
-    category: 'Extracurricular',
-    subject: 'Comunicación',
-    memberCount: 67,
-    isPrivate: false,
-    image:
-      'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=debate%20club%20students%20public%20speaking%20podium%20audience%20formal%20setting&image_size=landscape_4_3',
-    location: 'Auditorio Principal',
-    meetingDay: 'Lunes 18:00',
-    rating: 4.2,
-    isFavorite: true,
-    president: {
-      name: 'Lic. María Torres',
-      avatar:
-        'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=female%20debate%20coach%20professional%20confident%20portrait&image_size=square',
-    },
-    tags: ['Debate', 'Oratoria', 'Comunicación', 'Liderazgo'],
-    level: 'Intermedio',
-    createdAt: '2024-01-08',
-    lastActivity: '2024-01-18',
-    isJoined: true,
-    achievements: [{ name: 'Oradores Expertos', icon: '🎤' }],
-  },
-];
+// Interfaces for API responses
+interface ClubsResponse {
+  clubs: Club[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
 
-const categories = ["Todos", "Académico", "Extracurricular", "Deportivo", "Arte", "Tecnología"];
-const subjects = ["Todos", "Matemáticas", "Ciencias", "Historia", "Literatura", "Idiomas", "Comunicación"];
-const levels = ["Todos", "Principiante", "Intermedio", "Avanzado"];
-const sortOptions = ["Más recientes", "Más populares", "Más activos", "Alfabético"];
+interface ClubStats {
+  totalClubs: number;
+  totalMembers: number;
+  eventsThisWeek: number;
+  myClubsCount: number;
+}
+
+interface CategoriesResponse {
+  categories: ClubCategory[];
+  stats: {
+    totalClubs: number;
+    totalMembers: number;
+    averageMembersPerClub: number;
+    mostActiveCategory: string;
+  };
+}
 
 export default function ClubsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const [selectedSubject, setSelectedSubject] = useState("Todos");
-  const [selectedLevel, setSelectedLevel] = useState("Todos");
-  const [sortBy, setSortBy] = useState("Más recientes");
-  const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
+  const { data: session } = useSession();
+  
+  // State management
   const [activeTab, setActiveTab] = useState("browse");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Todas");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [sortBy, setSortBy] = useState("recent");
+  const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
   const [showCreateClub, setShowCreateClub] = useState(false);
+  
+  // Data state
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [categories, setCategories] = useState<ClubCategory[]>([]);
+  const [stats, setStats] = useState<ClubStats>({
+    totalClubs: 0,
+    totalMembers: 0,
+    eventsThisWeek: 0,
+    myClubsCount: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  // Constants
+  const sortOptions = [
+    { value: "recent", label: "Más recientes" },
+    { value: "popular", label: "Más populares" },
+    { value: "active", label: "Más activos" },
+    { value: "alphabetical", label: "Alfabético" }
+  ];
+  
+  const levelOptions = [
+    { value: "", label: "Todos los niveles" },
+    { value: "BEGINNER", label: "Principiante" },
+    { value: "INTERMEDIATE", label: "Intermedio" },
+    { value: "ADVANCED", label: "Avanzado" }
+  ];
 
+  // API functions
+  const fetchClubs = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '12',
+        ...(searchQuery && { search: searchQuery }),
+        ...(selectedCategory !== 'Todas' && { category: selectedCategory }),
+        ...(selectedSubject && { subject: selectedSubject }),
+        ...(selectedLevel && { level: selectedLevel }),
+        ...(sortBy && { sortBy })
+      });
+      
+      const response = await fetch(`/api/clubs?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch clubs');
+      
+      const data: ClubsResponse = await response.json();
+      setClubs(data.clubs);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      console.error('Error fetching clubs:', error);
+      toast.error('Error al cargar los clubes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/clubs/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      
+      const data: CategoriesResponse = await response.json();
+      setCategories(data.categories);
+      setStats({
+        totalClubs: data.stats.totalClubs,
+        totalMembers: data.stats.totalMembers,
+        eventsThisWeek: 0, // TODO: Implement events API
+        myClubsCount: 0 // Will be fetched separately if user is logged in
+      });
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchMyClubsCount = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      const response = await fetch('/api/clubs/my-clubs?includeStats=true&limit=1');
+      if (!response.ok) throw new Error('Failed to fetch my clubs count');
+      
+      const data = await response.json();
+      setStats(prev => ({ ...prev, myClubsCount: data.total || 0 }));
+    } catch (error) {
+      console.error('Error fetching my clubs count:', error);
+    }
+  };
+
+  // Event handlers
   const handleClubSelect = (clubId: string) => {
     setSelectedClubId(clubId);
   };
@@ -132,36 +159,44 @@ export default function ClubsPage() {
 
   const handleCloseCreateClub = () => {
     setShowCreateClub(false);
+    // Refresh clubs list after creating a new club
+    fetchClubs();
   };
 
-  // Filter clubs based on search and filters
-  const filteredClubs = mockClubs.filter(club => {
-    const matchesSearch = club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         club.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         club.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory === "Todos" || club.category === selectedCategory;
-    const matchesSubject = selectedSubject === "Todos" || club.subject === selectedSubject;
-    const matchesLevel = selectedLevel === "Todos" || club.level === selectedLevel;
-    
-    return matchesSearch && matchesCategory && matchesSubject && matchesLevel;
-  });
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setPage(1); // Reset to first page when searching
+  };
 
-  // Sort clubs
-  const sortedClubs = [...filteredClubs].sort((a, b) => {
-    switch (sortBy) {
-      case "Más populares":
-        return b.memberCount - a.memberCount;
-      case "Más activos":
-        return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
-      case "Alfabético":
-        return a.name.localeCompare(b.name);
-      default: // Más recientes
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  const handleFilterChange = () => {
+    setPage(1); // Reset to first page when filters change
+  };
+
+  // Effects
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchClubs();
+  }, [page, searchQuery, selectedCategory, selectedSubject, selectedLevel, sortBy]);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchMyClubsCount();
     }
-  });
+  }, [session?.user?.id]);
+
+  // Get featured clubs (first 3 clubs)
+  const featuredClubs = clubs.slice(0, 3);
+  
+  // Get unique subjects from categories for filter dropdown
+  const subjects = Array.from(new Set(
+    categories.flatMap(cat => cat.subjects || [])
+  )).sort();
 
   if (selectedClubId) {
-    const selectedClub = mockClubs.find(club => club.id === selectedClubId);
+    const selectedClub = clubs.find(club => club.id === selectedClubId);
     if (selectedClub) {
       return (
         <ClubDetail 
@@ -196,28 +231,36 @@ export default function ClubsPage() {
           <Card className="bg-white/80 backdrop-blur-sm border-purple-200">
             <CardContent className="p-4 text-center">
               <Users className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-purple-600">24</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {loading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : stats.totalClubs}
+              </div>
               <div className="text-sm text-gray-600">Clubes Activos</div>
             </CardContent>
           </Card>
           <Card className="bg-white/80 backdrop-blur-sm border-blue-200">
             <CardContent className="p-4 text-center">
               <Trophy className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-blue-600">312</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {loading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : stats.totalMembers}
+              </div>
               <div className="text-sm text-gray-600">Miembros Totales</div>
             </CardContent>
           </Card>
           <Card className="bg-white/80 backdrop-blur-sm border-indigo-200">
             <CardContent className="p-4 text-center">
               <Calendar className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-indigo-600">8</div>
+              <div className="text-2xl font-bold text-indigo-600">
+                {loading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : stats.eventsThisWeek}
+              </div>
               <div className="text-sm text-gray-600">Eventos Esta Semana</div>
             </CardContent>
           </Card>
           <Card className="bg-white/80 backdrop-blur-sm border-green-200">
             <CardContent className="p-4 text-center">
-              <Plus className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-green-600">3</div>
+              <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-green-600">
+                {loading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : stats.myClubsCount}
+              </div>
               <div className="text-sm text-gray-600">Mis Clubes</div>
             </CardContent>
           </Card>
@@ -252,38 +295,40 @@ export default function ClubsPage() {
                       <Input
                         placeholder="Buscar clubes..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                         className="pl-10"
                       />
                     </div>
                   </div>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <Select value={selectedCategory} onValueChange={(value) => { setSelectedCategory(value); handleFilterChange(); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Categoría" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="Todas">Todas las categorías</SelectItem>
                       {categories.map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                        <SelectItem key={category.name} value={category.name}>{category.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <Select value={selectedSubject} onValueChange={(value) => { setSelectedSubject(value); handleFilterChange(); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Materia" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="">Todas las materias</SelectItem>
                       {subjects.map(subject => (
                         <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                  <Select value={selectedLevel} onValueChange={(value) => { setSelectedLevel(value); handleFilterChange(); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Nivel" />
                     </SelectTrigger>
                     <SelectContent>
-                      {levels.map(level => (
-                        <SelectItem key={level} value={level}>{level}</SelectItem>
+                      {levelOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -293,7 +338,7 @@ export default function ClubsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {sortOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -302,45 +347,118 @@ export default function ClubsPage() {
             </Card>
 
             {/* Featured Clubs */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-800">Clubes Destacados</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedClubs.slice(0, 3).map(club => (
-                  <ClubCard 
-                    key={club.id} 
-                    club={club} 
-                    onClick={() => handleClubSelect(club.id)}
-                  />
-                ))}
+            {!loading && featuredClubs.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-gray-800">Clubes Destacados</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {featuredClubs.map(club => (
+                    <ClubCard 
+                      key={club.id} 
+                      club={club} 
+                      onClick={() => handleClubSelect(club.id)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* All Clubs */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-800">Todos los Clubes</h2>
                 <Badge variant="secondary" className="bg-purple-100 text-purple-700">
-                  {sortedClubs.length} clubes encontrados
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    `${clubs.length} clubes encontrados`
+                  )}
                 </Badge>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedClubs.map(club => (
-                  <ClubCard 
-                    key={club.id} 
-                    club={club} 
-                    onClick={() => handleClubSelect(club.id)}
-                  />
-                ))}
-              </div>
+              
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <Card key={i} className="bg-white/80 backdrop-blur-sm animate-pulse">
+                      <CardContent className="p-6">
+                        <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                        <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded mb-4"></div>
+                        <div className="flex justify-between">
+                          <div className="h-3 bg-gray-200 rounded w-16"></div>
+                          <div className="h-3 bg-gray-200 rounded w-12"></div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : clubs.length === 0 ? (
+                <Card className="bg-white/80 backdrop-blur-sm">
+                  <CardContent className="p-12 text-center">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-600 mb-2">No se encontraron clubes</h3>
+                    <p className="text-gray-500 mb-4">Intenta ajustar tus filtros de búsqueda</p>
+                    <Button 
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategory('Todas');
+                        setSelectedSubject('');
+                        setSelectedLevel('');
+                      }}
+                      variant="outline"
+                    >
+                      Limpiar filtros
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {clubs.map(club => (
+                    <ClubCard 
+                      key={club.id} 
+                      club={club} 
+                      onClick={() => handleClubSelect(club.id)}
+                    />
+                  ))}
+                </div>
+              )}
+              
+              {/* Pagination */}
+              {!loading && totalPages > 1 && (
+                <div className="flex justify-center items-center space-x-2 mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                    disabled={page === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-gray-600">
+                    Página {page} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={page === totalPages}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
+              )}
             </div>
           </TabsContent>
 
-          <TabsContent value="my-clubs">
+          <TabsContent value="my-clubs" className="space-y-6">
             <MyClubs onClubSelect={(club) => handleClubSelect(club.id)} />
           </TabsContent>
 
-          <TabsContent value="create">
-            <CreateClub onCancel={() => setActiveTab("browse")} onSuccess={() => setActiveTab("browse")} />
+          <TabsContent value="create" className="space-y-6">
+            <CreateClub 
+              onClose={handleCloseCreateClub}
+              onClubCreated={(club) => {
+                handleCreateClub(club);
+                toast.success('Club creado exitosamente');
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>

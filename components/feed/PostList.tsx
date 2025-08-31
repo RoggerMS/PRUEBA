@@ -17,7 +17,7 @@ import {
   LoaderIcon,
   FlameIcon
 } from 'lucide-react';
-import { useFeed, useFireReaction, useBookmark } from '@/hooks/useFeed';
+import { useFeed, useFireReaction } from '@/hooks/useFeed';
 import { FeedPost } from '@/types/feed';
 import { toast } from 'sonner';
 
@@ -34,7 +34,7 @@ const formatTimeAgo = (dateString: string) => {
 
 function PostCard({ post }: { post: FeedPost }) {
   const fireReaction = useFireReaction();
-  const bookmarkMutation = useBookmark();
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   const handleFire = async () => {
     try {
@@ -46,14 +46,26 @@ function PostCard({ post }: { post: FeedPost }) {
 
   const handleBookmark = async () => {
     try {
-      await bookmarkMutation.mutateAsync(post.id);
+      const response = await fetch(`/api/feed/${post.id}/bookmark`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to bookmark post');
+      }
+      
+      setIsBookmarked(!isBookmarked);
+      toast.success(isBookmarked ? 'Post removido de guardados' : 'Post guardado');
     } catch (error) {
       toast.error('Error al guardar el post');
     }
   };
 
   const getPostIcon = () => {
-    switch (post.kind) {
+    switch (post.type) {
       case 'note': return '📚';
       case 'question': return '❓';
       case 'photo': return '📷';
@@ -193,10 +205,9 @@ function PostCard({ post }: { post: FeedPost }) {
           variant="ghost" 
           size="sm" 
           onClick={handleBookmark}
-          className={`${post.viewerState.saved ? 'text-blue-600' : 'text-gray-600'}`}
-          disabled={bookmarkMutation.isPending}
+          className={`${isBookmarked ? 'text-blue-600' : 'text-gray-600'}`}
         >
-          <BookmarkIcon className={`h-4 w-4 ${post.viewerState.saved ? 'fill-blue-600' : ''}`} />
+          <BookmarkIcon className={`h-4 w-4 ${isBookmarked ? 'fill-blue-600' : ''}`} />
         </Button>
       </div>
     </Card>

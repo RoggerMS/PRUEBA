@@ -104,8 +104,7 @@ export default function RegisterPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          firstName: form.firstName,
-          lastName: form.lastName,
+          name: `${form.firstName} ${form.lastName}`.trim(),
           username: form.username,
           email: form.email,
           password: form.password,

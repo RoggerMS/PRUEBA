@@ -8,31 +8,33 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ImageIcon, FileTextIcon, LinkIcon, SmileIcon } from 'lucide-react';
+import { useCreatePost } from '@/hooks/useFeed';
+import { toast } from 'sonner';
 
 export function Composer() {
   const { data: session } = useSession();
   const [content, setContent] = useState('');
-  const [isPosting, setIsPosting] = useState(false);
   const [postType, setPostType] = useState<'text' | 'note' | 'question'>('text');
+  const createPost = useCreatePost();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
 
-    setIsPosting(true);
     try {
-      // TODO: Implementar API call para crear post
-      console.log('Creating post:', { content, type: postType });
-      
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await createPost.mutateAsync({
+        content: content.trim(),
+        type: postType,
+        visibility: 'public',
+        tags: []
+      });
       
       setContent('');
       setPostType('text');
+      toast.success('Post publicado exitosamente');
     } catch (error) {
       console.error('Error creating post:', error);
-    } finally {
-      setIsPosting(false);
+      toast.error('Error al publicar el post');
     }
   };
 
@@ -134,10 +136,10 @@ export function Composer() {
           
           <Button 
             type="submit" 
-            disabled={!content.trim() || isPosting}
+            disabled={!content.trim() || createPost.isPending}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            {isPosting ? 'Publicando...' : 'Publicar'}
+            {createPost.isPending ? 'Publicando...' : 'Publicar'}
           </Button>
         </div>
       </form>

@@ -32,13 +32,12 @@ export function useFeed(params: FeedParams = {}) {
 
   return useInfiniteQuery({
     queryKey: ['feed', { ranking, kind, author, hashtag }],
-    queryFn: async ({ pageParam = undefined }) => {
+    queryFn: async ({ pageParam = 1 }) => {
       const searchParams = new URLSearchParams();
       
-      if (pageParam) searchParams.set('cursor', pageParam);
+      searchParams.set('page', pageParam.toString());
       searchParams.set('limit', limit.toString());
-      searchParams.set('ranking', ranking);
-      if (kind) searchParams.set('kind', kind);
+      if (kind) searchParams.set('type', kind);
       if (author) searchParams.set('author', author);
       if (hashtag) searchParams.set('hashtag', hashtag);
 
@@ -48,12 +47,17 @@ export function useFeed(params: FeedParams = {}) {
         throw new Error('Failed to fetch feed');
       }
       
-      return response.json() as Promise<FeedResponse>;
+      const data = await response.json();
+      return {
+        posts: data.posts,
+        hasMore: data.pagination.hasMore,
+        nextCursor: data.pagination.hasMore ? pageParam + 1 : undefined
+      } as FeedResponse;
     },
     getNextPageParam: (lastPage) => {
       return lastPage.hasMore ? lastPage.nextCursor : undefined;
     },
-    initialPageParam: undefined,
+    initialPageParam: 1,
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
     refetchOnWindowFocus: true,
@@ -67,28 +71,19 @@ export function useCreatePost() {
 
   return useMutation({
     mutationFn: async (data: CreatePostData) => {
-      const formData = new FormData();
-      
-      formData.append('kind', data.kind);
-      formData.append('visibility', data.visibility);
-      
-      if (data.text) {
-        formData.append('text', data.text);
-      }
-      
-      if (data.hashtags && data.hashtags.length > 0) {
-        formData.append('hashtags', JSON.stringify(data.hashtags));
-      }
-      
-      if (data.media && data.media.length > 0) {
-        data.media.forEach((file, index) => {
-          formData.append(`media_${index}`, file);
-        });
-      }
+      const payload = {
+        content: data.text || '',
+        type: data.kind.toUpperCase(),
+        visibility: data.visibility.toUpperCase(),
+        tags: data.hashtags?.join(',') || ''
+      };
 
       const response = await fetch('/api/feed', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload),
       });
       
       if (!response.ok) {
