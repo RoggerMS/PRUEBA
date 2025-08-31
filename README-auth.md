@@ -1,6 +1,6 @@
 # Autenticación y rutas
 
-Este proyecto utiliza **NextAuth** y middleware para proteger rutas. Las rutas públicas pueden visitarse sin iniciar sesión; las protegidas redirigen a `/auth/login`.
+Este proyecto utiliza **NextAuth** y middleware para proteger rutas. Las rutas públicas pueden visitarse sin iniciar sesión; las protegidas redirigen a `/auth/login` (también accesible como `/auth/signin`).
 
 ## Rutas públicas
 

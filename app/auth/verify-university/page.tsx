@@ -25,7 +25,7 @@ export default function VerifyUniversityPage() {
   useEffect(() => {
     // Redirigir si no está autenticado
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth/login');
     }
   }, [status, router]);
 

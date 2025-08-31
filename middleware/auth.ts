@@ -38,7 +38,9 @@ const MODERATOR_ROUTES = [
 // Rutas públicas (no requieren autenticación)
 const PUBLIC_ROUTES = [
   '/',
+  '/auth/login',
   '/auth/signin',
+  '/auth/register',
   '/auth/signup',
   '/auth/forgot-password',
   '/api/auth',
@@ -64,9 +66,9 @@ export async function authMiddleware(request: NextRequest) {
   
   if (requiresAuth && !token) {
     // Redirigir a login si no está autenticado
-    const signInUrl = new URL('/auth/signin', request.url);
-    signInUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(signInUrl);
+    const loginUrl = new URL('/auth/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Si está autenticado, verificar permisos adicionales
