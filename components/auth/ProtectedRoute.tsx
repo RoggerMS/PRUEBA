@@ -56,10 +56,10 @@ export function ProtectedRoute({
           <CardContent className="space-y-4">
             <div className="flex flex-col space-y-2">
               <Button asChild>
-                <Link href="/auth/signin">Iniciar Sesión</Link>
+                <Link href="/auth/login">Iniciar Sesión</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/auth/signup">Crear Cuenta</Link>
+                <Link href="/auth/register">Crear Cuenta</Link>
               </Button>
             </div>
             <div className="text-center">

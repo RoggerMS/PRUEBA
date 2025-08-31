@@ -77,7 +77,7 @@ export default async function HomePage() {
   
   // Si no hay sesión, redirigir al login
   if (!session) {
-    redirect('/auth/signin');
+    redirect('/auth/login');
   }
 
   return (
