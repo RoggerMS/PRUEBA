@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,10 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClubCard } from "@/components/clubs/ClubCard";
-import { ClubDetail } from "@/components/clubs/ClubDetail";
-import { MyClubs } from "@/components/clubs/MyClubs";
-import { CreateClub } from "@/components/clubs/CreateClub";
+import ClubCard from "@/components/clubs/ClubCard";
+import ClubDetail from "@/components/clubs/ClubDetail";
+import MyClubs from "@/components/clubs/MyClubs";
+import CreateClub from "@/components/clubs/CreateClub";
 import { Search, Users, Trophy, Calendar, Plus, Filter } from "lucide-react";
 
 // Mock data for clubs

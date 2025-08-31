@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import AchievementCard from '@/components/perfil/AchievementCard'
@@ -19,7 +21,7 @@ const mockAchievements = [
     earnedDate: '2024-01-15',
     claimed: false,
     claimable: true,
-    reward: { xp: 50, crolars: 10 }
+    reward: 'XP: 50, Crolars: 10'
   },
   {
     id: '2',
@@ -33,7 +35,7 @@ const mockAchievements = [
     earnedDate: '2024-01-20',
     claimed: true,
     claimable: true,
-    reward: { xp: 100, crolars: 25 }
+    reward: 'XP: 100, Crolars: 25'
   },
   {
     id: '3',
@@ -48,7 +50,7 @@ const mockAchievements = [
     maxProgress: 50,
     claimed: false,
     claimable: false,
-    reward: { xp: 500, crolars: 100 }
+    reward: 'XP: 500, Crolars: 100'
   },
   {
     id: '4',
@@ -62,7 +64,7 @@ const mockAchievements = [
     earnedDate: '2024-01-25',
     claimed: false,
     claimable: true,
-    reward: { xp: 150, crolars: 30 }
+    reward: 'XP: 150, Crolars: 30'
   }
 ]
 
@@ -86,17 +88,7 @@ export default function ProfileAchievementsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-blue-500" />
-              Insignias
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BadgeCollection />
-          </CardContent>
-        </Card>
+        {/* Sección de insignias omitida por falta de datos */}
       </div>
     </div>
   )

@@ -160,4 +160,4 @@ export function getUserIdFromRequest(request: NextRequest): string | undefined {
   return undefined
 }
 
-export default not
+export default notificationStream

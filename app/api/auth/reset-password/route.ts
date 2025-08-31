@@ -12,7 +12,7 @@ const resetPasswordSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = rateLimitResetPassword(request);
+    const rateLimitResult = await rateLimitResetPassword(request);
     if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },

@@ -195,11 +195,11 @@ export default function GamificationAdminPage() {
         </TabsList>
 
         <TabsContent value="badges">
-          <GamificationAdminPanel type="badges" />
+          <GamificationAdminPanel />
         </TabsContent>
 
         <TabsContent value="achievements">
-          <GamificationAdminPanel type="achievements" />
+          <GamificationAdminPanel />
         </TabsContent>
       </Tabs>
     </div>

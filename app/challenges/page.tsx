@@ -36,8 +36,8 @@ import {
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
 import { ChallengeDetail } from "@/components/challenges/ChallengeDetail";
 import { ChallengeLeaderboard } from "@/components/challenges/ChallengeLeaderboard";
-import { MyChallenges } from "@/components/challenges/MyChallenges";
-import { CreateChallenge } from "@/components/challenges/CreateChallenge";
+import MyChallenges from "@/components/challenges/MyChallenges";
+import CreateChallenge from "@/components/challenges/CreateChallenge";
 
 interface Challenge {
   id: string;

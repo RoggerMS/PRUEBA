@@ -14,7 +14,7 @@ const registerSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = rateLimitRegister(request);
+    const rateLimitResult = await rateLimitRegister(request);
     if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },
