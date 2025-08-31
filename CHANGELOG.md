@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Guard club rating display to avoid runtime errors when rating is missing.
 - Align club page sort options with API parameters and compute pagination to prevent fetch errors.
 - Redirect root `auth`, `admin`, and `profile` paths to their default pages to eliminate 404 errors.
 - Fix unbalanced braces and missing imports in comments API, notes page, feed pages, and forum icons so `npm run build` and development server start successfully.

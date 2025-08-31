@@ -131,13 +131,14 @@ export default function ClubDetail({
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
 
-  const renderStars = (rating: number) => {
+  const renderStars = (rating?: number) => {
+    const safeRating = rating ?? 0;
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
         className={`h-4 w-4 ${
-          i < Math.floor(rating) 
-            ? 'text-yellow-400 fill-current' 
+          i < Math.floor(safeRating)
+            ? 'text-yellow-400 fill-current'
             : 'text-gray-300'
         }`}
       />
@@ -209,7 +210,7 @@ export default function ClubDetail({
                     <div className="flex items-center gap-1">
                       {renderStars(club.rating)}
                       <span className="text-sm text-gray-600 ml-1">
-                        ({club.rating.toFixed(1)})
+                        ({club.rating !== undefined ? club.rating.toFixed(1) : 'N/A'})
                       </span>
                     </div>
                   </div>
