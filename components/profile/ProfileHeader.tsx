@@ -329,10 +329,10 @@ export function ProfileHeader({
                 
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    Nivel {user.stats.level}
+                    Nivel {user.level || 1}
                   </Badge>
                   <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                    {user.stats.reputation} pts
+                    {user.xp || 0} pts
                   </Badge>
                 </div>
               </div>
@@ -438,42 +438,42 @@ export function ProfileHeader({
         <CardContent className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.followers)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.followers || 0)}</p>
               <p className="text-sm text-gray-600">Seguidores</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.following)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.following || 0)}</p>
               <p className="text-sm text-gray-600">Siguiendo</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.posts)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.posts || 0)}</p>
               <p className="text-sm text-gray-600">Publicaciones</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.notesShared)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(0)}</p>
               <p className="text-sm text-gray-600">Apuntes</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.questionsAnswered)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(0)}</p>
               <p className="text-sm text-gray-600">Respuestas</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.reputation)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.xp || 0)}</p>
               <p className="text-sm text-gray-600">Reputación</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{user.stats.level}</p>
+              <p className="text-2xl font-bold text-gray-900">{user.level || 1}</p>
               <p className="text-sm text-gray-600">Nivel</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{user.stats.achievements}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(0)}</p>
               <p className="text-sm text-gray-600">Logros</p>
             </div>
           </div>

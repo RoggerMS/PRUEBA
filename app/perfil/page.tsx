@@ -194,6 +194,47 @@ const mockAchievements = [
   }
 ]
 
+const mockBadges = [
+  {
+    id: '1',
+    title: 'Primer Paso',
+    description: 'Completaste tu primer día en La Cantuta',
+    icon: '🎓',
+    rarity: 'common' as const,
+    category: 'Inicio',
+    earned: true,
+    earnedAt: '2024-01-15'
+  },
+  {
+    id: '2',
+    title: 'Estudiante Activo',
+    description: 'Participaste en 5 actividades académicas',
+    icon: '📚',
+    rarity: 'uncommon' as const,
+    category: 'Académico',
+    earned: true,
+    earnedAt: '2024-01-20'
+  },
+  {
+    id: '3',
+    title: 'Compañero Solidario',
+    description: 'Ayudaste a 10 estudiantes cantutinos',
+    icon: '🤝',
+    rarity: 'rare' as const,
+    category: 'Social',
+    earned: false
+  },
+  {
+    id: '4',
+    title: 'Maestro Tecnológico',
+    description: 'Dominaste 50 conceptos de programación',
+    icon: '💻',
+    rarity: 'legendary' as const,
+    category: 'Tecnología',
+    earned: false
+  }
+]
+
 const mockStats = {
   coursesCompleted: 23,
   challengesCompleted: 45,
@@ -429,7 +470,7 @@ export default function PerfilPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BadgeCollection />
+                  <BadgeCollection badges={mockBadges} />
                 </CardContent>
               </Card>
             </TabsContent>

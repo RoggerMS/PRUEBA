@@ -111,3 +111,4 @@ export class ReorderFrasesItemDto {
   @IsNumber()
   @Min(0)
   newOrder: number;
+}
