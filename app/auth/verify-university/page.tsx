@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import UniversityVerification from '@/components/auth/UniversityVerification';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,9 +13,14 @@ import Link from 'next/link';
 export default function VerifyUniversityPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const [callbackUrl, setCallbackUrl] = useState('/dashboard');
   const [isVerified, setIsVerified] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cb = params.get('callbackUrl');
+    if (cb) setCallbackUrl(cb);
+  }, []);
 
   useEffect(() => {
     // Redirigir si no está autenticado

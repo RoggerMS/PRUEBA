@@ -32,10 +32,13 @@ const mockProducts = [
       name: 'Ana García',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ana',
       rating: 4.8,
-      sales: 45
+      sales: 45,
+      verified: true
     },
     rating: 4.9,
     reviews: 23,
+    downloads: 120,
+    views: 450,
     images: [
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=calculus%20differential%20summary%20notes%20mathematics%20formulas%20clean%20academic%20style&image_size=square',
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=mathematical%20equations%20derivatives%20formulas%20notebook%20academic%20style&image_size=square',
@@ -58,10 +61,13 @@ const mockProducts = [
       name: 'Carlos Mendez',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos',
       rating: 4.6,
-      sales: 32
+      sales: 32,
+      verified: true
     },
     rating: 4.7,
     reviews: 18,
+    downloads: 90,
+    views: 300,
     images: [
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20presentation%20templates%20powerpoint%20academic%20clean%20modern%20design&image_size=square',
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=business%20presentation%20slides%20template%20corporate%20design%20professional&image_size=square'
@@ -83,10 +89,13 @@ const mockProducts = [
       name: 'María López',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
       rating: 4.9,
-      sales: 67
+      sales: 67,
+      verified: true
     },
     rating: 4.8,
     reviews: 31,
+    downloads: 150,
+    views: 500,
     images: [
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=organic%20chemistry%20laboratory%20guide%20scientific%20equipment%20academic%20style&image_size=square',
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=chemistry%20lab%20equipment%20beakers%20molecules%20scientific%20illustration&image_size=square',
@@ -109,10 +118,13 @@ const mockProducts = [
       name: 'CRUNEVO',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=CRUNEVO',
       rating: 5.0,
-      sales: 234
+      sales: 234,
+      verified: true
     },
     rating: 4.9,
     reviews: 89,
+    downloads: 400,
+    views: 1000,
     images: [
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=premium%20access%20badge%20golden%20crown%20luxury%20academic%20platform&image_size=square',
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=premium%20features%20dashboard%20academic%20platform%20exclusive%20access&image_size=square'
@@ -134,10 +146,13 @@ const mockProducts = [
       name: 'Diego Silva',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diego',
       rating: 4.5,
-      sales: 28
+      sales: 28,
+      verified: false
     },
     rating: 4.6,
     reviews: 15,
+    downloads: 60,
+    views: 200,
     images: [
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=academic%20icons%20pack%20vector%20design%20educational%20symbols%20clean%20style&image_size=square',
       'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=educational%20icons%20collection%20school%20university%20symbols%20vector&image_size=square',
