@@ -1,48 +1,45 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
 import { 
-  Heart, 
-  Share2, 
-  Download, 
-  Star, 
-  Eye, 
-  MessageCircle, 
-  Flag, 
-  FileText, 
-  Image, 
-  Video, 
+  X, 
+  ZoomIn, 
+  ZoomOut, 
+  RotateCw,
+  Download,
+  Share2,
+  Heart,
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Image,
   File,
-  X,
-  Send,
-  ThumbsUp,
-  ThumbsDown
+  User,
+  Calendar,
+  Eye,
+  Star,
+  Send
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Note {
   id: string;
   title: string;
   description: string;
   author: {
-    id: string;
     name: string;
     avatar: string;
-    career: string;
-    level: number;
-    points: number;
+    verified: boolean;
   };
-  category: string;
   career: string;
+  category: string;
   tags: string[];
   price: number;
-  isFree: boolean;
   rating: number;
   downloads: number;
   views: number;
@@ -50,407 +47,410 @@ interface Note {
   files: {
     id: string;
     name: string;
-    type: string;
-    size: number;
+    type: 'pdf' | 'docx' | 'pptx' | 'xlsx' | 'image' | 'other';
     url: string;
+    pages?: number;
   }[];
-  liked: boolean;
-}
-
-interface Comment {
-  id: string;
-  author: {
+  comments: {
     id: string;
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  createdAt: string;
-  likes: number;
-  liked: boolean;
+    user: {
+      name: string;
+      avatar: string;
+    };
+    content: string;
+    rating: number;
+    createdAt: string;
+  }[];
 }
 
 interface NotesViewerProps {
-  note: Note | null;
-  isOpen: boolean;
+  note: Note;
   onClose: () => void;
-  onLike: (noteId: string) => void;
-  onDownload: (noteId: string) => void;
 }
 
-const mockComments: Comment[] = [
-  {
-    id: '1',
-    author: {
-      id: 'user1',
-      name: 'María González',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20female%20student%20avatar&image_size=square'
-    },
-    content: 'Excelentes apuntes, muy bien organizados y fáciles de entender. Me ayudaron mucho para el examen.',
-    createdAt: '2024-01-15T10:30:00Z',
-    likes: 5,
-    liked: false
-  },
-  {
-    id: '2',
-    author: {
-      id: 'user2',
-      name: 'Carlos Rodríguez',
-      avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20male%20student%20avatar&image_size=square'
-    },
-    content: '¿Podrías subir más apuntes sobre este tema? Están muy completos.',
-    createdAt: '2024-01-14T15:45:00Z',
-    likes: 2,
-    liked: true
-  }
-];
-
 const getFileIcon = (type: string) => {
-  switch (type.toLowerCase()) {
+  switch (type) {
     case 'pdf':
-      return FileText;
+      return <FileText className="w-5 h-5 text-red-500" />;
+    case 'docx':
+      return <FileText className="w-5 h-5 text-blue-500" />;
+    case 'pptx':
+      return <FileText className="w-5 h-5 text-orange-500" />;
+    case 'xlsx':
+      return <FileText className="w-5 h-5 text-green-500" />;
     case 'image':
-    case 'jpg':
-    case 'jpeg':
-    case 'png':
-    case 'gif':
-      return Image;
-    case 'video':
-    case 'mp4':
-    case 'avi':
-    case 'mov':
-      return Video;
+      return <Image className="w-5 h-5 text-purple-500" />;
     default:
-      return File;
+      return <File className="w-5 h-5 text-gray-500" />;
   }
-};
-
-const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
+  return new Date(dateString).toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: 'numeric'
   });
 };
 
-export function NotesViewer({ note, isOpen, onClose, onLike, onDownload }: NotesViewerProps) {
-  const [comments, setComments] = useState<Comment[]>(mockComments);
+export function NotesViewer({ note, onClose }: NotesViewerProps) {
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [zoom, setZoom] = useState(100);
+  const [rotation, setRotation] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'files' | 'comments'>('overview');
+  const [newRating, setNewRating] = useState(5);
 
-  if (!note) return null;
+  const currentFile = note.files[currentFileIndex];
+  const totalPages = currentFile?.pages || 1;
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 25, 200));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 25, 50));
+  };
+
+  const handleRotate = () => {
+    setRotation(prev => (prev + 90) % 360);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevFile = () => {
+    setCurrentFileIndex(prev => Math.max(prev - 1, 0));
+    setCurrentPage(1);
+  };
+
+  const handleNextFile = () => {
+    setCurrentFileIndex(prev => Math.min(prev + 1, note.files.length - 1));
+    setCurrentPage(1);
+  };
+
+  const handleDownload = () => {
+    toast.success('Descarga iniciada');
+  };
 
   const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: note.title,
-        text: note.description,
-        url: window.location.href
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(window.location.href);
+    toast.success('Enlace copiado al portapapeles');
+  };
+
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+    toast.success(isLiked ? 'Eliminado de favoritos' : 'Agregado a favoritos');
+  };
+
+  const handleSubmitComment = () => {
+    if (!newComment.trim()) {
+      toast.error('Escribe un comentario');
+      return;
     }
-  };
-
-  const handleReport = () => {
-    // Implementar reporte
-    console.log('Reportar nota:', note.id);
-  };
-
-  const handleAddComment = () => {
-    if (newComment.trim()) {
-      const comment: Comment = {
-        id: Date.now().toString(),
-        author: {
-          id: 'current-user',
-          name: 'Usuario Actual',
-          avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar&image_size=square'
-        },
-        content: newComment,
-        createdAt: new Date().toISOString(),
-        likes: 0,
-        liked: false
-      };
-      setComments(prev => [comment, ...prev]);
-      setNewComment('');
-    }
-  };
-
-  const handleLikeComment = (commentId: string) => {
-    setComments(prev => prev.map(comment => 
-      comment.id === commentId 
-        ? { 
-            ...comment, 
-            liked: !comment.liked,
-            likes: comment.liked ? comment.likes - 1 : comment.likes + 1
-          }
-        : comment
-    ));
+    
+    toast.success('Comentario agregado');
+    setNewComment('');
+    setNewRating(5);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <DialogTitle className="text-xl font-bold text-gray-900 mb-2">
-                {note.title}
-              </DialogTitle>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage src={note.author.avatar} />
-                    <AvatarFallback>{note.author.name[0]}</AvatarFallback>
-                  </Avatar>
-                  <span>{note.author.name}</span>
-                  <Badge variant="outline" className="text-xs">
-                    Nivel {note.author.level}
-                  </Badge>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="w-full h-full max-w-7xl mx-auto p-4 flex gap-4">
+        {/* Main Viewer */}
+        <Card className="flex-1 flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {getFileIcon(currentFile?.type)}
+                <span className="font-medium">{currentFile?.name}</span>
+              </div>
+              {note.files.length > 1 && (
+                <Badge variant="secondary">
+                  {currentFileIndex + 1} de {note.files.length}
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {/* File Navigation */}
+              {note.files.length > 1 && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handlePrevFile}
+                    disabled={currentFileIndex === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleNextFile}
+                    disabled={currentFileIndex === note.files.length - 1}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+              
+              {/* Zoom Controls */}
+              <Button variant="outline" size="sm" onClick={handleZoomOut}>
+                <ZoomOut className="w-4 h-4" />
+              </Button>
+              <span className="text-sm font-medium px-2">{zoom}%</span>
+              <Button variant="outline" size="sm" onClick={handleZoomIn}>
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+              
+              {/* Rotate */}
+              <Button variant="outline" size="sm" onClick={handleRotate}>
+                <RotateCw className="w-4 h-4" />
+              </Button>
+              
+              {/* Actions */}
+              <Button variant="outline" size="sm" onClick={handleDownload}>
+                <Download className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleShare}>
+                <Share2 className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant={isLiked ? "default" : "outline"} 
+                size="sm" 
+                onClick={handleLike}
+                className={isLiked ? "bg-red-500 hover:bg-red-600" : ""}
+              >
+                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+              </Button>
+              
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="flex-1 flex flex-col p-0">
+            {/* Document Viewer */}
+            <div className="flex-1 bg-gray-100 flex items-center justify-center overflow-hidden">
+              <div 
+                className="bg-white shadow-lg transition-transform duration-200"
+                style={{
+                  transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
+                  transformOrigin: 'center'
+                }}
+              >
+                {currentFile?.type === 'image' ? (
+                  <img 
+                    src={currentFile.url} 
+                    alt={currentFile.name}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                ) : (
+                  <div className="w-[600px] h-[800px] bg-white border flex items-center justify-center">
+                    <div className="text-center">
+                      {getFileIcon(currentFile?.type)}
+                      <p className="mt-2 text-gray-600">Vista previa del documento</p>
+                      <p className="text-sm text-gray-500">{currentFile?.name}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Page Navigation */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 py-3 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm font-medium">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Sidebar */}
+        <Card className="w-80 flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-lg">{note.title}</CardTitle>
+          </CardHeader>
+          
+          <CardContent className="flex-1 space-y-4">
+            {/* Author Info */}
+            <div className="flex items-center gap-3">
+              <img 
+                src={note.author.avatar} 
+                alt={note.author.name}
+                className="w-10 h-10 rounded-full"
+              />
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">{note.author.name}</span>
+                  {note.author.verified && (
+                    <Badge variant="secondary" className="text-xs">
+                      ✓
+                    </Badge>
+                  )}
                 </div>
-                <span>•</span>
+                <p className="text-sm text-gray-500">{note.career}</p>
+              </div>
+            </div>
+            
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-500" />
+                <span>{note.rating}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Download className="w-4 h-4 text-gray-500" />
+                <span>{note.downloads}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Eye className="w-4 h-4 text-gray-500" />
+                <span>{note.views}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Calendar className="w-4 h-4 text-gray-500" />
                 <span>{formatDate(note.createdAt)}</span>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </DialogHeader>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between py-4 border-b flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <Button
-              variant={note.liked ? "default" : "outline"}
-              size="sm"
-              onClick={() => onLike(note.id)}
-              className={note.liked ? "bg-red-500 hover:bg-red-600" : ""}
-            >
-              <Heart className={`w-4 h-4 mr-1 ${note.liked ? 'fill-current' : ''}`} />
-              Me gusta
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="w-4 h-4 mr-1" />
-              Compartir
-            </Button>
+            
+            {/* Description */}
+            {note.description && (
+              <div>
+                <h4 className="font-medium mb-2">Descripción</h4>
+                <p className="text-sm text-gray-600">{note.description}</p>
+              </div>
+            )}
+            
+            {/* Category and Tags */}
+            <div>
+              <h4 className="font-medium mb-2">Categoría</h4>
+              <Badge variant="outline">{note.category}</Badge>
+            </div>
+            
+            {note.tags.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">Etiquetas</h4>
+                <div className="flex flex-wrap gap-1">
+                  {note.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Price */}
+            <div>
+              <h4 className="font-medium mb-2">Precio</h4>
+              <div className="text-lg font-bold text-purple-600">
+                {note.price === 0 ? 'Gratis' : `${note.price} Crolars`}
+              </div>
+            </div>
+            
+            {/* Comments Toggle */}
             <Button 
               variant="outline" 
-              size="sm" 
-              onClick={() => onDownload(note.id)}
-              className="bg-green-50 hover:bg-green-100 text-green-700"
+              className="w-full"
+              onClick={() => setShowComments(!showComments)}
             >
-              <Download className="w-4 h-4 mr-1" />
-              Descargar
+              <MessageCircle className="w-4 h-4 mr-2" />
+              {showComments ? 'Ocultar' : 'Ver'} Comentarios ({note.comments.length})
             </Button>
-          </div>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <div className="flex items-center gap-1">
-              <Eye className="w-4 h-4" />
-              <span>{note.views}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Download className="w-4 h-4" />
-              <span>{note.downloads}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span>{note.rating.toFixed(1)}</span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleReport}>
-              <Flag className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b flex-shrink-0">
-          <button
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'overview'
-                ? 'border-purple-500 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Descripción
-          </button>
-          <button
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'files'
-                ? 'border-purple-500 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('files')}
-          >
-            Archivos ({note.files.length})
-          </button>
-          <button
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'comments'
-                ? 'border-purple-500 text-purple-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setActiveTab('comments')}
-          >
-            Comentarios ({comments.length})
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Descripción</h3>
-                <p className="text-gray-700 leading-relaxed">{note.description}</p>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
-                  {note.category}
-                </Badge>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                  {note.career}
-                </Badge>
-                {note.tags.map((tag, index) => (
-                  <Badge key={index} variant="outline">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-              
-              {!note.isFree && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold text-green-800">Precio</h4>
-                      <p className="text-2xl font-bold text-green-600">
-                        ${note.price.toLocaleString()} COP
+            
+            {/* Comments Section */}
+            {showComments && (
+              <div className="space-y-4">
+                {/* Add Comment */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Tu calificación:</span>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setNewRating(star)}
+                          className={`w-4 h-4 ${star <= newRating ? 'text-yellow-500' : 'text-gray-300'}`}
+                        >
+                          <Star className="w-full h-full fill-current" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Escribe tu comentario..."
+                    rows={3}
+                  />
+                  <Button 
+                    onClick={handleSubmitComment}
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Enviar Comentario
+                  </Button>
+                </div>
+                
+                {/* Comments List */}
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {note.comments.map((comment) => (
+                    <div key={comment.id} className="border rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <img 
+                          src={comment.user.avatar} 
+                          alt={comment.user.name}
+                          className="w-6 h-6 rounded-full"
+                        />
+                        <span className="text-sm font-medium">{comment.user.name}</span>
+                        <div className="flex gap-0.5 ml-auto">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star}
+                              className={`w-3 h-3 ${star <= comment.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">{comment.content}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {formatDate(comment.createdAt)}
                       </p>
                     </div>
-                    <Button className="bg-green-600 hover:bg-green-700">
-                      Comprar
-                    </Button>
-                  </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'files' && (
-            <div className="space-y-4">
-              {note.files.map((file) => {
-                const IconComponent = getFileIcon(file.type);
-                return (
-                  <Card key={file.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <IconComponent className="w-8 h-8 text-gray-500" />
-                          <div>
-                            <h4 className="font-medium text-gray-900">{file.name}</h4>
-                            <p className="text-sm text-gray-500">
-                              {file.type.toUpperCase()} • {formatFileSize(file.size)}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-1" />
-                            Ver
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Download className="w-4 h-4 mr-1" />
-                            Descargar
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {activeTab === 'comments' && (
-            <div className="space-y-6">
-              {/* Add Comment */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <Textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Escribe un comentario..."
-                      rows={3}
-                    />
-                    <div className="flex justify-end">
-                      <Button 
-                        onClick={handleAddComment}
-                        disabled={!newComment.trim()}
-                        size="sm"
-                      >
-                        <Send className="w-4 h-4 mr-1" />
-                        Comentar
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Comments List */}
-              <div className="space-y-4">
-                {comments.map((comment) => (
-                  <Card key={comment.id}>
-                    <CardContent className="p-4">
-                      <div className="flex gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={comment.author.avatar} />
-                          <AvatarFallback>{comment.author.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-gray-900">
-                              {comment.author.name}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {formatDate(comment.createdAt)}
-                            </span>
-                          </div>
-                          <p className="text-gray-700 mb-2">{comment.content}</p>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleLikeComment(comment.id)}
-                              className={comment.liked ? "text-blue-600" : "text-gray-500"}
-                            >
-                              <ThumbsUp className={`w-4 h-4 mr-1 ${comment.liked ? 'fill-current' : ''}`} />
-                              {comment.likes}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
               </div>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
