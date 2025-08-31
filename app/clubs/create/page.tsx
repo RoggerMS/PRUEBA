@@ -101,7 +101,12 @@ export default function CreateClubPage() {
 
   const validateForm = (): boolean => {
     try {
-      createClubSchema.parse(formData);
+      const sanitizedData = {
+        ...formData,
+        subject: formData.subject === 'none' ? undefined : formData.subject,
+        level: formData.level === 'none' ? undefined : formData.level,
+      };
+      createClubSchema.parse(sanitizedData);
       setErrors({});
       return true;
     } catch (error) {
@@ -134,12 +139,18 @@ export default function CreateClubPage() {
     try {
       setLoading(true);
       
+      const payload = {
+        ...formData,
+        subject: formData.subject === 'none' ? undefined : formData.subject,
+        level: formData.level === 'none' ? undefined : formData.level,
+      };
+
       const response = await fetch('/api/clubs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -270,7 +281,7 @@ export default function CreateClubPage() {
                         <SelectValue placeholder="Selecciona una materia" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Ninguna</SelectItem>
+                        <SelectItem value="none">Ninguna</SelectItem>
                         {subjects.map((subject) => (
                           <SelectItem key={subject} value={subject}>
                             {subject}
@@ -287,7 +298,7 @@ export default function CreateClubPage() {
                         <SelectValue placeholder="Selecciona un nivel" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Ninguno</SelectItem>
+                        <SelectItem value="none">Ninguno</SelectItem>
                         {levels.map((level) => (
                           <SelectItem key={level} value={level}>
                             {level}
