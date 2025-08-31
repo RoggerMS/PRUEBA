@@ -64,7 +64,7 @@ interface Club {
   rating: number;
   image?: string;
   coverImage?: string;
-  tags: string[];
+  tags: string[] | string;
   isJoined: boolean;
   isFavorite: boolean;
   foundedDate: string;
@@ -100,8 +100,8 @@ export default function ClubDetail({
   club, 
   onJoin, 
   onLeave, 
-  onFavorite, 
-  onClose 
+  onFavorite,
+  onClose
 }: ClubDetailProps) {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -116,6 +116,13 @@ export default function ClubDetail({
   const handleFavorite = () => {
     onFavorite?.(club.id);
   };
+
+  // Normalize tags to always work with an array
+  const tags = Array.isArray(club.tags)
+    ? club.tags
+    : typeof club.tags === 'string'
+      ? club.tags.split(',').map(tag => tag.trim())
+      : [];
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
@@ -353,11 +360,11 @@ export default function ClubDetail({
                 </div>
               </div>
               
-              {club.tags.length > 0 && (
+              {tags.length > 0 && (
                 <div>
                   <h4 className="font-semibold mb-3">Etiquetas</h4>
                   <div className="flex flex-wrap gap-2">
-                    {club.tags.map((tag) => (
+                    {tags.map((tag) => (
                       <Badge key={tag} variant="outline">
                         {tag}
                       </Badge>

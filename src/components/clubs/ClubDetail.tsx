@@ -42,7 +42,7 @@ interface Club {
     avatar: string;
     role: string;
   };
-  tags: string[];
+  tags: string[] | string;
   level: string;
   createdAt: string;
   lastActivity: string;
@@ -158,6 +158,13 @@ export function ClubDetail({ club, onBack }: ClubDetailProps) {
       setNewPost("");
     }
   };
+
+  // Normalize tags to always work with an array
+  const tags = Array.isArray(club.tags)
+    ? club.tags
+    : typeof club.tags === 'string'
+      ? club.tags.split(',').map(tag => tag.trim())
+      : [];
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -297,7 +304,7 @@ export function ClubDetail({ club, onBack }: ClubDetailProps) {
 
             {/* Tags */}
             <div className="flex flex-wrap gap-2 mt-4">
-              {club.tags.map((tag, index) => (
+              {tags.map((tag, index) => (
                 <Badge key={index} variant="outline" className="bg-gray-50">
                   {tag}
                 </Badge>

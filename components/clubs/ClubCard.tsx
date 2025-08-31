@@ -17,7 +17,7 @@ interface Club {
   meetingDay: string;
   rating: number;
   image?: string;
-  tags: string[];
+  tags: string[] | string;
   isJoined: boolean;
   isFavorite: boolean;
   president: {
@@ -42,8 +42,8 @@ export default function ClubCard({
   club, 
   onJoin, 
   onLeave, 
-  onFavorite, 
-  onViewDetails 
+  onFavorite,
+  onViewDetails
 }: ClubCardProps) {
   const handleJoinLeave = () => {
     if (club.isJoined) {
@@ -56,6 +56,13 @@ export default function ClubCard({
   const handleFavorite = () => {
     onFavorite?.(club.id);
   };
+
+  // Ensure tags are always handled as an array
+  const tags = Array.isArray(club.tags)
+    ? club.tags
+    : typeof club.tags === 'string'
+      ? club.tags.split(',').map(tag => tag.trim())
+      : [];
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
@@ -198,16 +205,16 @@ export default function ClubCard({
         )}
 
         {/* Tags */}
-        {club.tags.length > 0 && (
+        {tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {club.tags.slice(0, 3).map((tag) => (
+            {tags.slice(0, 3).map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
                 {tag}
               </Badge>
             ))}
-            {club.tags.length > 3 && (
+            {tags.length > 3 && (
               <Badge variant="outline" className="text-xs">
-                +{club.tags.length - 3} más
+                +{tags.length - 3} más
               </Badge>
             )}
           </div>
