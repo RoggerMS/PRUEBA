@@ -32,6 +32,7 @@
 - Replace default "U" avatar with generic user icon and direct unauthenticated profile clicks to login.
 - Guard missing profile fields and handle empty interests to prevent runtime errors on the profile page.
 - Restore inline profile editing on `/perfil` without redirecting to settings.
+- Replace example profile page with API-driven version and align editor with `/settings`.
 - Remove quick configuration card from profile page and centralize settings under `/settings`.
 - Reintroduce achievements tab and dedicated pages at `/perfil/logros` and `/u/[username]/logros`.
 - Correct camera icon alignment on profile avatar and banner.

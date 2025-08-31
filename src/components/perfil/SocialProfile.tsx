@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { MessageCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Composer } from '@/components/feed/Composer';
 import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 import ProfileEditor from './ProfileEditor';
 import { ProfileHeader } from './ProfileHeader';
 
-interface User {
+export interface User {
   id: string;
   name: string;
   username: string;
@@ -35,21 +33,57 @@ interface SocialProfileProps {
 export function SocialProfile({ user, isOwnProfile = false }: SocialProfileProps) {
   const { data: session } = useSession();
   const [showEditor, setShowEditor] = useState(false);
+  const [profileData, setProfileData] = useState(user);
   const [bannerImage, setBannerImage] = useState(user.banner || '');
   const [profileImage, setProfileImage] = useState(user.avatar);
 
+  const handleSave = async (updatedProfile: any) => {
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: updatedProfile.name,
+          username: updatedProfile.username
+        })
+      });
+
+      if (response.ok) {
+        setProfileData(prev => ({
+          ...prev,
+          name: updatedProfile.name,
+          username: updatedProfile.username,
+          bio: updatedProfile.bio,
+          location: updatedProfile.location,
+          university: updatedProfile.university,
+          major: updatedProfile.major,
+          interests: updatedProfile.interests
+        }));
+        setProfileImage(updatedProfile.avatar);
+        setBannerImage(updatedProfile.banner || '');
+        toast.success('Perfil actualizado correctamente');
+      } else {
+        toast.error('Error al actualizar perfil');
+      }
+    } catch (error) {
+      toast.error('Error al actualizar perfil');
+    } finally {
+      setShowEditor(false);
+    }
+  };
+
   if (showEditor) {
-    const profileData = {
-      id: user.id,
-      name: user.name,
-      email: 'user@example.com', // TODO: Obtener del usuario real
+    const profileDataForEditor = {
+      id: profileData.id,
+      name: profileData.name,
+      email: session?.user?.email || '',
       avatar: profileImage,
       banner: bannerImage,
-      bio: user.bio,
-      location: user.location,
-      university: user.university,
-      major: user.major,
-      interests: user.interests,
+      bio: profileData.bio,
+      location: profileData.location,
+      university: profileData.university,
+      major: profileData.major,
+      interests: profileData.interests,
       socialLinks: {
         linkedin: '',
         github: '',
@@ -58,37 +92,34 @@ export function SocialProfile({ user, isOwnProfile = false }: SocialProfileProps
     };
 
     return (
-      <ProfileEditor 
-        profile={profileData}
+      <ProfileEditor
+        profile={profileDataForEditor}
         onCancel={() => setShowEditor(false)}
-        onSave={(updatedProfile) => {
-          // TODO: Actualizar los datos del usuario
-          setShowEditor(false);
-        }}
+        onSave={handleSave}
       />
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto">
-      <ProfileHeader 
+      <ProfileHeader
         user={{
-          name: user.name,
-          username: user.username,
+          name: profileData.name,
+          username: profileData.username,
           avatar: profileImage,
           banner: bannerImage,
-          bio: user.bio,
-          location: user.location,
-          university: user.university,
-          major: user.major,
-          joinDate: user.joinDate,
-          level: user.level,
-          xp: user.xp,
-          maxXp: user.maxXp,
-          interests: user.interests,
-          followers: user.followers,
-          following: user.following,
-          posts: user.posts
+          bio: profileData.bio,
+          location: profileData.location,
+          university: profileData.university,
+          major: profileData.major,
+          joinDate: profileData.joinDate,
+          level: profileData.level,
+          xp: profileData.xp,
+          maxXp: profileData.maxXp,
+          interests: profileData.interests,
+          followers: profileData.followers,
+          following: profileData.following,
+          posts: profileData.posts
         }}
         mode={isOwnProfile ? 'view' : 'public'}
         onEdit={() => setShowEditor(true)}
