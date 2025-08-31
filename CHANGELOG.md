@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add global error boundary to log errors and offer reload or home navigation.
+
 - Prevent redundant notification fetches and SSE reconnections by refining `useNotifications` dependencies.
 - Guard club rating display to avoid runtime errors when rating is missing.
 - Align club page sort options with API parameters and compute pagination to prevent fetch errors.
