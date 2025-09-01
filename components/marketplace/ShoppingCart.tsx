@@ -25,7 +25,12 @@ interface CartItem {
 }
 
 interface ShoppingCartProps {
-  items: CartItem[];
+  /**
+   * Optional list of cart items. Defaults to an empty array to avoid
+   * `reduce` on `undefined` runtime errors when the cart has not been
+   * initialized.
+   */
+  items?: CartItem[];
   isOpen: boolean;
   onClose: () => void;
   onUpdateQuantity: (itemId: string, quantity: number) => void;
@@ -34,7 +39,7 @@ interface ShoppingCartProps {
 }
 
 export function ShoppingCart({
-  items,
+  items = [],
   isOpen,
   onClose,
   onUpdateQuantity,
@@ -44,8 +49,14 @@ export function ShoppingCart({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalCrolars = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const totalSoles = items.reduce((sum, item) => sum + (item.priceInSoles * item.quantity), 0);
+  const totalCrolars = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const totalSoles = items.reduce(
+    (sum, item) => sum + item.priceInSoles * item.quantity,
+    0
+  );
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
     const item = items.find(i => i.id === itemId);
