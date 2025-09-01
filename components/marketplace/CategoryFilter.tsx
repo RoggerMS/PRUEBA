@@ -11,7 +11,9 @@ interface Category {
   name: string;
   parentId?: string;
   children?: Category[];
-}
+  }
+
+export default CategoryFilter;
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -108,3 +110,4 @@ export function CategoryFilter({ categories, selectedCategory, onCategorySelect 
     </Card>
   );
 }
+export default CategoryFilter;
