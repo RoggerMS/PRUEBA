@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { gamificationService } from '@/services/gamificationService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,7 +27,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { gamificationService } from '@/lib/gamification';
+import { gamificationService } from '@/services/gamificationService';
 import { useQuestion, useAnswers, useCreateAnswer, useVoteQuestion, useVoteAnswer, useAcceptAnswer } from '@/hooks/useForum';
 
 interface Author {

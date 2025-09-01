@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add missing events components and helpers so the events pages build without module resolution errors.
 - Default cart items to an empty array in `ShoppingCart` to prevent `reduce` on `undefined` errors when the cart is uninitialized.
 - Handle marketplace product tags provided as arrays or comma-separated strings to prevent runtime errors in product detail and search.
 - Fix undefined composer and redundant close button in feed; simplify quick action labels.
