@@ -11,9 +11,7 @@ interface Category {
   name: string;
   parentId?: string;
   children?: Category[];
-  }
-
-export default CategoryFilter;
+}
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -21,7 +19,7 @@ interface CategoryFilterProps {
   onCategorySelect: (categoryId: string | undefined) => void;
 }
 
-export function CategoryFilter({ categories, selectedCategory, onCategorySelect }: CategoryFilterProps) {
+export default function CategoryFilter({ categories, selectedCategory, onCategorySelect }: CategoryFilterProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (categoryId: string) => {
@@ -110,4 +108,3 @@ export function CategoryFilter({ categories, selectedCategory, onCategorySelect 
     </Card>
   );
 }
-export default CategoryFilter;
