@@ -728,3 +728,40 @@ SELECT id, true, true, true, true FROM users WHERE id NOT IN (SELECT userId FROM
 
 Cada módulo indica su ruta principal, el endpoint asociado y los modelos de Prisma utilizados. Si el endpoint o el esquema aún no están implementados, se marca como pendiente.
 
+## 9. Tiempo Real
+
+El feed emplea un canal WebSocket para propagar eventos en tiempo real a todos los clientes conectados.
+
+### Eventos soportados
+
+| Evento        | Descripción                                                   | Destino principal |
+|---------------|---------------------------------------------------------------|-------------------|
+| `newPost`     | Un usuario publica contenido nuevo                            | Timeline          |
+| `newComment`  | Se añade un comentario a un post existente                    | Vista de post     |
+| `notification`| Se genera una alerta para el [Panel de Notificaciones](./crunevo-feed-system-requirements.md) (ver sección 2.2, punto 6) | Centro de notificaciones |
+
+### Flujo de mensajes
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant S as Servidor
+    C->>S: POST /api/feed
+    S-->>C: 201 Created
+    S-->>C: WS emit newPost
+
+    C->>S: POST /api/feed/[id]/comments
+    S-->>C: 201 Created
+    S-->>C: WS emit newComment
+
+    S-->>C: WS emit notification
+```
+
+```ts
+// Cliente
+socket.on('newPost',    (p) => renderPost(p))
+socket.on('newComment', (c) => appendComment(c))
+socket.on('notification', (n) => updateNotificationPanel(n))
+```
+
+
