@@ -9,7 +9,7 @@ import {
   Home, FileText, MessageSquare, Users, Calendar, BookOpen, ShoppingCart,
   Gamepad2, Target, Trophy, Bot, TrendingUp, Bookmark, Coins,
   Upload, HelpCircle, UserPlus, Award, Star, Grid3X3, GraduationCap,
-  ShoppingBag, Zap, Rss, Moon, Sun
+  ShoppingBag, Zap, Moon, Sun
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -28,7 +28,6 @@ interface MenuItem {
 const MENU_ITEMS: MenuItem[] = [
   // Principal
   { key: 'inicio', label: 'Inicio', href: '/', icon: Home },
-  { key: 'feed', label: 'Feed', href: '/feed', icon: Rss },
   { key: 'perfil', label: 'Perfil', href: '/perfil', icon: User },
   { key: 'workspace', label: 'Workspace', href: '/workspace', icon: Grid3X3 },
   { key: 'apunte', label: 'Apunte', href: '/apunte', icon: FileText },
