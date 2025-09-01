@@ -476,7 +476,7 @@ export function FacebookStyleComposer() {
                     }
                   }}
                 >
-                  <Smile className="h-4 w-4 mr-2" />
+                  <SmileIcon className="h-4 w-4 mr-2" />
                   Emoji 🙂
                 </Button>
                 <Button 

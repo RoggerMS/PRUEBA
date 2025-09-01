@@ -20,7 +20,7 @@ import {
 import { useFeed, useFireReaction } from '@/hooks/useFeed';
 import { FeedPost } from '@/types/feed';
 import { toast } from 'sonner';
-import { CommentModal } from './CommentModal';
+import CommentModal from './CommentModal';
 import { MediaViewer } from './MediaViewer';
 
 // Helper function to format time ago
