@@ -273,16 +273,23 @@ async function main() {
   // Create some sample interactions (likes, comments, bookmarks, votes)
   const postIds = await prisma.post.findMany({ select: { id: true } });
   
-  // Create likes
+  // Create likes (ensuring no duplicates for userId-postId combination)
   const likes = [
     { postId: postIds[0].id, userId: demoUser.id },
     { postId: postIds[0].id, userId: johnUser.id },
     { postId: postIds[1].id, userId: adminUser.id },
-    { postId: postIds[2].id, userId: adminUser.id },
+    { postId: postIds[2].id, userId: demoUser.id }, // Changed from adminUser to demoUser to avoid duplicate
   ];
 
   for (const likeData of likes) {
-    await prisma.like.create({ data: likeData });
+    try {
+      await prisma.like.create({ data: likeData });
+    } catch (error) {
+      // Skip if like already exists (unique constraint violation)
+      if (error.code !== 'P2002') {
+        throw error;
+      }
+    }
   }
 
   console.log(`✅ ${likes.length} Likes created`);
@@ -321,7 +328,14 @@ async function main() {
   ];
 
   for (const bookmarkData of bookmarks) {
-    await prisma.bookmark.create({ data: bookmarkData });
+    try {
+      await prisma.bookmark.create({ data: bookmarkData });
+    } catch (error) {
+      // Skip if bookmark already exists (unique constraint violation)
+      if (error.code !== 'P2002') {
+        throw error;
+      }
+    }
   }
 
   console.log(`✅ ${bookmarks.length} Bookmarks created`);
@@ -334,7 +348,14 @@ async function main() {
   ];
 
   for (const voteData of questionVotes) {
-    await prisma.vote.create({ data: voteData });
+    try {
+      await prisma.vote.create({ data: voteData });
+    } catch (error) {
+      // Skip if vote already exists (unique constraint violation)
+      if (error.code !== 'P2002') {
+        throw error;
+      }
+    }
   }
 
   const answerVotes = [
@@ -344,7 +365,14 @@ async function main() {
   ];
 
   for (const voteData of answerVotes) {
-    await prisma.vote.create({ data: voteData });
+    try {
+      await prisma.vote.create({ data: voteData });
+    } catch (error) {
+      // Skip if vote already exists (unique constraint violation)
+      if (error.code !== 'P2002') {
+        throw error;
+      }
+    }
   }
 
   console.log(`✅ ${questionVotes.length + answerVotes.length} Votes created`);
