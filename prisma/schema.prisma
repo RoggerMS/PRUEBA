@@ -99,6 +99,7 @@ model User {
   posts         Post[]
   comments      Comment[]
   likes         Like[]
+  commentLikes  CommentLike[]
   bookmarks     Bookmark[]
   notes         Note[]
   noteRatings   NoteRating[]
@@ -111,6 +112,14 @@ model User {
   notifications Notification[]
   followers     Follow[] @relation("UserFollowers")
   following     Follow[] @relation("UserFollowing")
+  
+  // Enhanced feed relations
+  mediaUploads  Media[]       @relation("MediaUploads")
+  mediaComments MediaComment[] @relation("MediaComments")
+  postMentions  PostMention[] @relation("PostMentions")
+  commentMentions CommentMention[] @relation("CommentMentions")
+  postShares    PostShare[]   @relation("PostShares")
+  feedSettings  UserFeedSettings?
   clubMemberships ClubMember[]
   eventAttendances EventAttendance[]
   courseEnrollments CourseEnrollment[]
@@ -176,6 +185,11 @@ model Post {
   visibility  Visibility @default(PUBLIC)
   isPinned    Boolean   @default(false)
   
+  // New fields for enhanced functionality
+  editedAt    DateTime?
+  shareCount  Int       @default(0)
+  viewCount   Int       @default(0)
+  
   authorId    String
   author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   
@@ -188,18 +202,25 @@ model Post {
   bookmarks   Bookmark[]
   reports     Report[]
   reactions   PostReaction[]
+  media       PostMedia[]
+  hashtags    PostHashtag[]
+  mentions    PostMention[]
+  shares      PostShare[]
   
   // Índices para performance
   @@index([createdAt(sort: Desc)])
   @@index([authorId])
   @@index([type])
   @@index([visibility])
+  @@index([shareCount(sort: Desc)])
+  @@index([viewCount(sort: Desc)])
   @@map("posts")
 }
 
 model Comment {
   id        String   @id @default(cuid())
   content   String
+  editedAt  DateTime?
   
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -214,16 +235,24 @@ model Comment {
   parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentReplies")
   
+  // New fields for threaded comments
+  depth     Int      @default(0)
+  path      String?  // For efficient thread queries
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   // Relations
   likes     Like[]
+  commentLikes CommentLike[]
   reports   Report[]
+  mentions  CommentMention[]
   
   // Índices para performance
   @@index([postId])
+  @@index([parentId])
   @@index([createdAt])
+  @@index([path])
   @@map("comments")
 }
 
@@ -248,6 +277,24 @@ model Like {
   @@unique([userId, commentId])
   @@unique([userId, answerId])
   @@map("likes")
+}
+
+// Separate model for comment likes with better performance
+model CommentLike {
+  id        String   @id @default(cuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, commentId])
+  @@index([commentId])
+  @@index([userId])
+  @@map("comment_likes")
 }
 
 // Nueva tabla para tracking individual de reacciones
@@ -305,6 +352,153 @@ model Follow {
   
   @@unique([followerId, followingId])
   @@map("follows")
+}
+
+// New models for enhanced feed functionality
+model Media {
+  id            String   @id @default(cuid())
+  filename      String
+  originalName  String
+  mimeType      String
+  size          Int
+  url           String
+  thumbnailUrl  String?
+  width         Int?
+  height        Int?
+  duration      Int?     // For videos in seconds
+  
+  uploaderId    String
+  uploader      User     @relation("MediaUploads", fields: [uploaderId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  
+  // Relations
+  postMedia     PostMedia[]
+  comments      MediaComment[]
+  
+  @@index([uploaderId])
+  @@index([mimeType])
+  @@map("media")
+}
+
+model PostMedia {
+  id      String @id @default(cuid())
+  postId  String
+  mediaId String
+  order   Int    @default(0)
+  
+  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media   Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, mediaId])
+  @@index([postId, order])
+  @@map("post_media")
+}
+
+model MediaComment {
+  id        String   @id @default(cuid())
+  mediaId   String
+  authorId  String
+  content   String
+  
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  author    User     @relation("MediaComments", fields: [authorId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([mediaId])
+  @@index([createdAt])
+  @@map("media_comments")
+}
+
+model Hashtag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  useCount  Int      @default(0)
+  
+  posts     PostHashtag[]
+  
+  createdAt DateTime @default(now())
+  
+  @@index([useCount(sort: Desc)])
+  @@map("hashtags")
+}
+
+model PostHashtag {
+  id        String  @id @default(cuid())
+  postId    String
+  hashtagId String
+  
+  post      Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, hashtagId])
+  @@map("post_hashtags")
+}
+
+model PostMention {
+  id           String @id @default(cuid())
+  postId       String
+  mentionedId  String
+  
+  post         Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  mentioned    User   @relation("PostMentions", fields: [mentionedId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+  
+  @@unique([postId, mentionedId])
+  @@map("post_mentions")
+}
+
+model PostShare {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  comment   String?
+  
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation("PostShares", fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([postId, userId])
+  @@index([createdAt])
+  @@map("post_shares")
+}
+
+model CommentMention {
+  id          String  @id @default(cuid())
+  commentId   String
+  mentionedId String
+  
+  comment     Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  mentioned   User    @relation("CommentMentions", fields: [mentionedId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([commentId, mentionedId])
+  @@map("comment_mentions")
+}
+
+model UserFeedSettings {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  
+  showFollowingFirst    Boolean @default(true)
+  showMediaPosts        Boolean @default(true)
+  showQuestionPosts     Boolean @default(true)
+  showNotePosts         Boolean @default(true)
+  autoplayVideos        Boolean @default(false)
+  emailNotifications    Boolean @default(true)
+  pushNotifications     Boolean @default(true)
+  
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@map("user_feed_settings")
 }
 
 // ============================================================================

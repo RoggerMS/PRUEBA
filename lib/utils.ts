@@ -53,3 +53,7 @@ export function generateAvatar(name: string): string {
 
   return `https://ui-avatars.com/api/?name=${initials}&background=6366f1&color=fff&size=128`
 }
+
+export function formatTimeAgo(date: Date | string): string {
+  return formatRelativeTime(date)
+}

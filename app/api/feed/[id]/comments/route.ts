@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
 
 const createCommentSchema = z.object({
-  content: z.string().min(1, 'Comment content is required').max(500, 'Comment too long'),
-  parentId: z.string().optional() // For reply comments
-})
+  text: z.string().min(1).max(2000),
+  parentId: z.string().optional()
+});
 
 // GET /api/feed/[id]/comments - Get comments for a post
 export async function GET(
@@ -15,121 +15,157 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const skip = (page - 1) * limit
+    const session = await getServerSession(authOptions);
+    const postId = params.id;
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const offset = (page - 1) * limit;
 
-    const postId = params.id
-    const session = await getServerSession(authOptions)
-    const userId = session?.user?.id
-
-    // Check if post exists
+    // Verify post exists
     const post = await prisma.post.findUnique({
       where: { id: postId },
       select: { id: true }
-    })
+    });
 
     if (!post) {
       return NextResponse.json(
         { error: 'Post not found' },
         { status: 404 }
-      )
+      );
     }
 
-    // Get top-level comments (no parent)
+    // Get top-level comments with nested replies
     const comments = await prisma.comment.findMany({
       where: {
         postId,
         parentId: null // Only top-level comments
       },
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
       include: {
         author: {
           select: {
             id: true,
             name: true,
             username: true,
-            image: true,
+            avatar: true,
             verified: true
           }
         },
-        _count: {
-          select: {
-            likes: true,
-            replies: true
-          }
-        },
-        // Include user's likes if logged in
-        ...(userId && {
-          likes: {
-            where: { userId },
-            select: { id: true }
-          }
-        }),
-        // Include some replies (limited)
         replies: {
-          take: 3,
-          orderBy: { createdAt: 'asc' },
           include: {
             author: {
               select: {
                 id: true,
                 name: true,
                 username: true,
-                image: true,
+                avatar: true,
                 verified: true
               }
             },
+            replies: {
+              include: {
+                author: {
+                  select: {
+                    id: true,
+                    name: true,
+                    username: true,
+                    avatar: true,
+                    verified: true
+                  }
+                },
+                replies: {
+                  include: {
+                    author: {
+                      select: {
+                        id: true,
+                        name: true,
+                        username: true,
+                        avatar: true,
+                        verified: true
+                      }
+                    },
+                    _count: {
+                      select: {
+                        replies: true,
+                        likes: true
+                      }
+                    }
+                  },
+                  orderBy: { createdAt: 'asc' }
+                },
+                _count: {
+                  select: {
+                    replies: true,
+                    likes: true
+                  }
+                }
+              },
+              orderBy: { createdAt: 'asc' }
+            },
             _count: {
               select: {
+                replies: true,
                 likes: true
               }
-            },
-            ...(userId && {
-              likes: {
-                where: { userId },
-                select: { id: true }
-              }
-            })
+            }
+          },
+          orderBy: { createdAt: 'asc' }
+        },
+        _count: {
+          select: {
+            replies: true,
+            likes: true
           }
         }
-      }
-    })
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: offset,
+      take: limit
+    });
 
-    // Transform comments to include interaction flags
-    const transformedComments = comments.map(comment => ({
-      ...comment,
-      isLiked: userId ? comment.likes?.length > 0 : false,
-      likesCount: comment._count.likes,
-      repliesCount: comment._count.replies,
-      replies: comment.replies.map(reply => ({
-        ...reply,
-        isLiked: userId ? reply.likes?.length > 0 : false,
-        likesCount: reply._count.likes,
-        likes: undefined,
-        _count: undefined
-      })),
-      likes: undefined,
-      _count: undefined
-    }))
+    // Get user's like status for all comments if authenticated
+    let userLikes: Set<string> = new Set();
+    if (session?.user?.id) {
+      const allCommentIds = getAllCommentIds(comments);
+      const likes = await prisma.commentLike.findMany({
+        where: {
+          userId: session.user.id,
+          commentId: { in: allCommentIds }
+        },
+        select: { commentId: true }
+      });
+      userLikes = new Set(likes.map(like => like.commentId));
+    }
+
+    // Transform comments with viewer state
+    const transformedComments = comments.map(comment => 
+      transformComment(comment, userLikes)
+    );
+
+    // Get total count for pagination
+    const totalComments = await prisma.comment.count({
+      where: {
+        postId,
+        parentId: null
+      }
+    });
 
     return NextResponse.json({
       comments: transformedComments,
       pagination: {
         page,
         limit,
-        hasMore: comments.length === limit
+        total: totalComments,
+        hasMore: offset + comments.length < totalComments
       }
-    })
+    });
+
   } catch (error) {
-    console.error('Error fetching comments:', error)
+    console.error('Error fetching comments:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch comments' },
+      { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -139,52 +175,60 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
-      )
+      );
     }
 
-    const postId = params.id
-    const body = await request.json()
-    const validatedData = createCommentSchema.parse(body)
+    const postId = params.id;
+    const body = await request.json();
+    const { text, parentId } = createCommentSchema.parse(body);
 
-    // Check if post exists
+    // Verify post exists
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      select: { id: true }
-    })
+      select: { id: true, authorId: true }
+    });
 
     if (!post) {
       return NextResponse.json(
         { error: 'Post not found' },
         { status: 404 }
-      )
+      );
     }
 
-    // If parentId is provided, check if parent comment exists
-    if (validatedData.parentId) {
+    // If replying to a comment, verify parent exists and get depth
+    let depth = 0;
+    let path = '';
+    if (parentId) {
       const parentComment = await prisma.comment.findUnique({
-        where: { id: validatedData.parentId },
-        select: { id: true, postId: true }
-      })
+        where: { id: parentId },
+        select: { id: true, depth: true, path: true, postId: true }
+      });
 
       if (!parentComment || parentComment.postId !== postId) {
         return NextResponse.json(
-          { error: 'Parent comment not found or not in this post' },
+          { error: 'Parent comment not found' },
           { status: 404 }
-        )
+        );
       }
+
+      depth = parentComment.depth + 1;
+      path = parentComment.path ? `${parentComment.path}.${parentId}` : parentId;
     }
 
+    // Create the comment
     const comment = await prisma.comment.create({
       data: {
-        content: validatedData.content,
-        authorId: session.user.id,
+        text,
         postId,
-        parentId: validatedData.parentId || null
+        authorId: session.user.id,
+        parentId,
+        depth,
+        path
       },
       include: {
         author: {
@@ -192,41 +236,103 @@ export async function POST(
             id: true,
             name: true,
             username: true,
-            image: true,
+            avatar: true,
             verified: true
           }
         },
         _count: {
           select: {
-            likes: true,
-            replies: true
+            replies: true,
+            likes: true
           }
         }
       }
-    })
+    });
 
-    // Transform the response
+    // Update post comment count
+    await prisma.post.update({
+      where: { id: postId },
+      data: {
+        commentCount: {
+          increment: 1
+        }
+      }
+    });
+
+    // Transform comment with viewer state
     const transformedComment = {
-      ...comment,
-      isLiked: false,
-      likesCount: comment._count.likes,
-      repliesCount: comment._count.replies,
-      _count: undefined
-    }
+      id: comment.id,
+      text: comment.text,
+      createdAt: comment.createdAt.toISOString(),
+      editedAt: comment.editedAt?.toISOString() || null,
+      depth: comment.depth,
+      path: comment.path,
+      author: comment.author,
+      stats: {
+        likes: comment._count.likes,
+        replies: comment._count.replies
+      },
+      viewerState: {
+        liked: false // New comment, user hasn't liked it yet
+      },
+      replies: []
+    };
 
-    return NextResponse.json(transformedComment, { status: 201 })
+    return NextResponse.json(transformedComment, { status: 201 });
+
   } catch (error) {
+    console.error('Error creating comment:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Invalid request data', details: error.errors },
         { status: 400 }
-      )
+      );
     }
-
-    console.error('Error creating comment:', error)
     return NextResponse.json(
-      { error: 'Failed to create comment' },
+      { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
+}
+
+// Helper function to get all comment IDs recursively
+function getAllCommentIds(comments: any[]): string[] {
+  const ids: string[] = [];
+  
+  function collectIds(commentList: any[]) {
+    for (const comment of commentList) {
+      ids.push(comment.id);
+      if (comment.replies && comment.replies.length > 0) {
+        collectIds(comment.replies);
+      }
+    }
+  }
+  
+  collectIds(comments);
+  return ids;
+}
+
+// Helper function to transform comment with viewer state
+function transformComment(comment: any, userLikes: Set<string>): any {
+  const transformed = {
+    id: comment.id,
+    text: comment.text,
+    createdAt: comment.createdAt.toISOString(),
+    editedAt: comment.editedAt?.toISOString() || null,
+    depth: comment.depth,
+    path: comment.path,
+    author: comment.author,
+    stats: {
+      likes: comment._count.likes,
+      replies: comment._count.replies
+    },
+    viewerState: {
+      liked: userLikes.has(comment.id)
+    },
+    replies: comment.replies ? comment.replies.map((reply: any) => 
+      transformComment(reply, userLikes)
+    ) : []
+  };
+  
+  return transformed;
 }

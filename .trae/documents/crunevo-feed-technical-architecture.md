@@ -209,11 +209,11 @@ GET /api/media/[mediaId]
 
 La API utiliza **NextAuth.js** con adaptador de **Prisma** para autenticar a los usuarios y asociarles un `role` almacenado en el modelo `User`. Cada endpoint consulta la sesión mediante `getServerSession` y valida que el rol tenga permiso antes de ejecutar la lógica.
 
-| Endpoint                     | Estudiante                                         | Instructor                                 | Administrador                           |
-|-----------------------------|----------------------------------------------------|--------------------------------------------|-----------------------------------------|
-| `GET /api/feed`             | Lee posts públicos y de usuarios seguidos          | Igual que estudiante                       | Acceso completo                         |
-| `POST /api/feed`            | Crea posts propios                                 | Crea y modera posts                        | Crea, modera y configura                |
-| `POST /api/feed/[id]/comment` | Comenta posts visibles                             | Comenta y modera                           | Control total sobre comentarios         |
+| Endpoint                      | Estudiante                                | Instructor           | Administrador                   |
+| ----------------------------- | ----------------------------------------- | -------------------- | ------------------------------- |
+| `GET /api/feed`               | Lee posts públicos y de usuarios seguidos | Igual que estudiante | Acceso completo                 |
+| `POST /api/feed`              | Crea posts propios                        | Crea y modera posts  | Crea, modera y configura        |
+| `POST /api/feed/[id]/comment` | Comenta posts visibles                    | Comenta y modera     | Control total sobre comentarios |
 
 **Ejemplo de guardia por rol**
 
@@ -243,7 +243,6 @@ export async function DELETE(
   // lógica para eliminar o moderar post
 }
 ```
-
 
 ## 5. Arquitectura del Servidor
 
@@ -717,14 +716,14 @@ SELECT id, true, true, true, true FROM users WHERE id NOT IN (SELECT userId FROM
 
 ## 8. Módulos del Feed
 
-| Módulo               | Ruta                      | Endpoint                    | Modelos Prisma                       | Esquema |
-|----------------------|---------------------------|-----------------------------|--------------------------------------|---------|
-| Feed Principal       | `/feed`                   | `/api/feed`                 | `Post`, `User`, `Like`, `Bookmark`   | Sí      |
-| Modal de Creación    | `/feed` (composer)        | `POST /api/feed`            | `Post`                               | Sí      |
-| Sistema de Comentarios | `/feed/[postId]`        | `/api/feed/[id]/comments`   | `Comment`, `Post`, `Like`            | Sí      |
-| Visor de Medios      | `/feed/media/[mediaId]`   | Pendiente                   | Pendiente                            | Pendiente |
-| Perfil de Usuario    | `/profile/[username]`     | `/api/users/[username]`     | `User`, `Post`, `Follow`             | Sí      |
-| Panel de Notificaciones | `/notifications`       | `/api/notifications`        | `Notification`                       | Sí      |
+| Módulo                  | Ruta                    | Endpoint                  | Modelos Prisma                     | Esquema   |
+| ----------------------- | ----------------------- | ------------------------- | ---------------------------------- | --------- |
+| Feed Principal          | `/feed`                 | `/api/feed`               | `Post`, `User`, `Like`, `Bookmark` | Sí        |
+| Modal de Creación       | `/feed` (composer)      | `POST /api/feed`          | `Post`                             | Sí        |
+| Sistema de Comentarios  | `/feed/[postId]`        | `/api/feed/[id]/comments` | `Comment`, `Post`, `Like`          | Sí        |
+| Visor de Medios         | `/feed/media/[mediaId]` | Pendiente                 | Pendiente                          | Pendiente |
+| Perfil de Usuario       | `/profile/[username]`   | `/api/users/[username]`   | `User`, `Post`, `Follow`           | Sí        |
+| Panel de Notificaciones | `/notifications`        | `/api/notifications`      | `Notification`                     | Sí        |
 
 Cada módulo indica su ruta principal, el endpoint asociado y los modelos de Prisma utilizados. Si el endpoint o el esquema aún no están implementados, se marca como pendiente.
 
@@ -734,11 +733,11 @@ El feed emplea un canal WebSocket para propagar eventos en tiempo real a todos l
 
 ### Eventos soportados
 
-| Evento        | Descripción                                                   | Destino principal |
-|---------------|---------------------------------------------------------------|-------------------|
-| `newPost`     | Un usuario publica contenido nuevo                            | Timeline          |
-| `newComment`  | Se añade un comentario a un post existente                    | Vista de post     |
-| `notification`| Se genera una alerta para el [Panel de Notificaciones](./crunevo-feed-system-requirements.md) (ver sección 2.2, punto 6) | Centro de notificaciones |
+| Evento         | Descripción                                                                                                              | Destino principal        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------ |
+| `newPost`      | Un usuario publica contenido nuevo                                                                                       | Timeline                 |
+| `newComment`   | Se añade un comentario a un post existente                                                                               | Vista de post            |
+| `notification` | Se genera una alerta para el [Panel de Notificaciones](./crunevo-feed-system-requirements.md) (ver sección 2.2, punto 6) | Centro de notificaciones |
 
 ### Flujo de mensajes
 
@@ -763,5 +762,4 @@ socket.on('newPost',    (p) => renderPost(p))
 socket.on('newComment', (c) => appendComment(c))
 socket.on('notification', (n) => updateNotificationPanel(n))
 ```
-
 

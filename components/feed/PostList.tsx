@@ -20,6 +20,8 @@ import {
 import { useFeed, useFireReaction } from '@/hooks/useFeed';
 import { FeedPost } from '@/types/feed';
 import { toast } from 'sonner';
+import { CommentModal } from './CommentModal';
+import { MediaViewer } from './MediaViewer';
 
 // Helper function to format time ago
 const formatTimeAgo = (dateString: string) => {
@@ -35,6 +37,9 @@ const formatTimeAgo = (dateString: string) => {
 function PostCard({ post }: { post: FeedPost }) {
   const fireReaction = useFireReaction();
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [showMediaViewer, setShowMediaViewer] = useState(false);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
 
   const handleFire = async () => {
     try {
@@ -143,20 +148,63 @@ function PostCard({ post }: { post: FeedPost }) {
         
         {/* Media content */}
         {post.media && post.media.length > 0 && (
-          <div className="mt-3 rounded-lg overflow-hidden">
-            {post.media[0].type === 'image' && (
-              <img 
-                src={post.media[0].url} 
-                alt="Post image" 
-                className="w-full max-h-96 object-cover"
-              />
-            )}
-            {post.media[0].type === 'video' && (
-              <video 
-                src={post.media[0].url} 
-                controls 
-                className="w-full max-h-96"
-              />
+          <div className="mt-3">
+            {post.media.length === 1 ? (
+              <div 
+                className="rounded-lg overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
+                onClick={() => {
+                  setSelectedMediaIndex(0);
+                  setShowMediaViewer(true);
+                }}
+              >
+                {post.media[0].type === 'image' ? (
+                  <img
+                    src={post.media[0].url}
+                    alt="Post media"
+                    className="w-full h-auto max-h-96 object-cover"
+                  />
+                ) : (
+                  <video
+                    src={post.media[0].url}
+                    className="w-full h-auto max-h-96 object-cover"
+                    controls
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {post.media.slice(0, 4).map((media, index) => (
+                  <div 
+                    key={media.id} 
+                    className="relative rounded-lg overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={() => {
+                      setSelectedMediaIndex(index);
+                      setShowMediaViewer(true);
+                    }}
+                  >
+                    {media.type === 'image' ? (
+                      <img
+                        src={media.url}
+                        alt={`Post media ${index + 1}`}
+                        className="w-full h-32 object-cover"
+                      />
+                    ) : (
+                      <video
+                        src={media.url}
+                        className="w-full h-32 object-cover"
+                        muted
+                      />
+                    )}
+                    {index === 3 && post.media.length > 4 && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <span className="text-white font-semibold text-lg">
+                          +{post.media.length - 4}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -187,7 +235,12 @@ function PostCard({ post }: { post: FeedPost }) {
             <span className="text-xs">{post.stats.fires}</span>
           </Button>
           
-          <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-600">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowCommentModal(true)}
+            className="flex items-center space-x-1 text-gray-600"
+          >
             <MessageCircleIcon className="h-4 w-4" />
             <span className="text-xs">{post.stats.comments}</span>
           </Button>
@@ -207,8 +260,21 @@ function PostCard({ post }: { post: FeedPost }) {
           <BookmarkIcon className={`h-4 w-4 ${isBookmarked ? 'fill-blue-600' : ''}`} />
         </Button>
       </div>
-    </Card>
-  );
+      
+      <CommentModal 
+        isOpen={showCommentModal}
+        onClose={() => setShowCommentModal(false)}
+        post={post}
+      />
+      
+      <MediaViewer
+        isOpen={showMediaViewer}
+        onClose={() => setShowMediaViewer(false)}
+        post={post}
+        initialMediaIndex={selectedMediaIndex}
+      />
+      </Card>
+    );
 }
 
 export default function PostList() {
