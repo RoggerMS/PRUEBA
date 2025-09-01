@@ -41,6 +41,8 @@
 - Correct footer links for Cookies, Privacy, Terms, and Support pages.
 - Allow unauthenticated users to view public posts via the feed API.
 - Fix missing default exports in marketplace components to prevent invalid element type errors.
+- Import auth options from shared `@/lib/auth` in club management API route to resolve build-time export errors.
+- Pass detailed cart items and use the named `ShoppingCart` export in the marketplace page to avoid `reduce` on undefined during prerendering.
 - Resolve feed API route type mismatches and enum casing errors.
 - Skip notification stream setup when unauthenticated to eliminate 401 errors.
 - Gracefully return an empty feed when the database is unavailable.
