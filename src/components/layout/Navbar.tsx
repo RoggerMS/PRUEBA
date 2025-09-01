@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { Search, MessageCircle, User, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Search, MessageCircle, User, Settings, LogOut, Menu, X, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,8 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
-import { MobileSidebar } from './MobileSidebar';
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -154,13 +154,61 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-40 md:hidden">
-            <div
-              className="absolute inset-0 bg-black/50"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            <div className="absolute inset-y-0 left-0">
-              <MobileSidebar onClose={() => setIsMobileMenuOpen(false)} />
+          <div className="md:hidden border-t border-crunevo-200 py-4">
+            <div className="flex flex-col space-y-3">
+              {session ? (
+                <>
+                  <Link
+                    href="/notifications"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Bell className="w-5 h-5" />
+                    <span>Notificaciones</span>
+                    <Badge className="ml-auto bg-crunevo-500">3</Badge>
+                  </Link>
+                  <Link
+                    href="/messages"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <span>Mensajes</span>
+                  </Link>
+                  <Link
+                    href="/perfil"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User className="w-5 h-5" />
+                    <span>Perfil</span>
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>Configuración</span>
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-red-50 text-red-600 w-full text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Cerrar sesión</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-crunevo-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="w-5 h-5" />
+                  <span>Iniciar sesión</span>
+                </Link>
+              )}
             </div>
           </div>
         )}

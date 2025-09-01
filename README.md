@@ -39,7 +39,6 @@ export default tseslint.config({
 - Global navigation now uses a single `MainLayout` from `app/layout.tsx`, ensuring the navbar is available throughout the site.
 - Various TypeScript errors were resolved and notification components were corrected for consistent behavior.
 - Gamification notifications are now categorized as `GAMIFICATION`, fixing local build errors.
-- The mobile hamburger menu now displays the full sidebar navigation for a responsive experience.
 
 ### Patrón de notificaciones
 
