@@ -25,11 +25,12 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { eventFilterSchema, type EventFilterData } from '@/lib/validations';
+import { eventFilterSchema } from '@/lib/validations';
+import { ExtendedEventFilterData } from '@/shared/types/events';
 
 interface EventFiltersProps {
-  filters: EventFilterData;
-  onFiltersChange: (filters: EventFilterData) => void;
+  filters: ExtendedEventFilterData;
+  onFiltersChange: (filters: ExtendedEventFilterData) => void;
   onClearFilters: () => void;
   totalResults?: number;
   isLoading?: boolean;
@@ -84,7 +85,7 @@ export function EventFilters({
   const [dateTo, setDateTo] = useState<Date | undefined>(filters.dateTo ? new Date(filters.dateTo) : undefined);
   const [priceRange, setPriceRange] = useState([filters.minPrice || 0, filters.maxPrice || 1000]);
 
-  const updateFilters = (updates: Partial<EventFilterData>) => {
+  const updateFilters = (updates: Partial<ExtendedEventFilterData>) => {
     const newFilters = { ...filters, ...updates };
     onFiltersChange(newFilters);
   };

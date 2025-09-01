@@ -251,7 +251,7 @@ export default function MyClubs({
             </div>
             <p className="text-sm text-blue-700">{membership.nextEvent.title}</p>
             <div className="flex items-center gap-4 text-xs text-blue-600 mt-1">
-              <span>{new Date(membership.nextEvent.startDate).toLocaleDateString()}</span>
+              <span>{new Date(membership.nextEvent.date).toLocaleDateString()}</span>
               <div className="flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
                 <span>{membership.nextEvent.location}</span>

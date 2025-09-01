@@ -316,7 +316,7 @@ export default function CreateClub({ onSubmit, onCancel, isLoading = false }: Cr
                   min="5"
                   max="500"
                   value={formData.maxMembers}
-                  onChange={(e) => handleInputChange('maxMembers', parseInt(e.target.value))}
+                  onChange={(e) => handleInputChange('maxMembers', parseInt(e.target.value) || 0)}
                   className={errors.maxMembers ? 'border-red-500' : ''}
                 />
                 {errors.maxMembers && <p className="text-red-500 text-sm mt-1">{errors.maxMembers}</p>}

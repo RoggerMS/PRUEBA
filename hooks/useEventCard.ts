@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from 'react'
-import { Event } from '@/types/event'
+import { Event } from '@/shared/types/events'
 
 /**
  * Custom hook for EventCard component optimization
@@ -8,8 +8,8 @@ import { Event } from '@/types/event'
 export function useEventCard(event: Event) {
   // Memoize expensive date calculations
   const eventDate = useMemo(() => {
-    return new Date(event.date)
-  }, [event.date])
+    return new Date(event.startDate)
+  }, [event.startDate])
 
   const formattedDate = useMemo(() => {
     return eventDate.toLocaleDateString('es-ES', {
@@ -30,7 +30,7 @@ export function useEventCard(event: Event) {
   // Memoize status calculations
   const eventStatus = useMemo(() => {
     const now = new Date()
-    const eventDateTime = new Date(event.date)
+    const eventDateTime = new Date(event.startDate)
     
     if (eventDateTime < now) {
       return 'past'
@@ -39,7 +39,7 @@ export function useEventCard(event: Event) {
     } else {
       return 'upcoming'
     }
-  }, [event.date])
+  }, [event.startDate])
 
   // Memoize category colors
   const categoryColor = useMemo(() => {

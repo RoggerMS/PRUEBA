@@ -274,7 +274,7 @@ export function GamificationAdminPanel() {
   });
 
   // Obtener categorías únicas
-  const categories = [...new Set(badges.map(b => b.category))];
+  const categories = Array.from(new Set(badges.map(b => b.category)));
 
   useEffect(() => {
     if (isAdmin) {

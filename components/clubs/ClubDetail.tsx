@@ -36,9 +36,9 @@ interface ClubEvent {
   id: string;
   title: string;
   description: string;
-  date: string;
+  startDate: string;
   location: string;
-  attendees: number;
+  currentAttendees: number;
   maxAttendees?: number;
 }
 
@@ -233,7 +233,7 @@ export default function ClubDetail({
                 onClick={handleJoinLeave}
                 size="lg"
                 variant={club.isJoined ? "outline" : "default"}
-                disabled={!club.isJoined && club.maxMembers && club.memberCount >= club.maxMembers}
+                disabled={!club.isJoined && !!club.maxMembers && club.memberCount >= club.maxMembers}
               >
                 {club.isJoined ? 'Abandonar Club' : 
                  (club.maxMembers && club.memberCount >= club.maxMembers) ? 'Club Lleno' : 'Unirse al Club'}

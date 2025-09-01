@@ -23,10 +23,10 @@ export function Composer() {
 
     try {
       await createPost.mutateAsync({
-        content: content.trim(),
-        type: postType,
+        text: content.trim(),
+        kind: postType as 'post' | 'note' | 'question',
         visibility: 'public',
-        tags: []
+        hashtags: []
       });
       
       setContent('');

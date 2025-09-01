@@ -279,7 +279,7 @@ export function ProfileFeed({
                 </CardContent>
               </Card>
             ) : (
-              filteredItems.map((item) => {
+              filteredItems.map((item: any) => {
                 const TypeIcon = getTypeIcon(item.type);
                 
                 return (
@@ -292,7 +292,7 @@ export function ProfileFeed({
                           <Avatar className="w-10 h-10">
                             <AvatarImage src={item.author.avatar} alt={item.author.name} />
                             <AvatarFallback>
-                              {item.author.name.split(' ').map(n => n[0]).join('')}
+                              {item.author.name.split(' ').map((n: string) => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                           
@@ -381,7 +381,7 @@ export function ProfileFeed({
                       {/* Tags */}
                       {item.tags && item.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4">
-                          {item.tags.map((tag, index) => (
+                          {item.tags.map((tag: string, index: number) => (
                             <Badge key={index} variant="secondary" className="text-xs">
                               <Tag className="w-3 h-3 mr-1" />
                               {tag}
@@ -393,7 +393,7 @@ export function ProfileFeed({
                       {/* Attachments */}
                       {item.attachments && item.attachments.length > 0 && (
                         <div className="space-y-2 mb-4">
-                          {item.attachments.map((attachment, index) => (
+                          {item.attachments.map((attachment: any, index: number) => (
                             <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                               <FileText className="w-4 h-4 text-gray-600" />
                               <span className="text-sm text-gray-700 flex-1">{attachment.name}</span>

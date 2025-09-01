@@ -20,8 +20,8 @@ const createEventSchema = z.object({
 });
 
 const querySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(10),
+  page: z.string().transform(val => parseInt(val) || 1),
+  limit: z.string().transform(val => Math.min(parseInt(val) || 10, 50)),
   category: z.string().optional(),
   type: z.string().optional(),
   search: z.string().optional(),

@@ -65,7 +65,7 @@ function PostCard({ post }: { post: FeedPost }) {
   };
 
   const getPostIcon = () => {
-    switch (post.type) {
+    switch (post.kind) {
       case 'note': return '📚';
       case 'question': return '❓';
       case 'photo': return '📷';
@@ -105,33 +105,30 @@ function PostCard({ post }: { post: FeedPost }) {
       </div>
 
       {/* Contenido específico por tipo */}
-      {post.type === 'note' && post.noteData && (
+      {post.kind === 'note' && post.title && (
         <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-blue-900">{post.noteData.title}</h4>
-            <Badge className="bg-blue-100 text-blue-800">{post.noteData.fileType}</Badge>
+            <h4 className="font-semibold text-blue-900">{post.title}</h4>
+            <Badge className="bg-blue-100 text-blue-800">Nota</Badge>
           </div>
           <div className="flex items-center space-x-4 text-sm text-blue-700">
             <span className="flex items-center">
               <DownloadIcon className="h-3 w-3 mr-1" />
-              {post.noteData.downloads} descargas
+              {post.stats.saves} guardados
             </span>
-            <span>⭐ {post.noteData.rating}/5</span>
-            <span>📖 {post.noteData.subject}</span>
+            <span>👁️ {post.stats.views} vistas</span>
           </div>
         </div>
       )}
 
-      {post.type === 'question' && post.questionData && (
+      {post.kind === 'question' && post.title && (
         <div className="mb-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-orange-900">{post.questionData.title}</h4>
-            {post.questionData.isSolved && (
-              <Badge className="bg-green-100 text-green-800">✅ Resuelto</Badge>
-            )}
+            <h4 className="font-semibold text-orange-900">{post.title}</h4>
+            <Badge className="bg-orange-100 text-orange-800">Pregunta</Badge>
           </div>
           <div className="flex flex-wrap gap-1">
-            {post.questionData.tags.map((tag, index) => (
+            {post.hashtags?.map((tag, index) => (
               <Badge key={index} variant="outline" className="text-xs">
                 #{tag}
               </Badge>
@@ -142,7 +139,7 @@ function PostCard({ post }: { post: FeedPost }) {
 
       {/* Contenido del post */}
       <div className="mb-4">
-        <p className="text-sm text-gray-800 mb-3">{post.content}</p>
+        <p className="text-sm text-gray-800 mb-3">{post.text}</p>
         
         {/* Media content */}
         {post.media && post.media.length > 0 && (
@@ -165,9 +162,9 @@ function PostCard({ post }: { post: FeedPost }) {
         )}
         
         {/* Tags */}
-        {post.tags && post.tags.length > 0 && (
+        {post.hashtags && post.hashtags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-3">
-            {post.tags.map((tag, index) => (
+            {post.hashtags.map((tag, index) => (
               <Badge key={index} variant="outline" className="text-xs">
                 #{tag}
               </Badge>

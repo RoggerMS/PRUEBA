@@ -21,33 +21,7 @@ import {
   AlertCircle,
   TrendingUp
 } from "lucide-react";
-
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  date: string;
-  time: string;
-  endTime?: string;
-  location: string;
-  category: string;
-  type: string;
-  organizer: string;
-  organizerAvatar: string;
-  attendees: number;
-  maxAttendees: number;
-  price: number;
-  tags: string[];
-  status: string;
-  isRegistered: boolean;
-  isFeatured: boolean;
-  difficulty?: string;
-  duration?: string;
-  prizes?: string[];
-  requirements?: string[];
-  speakers?: string[];
-}
+import { Event } from '@/shared/types/events';
 
 interface MyEventsProps {
   events: Event[];
@@ -55,94 +29,119 @@ interface MyEventsProps {
 }
 
 // Mock data for user's events
-const mockMyEvents = [
+const mockMyEvents: Event[] = [
   {
     id: "1",
     title: "Hackathon de Inteligencia Artificial",
     description: "Competencia de 48 horas para desarrollar soluciones innovadoras con IA",
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=AI%20hackathon%20event%20with%20students%20coding%20laptops%20modern%20tech%20atmosphere&image_size=landscape_4_3",
-    date: "2024-02-15",
-    time: "09:00",
-    endTime: "18:00",
+    imageUrl: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=AI%20hackathon%20event%20with%20students%20coding%20laptops%20modern%20tech%20atmosphere&image_size=landscape_4_3",
+    startDate: "2024-02-15T09:00:00Z",
+    endDate: "2024-02-17T18:00:00Z",
     location: "Auditorio Principal",
-    category: "Tecnología",
-    type: "Competencia",
-    organizer: "Club de Programación",
-    organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=programming%20club%20logo%20modern%20tech%20icon&image_size=square",
+    isOnline: false,
+    category: "TECHNOLOGY",
+    type: "COMPETITION",
+    organizer: {
+      id: "club-prog-1",
+      name: "Club de Programación",
+      image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=programming%20club%20logo%20modern%20tech%20icon&image_size=square"
+    },
+    organizerId: "club-prog-1",
     attendees: 156,
+    currentAttendees: 156,
     maxAttendees: 200,
     price: 0,
     tags: ["IA", "Programación", "Competencia", "Premios"],
     status: "upcoming",
     isRegistered: true,
     isFeatured: true,
-    difficulty: "Intermedio",
+    difficulty: "INTERMEDIATE",
     duration: "2 días",
     registrationDate: "2024-01-10",
-    attendanceStatus: "confirmed"
+    attendanceStatus: "confirmed",
+    canEdit: false,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-10T00:00:00Z"
   },
   {
     id: "2",
-    title: "Conferencia de Sostenibilidad",
-    description: "Charlas sobre medio ambiente y desarrollo sostenible",
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=sustainability%20conference%20green%20environment%20students%20presentation&image_size=landscape_4_3",
-    date: "2024-02-20",
-    time: "14:00",
-    endTime: "17:00",
-    location: "Sala de Conferencias",
-    category: "Académico",
-    type: "Conferencia",
-    organizer: "Club de Medio Ambiente",
-    organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=environmental%20club%20logo%20green%20nature%20icon&image_size=square",
-    attendees: 89,
+    title: "Conferencia de Inteligencia Artificial",
+    description: "Explora las últimas tendencias en IA y machine learning con expertos de la industria.",
+    imageUrl: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=AI%20conference%20academic%20presentation%20technology&image_size=landscape_4_3",
+    startDate: "2024-02-20T14:00:00Z",
+    endDate: "2024-02-20T17:00:00Z",
+    location: "Sala de Conferencias B",
+    isOnline: true,
+    category: "ACADEMIC",
+    type: "CONFERENCE",
+    organizer: {
+      id: "org2",
+      name: "Departamento de Ciencias",
+      image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=science%20department%20university%20logo&image_size=square"
+    },
+    organizerId: "org2",
+    attendees: 120,
+    currentAttendees: 120,
     maxAttendees: 150,
-    price: 15,
-    tags: ["Sostenibilidad", "Medio Ambiente", "Conferencia"],
-    status: "upcoming",
-    isRegistered: true,
+    price: 25,
+    tags: ["IA", "machine learning", "conferencia"],
+    status: "ACTIVE",
+    isRegistered: false,
     isFeatured: false,
-    difficulty: "Principiante",
+    difficulty: "ADVANCED",
     duration: "3 horas",
     registrationDate: "2024-01-15",
-    attendanceStatus: "pending"
+    attendanceStatus: "pending",
+    canEdit: false,
+    createdAt: "2024-01-10T08:00:00Z",
+    updatedAt: "2024-01-18T16:45:00Z"
   },
   {
     id: "3",
     title: "Taller de Desarrollo Web",
-    description: "Aprende las últimas tecnologías de desarrollo web",
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=web%20development%20workshop%20coding%20students%20computers&image_size=landscape_4_3",
-    date: "2024-01-20",
-    time: "10:00",
-    endTime: "16:00",
+    description: "Aprende las bases del desarrollo web moderno con React y Node.js.",
+    imageUrl: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=web%20development%20workshop%20coding%20react%20nodejs&image_size=landscape_4_3",
+    startDate: "2024-02-25T10:00:00Z",
+    endDate: "2024-02-25T16:00:00Z",
     location: "Laboratorio de Computación",
-    category: "Tecnología",
-    type: "Taller",
-    organizer: "Departamento de Sistemas",
-    organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=computer%20science%20department%20logo%20academic&image_size=square",
+    isOnline: false,
+    category: "WORKSHOP",
+    type: "WORKSHOP",
+    organizer: {
+      id: "org3",
+      name: "Instructor Juan Pérez",
+      image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=instructor%20teacher%20professional%20portrait&image_size=square"
+    },
+    organizerId: "org3",
     attendees: 25,
+    currentAttendees: 25,
     maxAttendees: 30,
-    price: 20,
-    tags: ["Web", "JavaScript", "React", "Taller"],
-    status: "completed",
+    price: 50,
+    tags: ["web", "react", "nodejs"],
+    status: "ACTIVE",
     isRegistered: true,
-    isFeatured: false,
-    difficulty: "Intermedio",
+    isFeatured: true,
+    difficulty: "BEGINNER",
     duration: "6 horas",
     registrationDate: "2024-01-05",
-    attendanceStatus: "attended"
+    attendanceStatus: "attended",
+    canEdit: false,
+    createdAt: "2024-01-05T12:00:00Z",
+    updatedAt: "2024-01-22T09:15:00Z"
   },
   {
     id: "4",
     title: "Seminario de Emprendimiento",
     description: "Estrategias para crear y hacer crecer tu startup",
     image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=entrepreneurship%20seminar%20business%20students%20presentation&image_size=landscape_4_3",
-    date: "2024-01-10",
-    time: "15:00",
-    endTime: "18:00",
+    startDate: "2024-01-10T15:00:00Z",
+    endDate: "2024-01-10T18:00:00Z",
     location: "Aula de Negocios",
-    category: "Extracurricular",
-    type: "Seminario",
+    isOnline: false,
+    category: "BUSINESS",
+    type: "SEMINAR",
     organizer: "Centro de Emprendimiento",
+    organizerId: "center-ent-1",
     organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=entrepreneurship%20center%20logo%20business&image_size=square",
     attendees: 45,
     maxAttendees: 50,
@@ -151,10 +150,12 @@ const mockMyEvents = [
     status: "completed",
     isRegistered: true,
     isFeatured: false,
-    difficulty: "Principiante",
+    difficulty: "BEGINNER",
     duration: "3 horas",
     registrationDate: "2024-01-01",
-    attendanceStatus: "no-show"
+    attendanceStatus: "no-show",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z"
   }
 ];
 
@@ -202,7 +203,7 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
   const sortedEvents = [...filteredEvents].sort((a, b) => {
     switch (sortBy) {
       case "date":
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
       case "registration":
         return new Date((a as any).registrationDate).getTime() - new Date((b as any).registrationDate).getTime();
       case "name":
