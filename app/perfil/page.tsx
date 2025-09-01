@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { SocialProfile, User } from '@/src/components/perfil/SocialProfile'
+import { SocialProfile, User } from '@/components/perfil/SocialProfile'
 import { Loader2 } from 'lucide-react'
 
 export default function PerfilPage() {
