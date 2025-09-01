@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Provide toast and loading components for events pages and coerce `page` and `limit` query parameters to numbers to avoid module resolution and validation errors.
 - Add missing events components and helpers so the events pages build without module resolution errors.
 - Default cart items to an empty array in `ShoppingCart` to prevent `reduce` on `undefined` errors when the cart is uninitialized.
 - Handle marketplace product tags provided as arrays or comma-separated strings to prevent runtime errors in product detail and search.
