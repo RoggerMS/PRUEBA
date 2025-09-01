@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Handle marketplace product tags provided as arrays or comma-separated strings to prevent runtime errors in product detail and search.
 - Fix undefined composer and redundant close button in feed; simplify quick action labels.
 - Fix duplicate default export in `CategoryFilter` component that caused Next.js build failures.
 - Hide main sidebar on mobile screens so it only appears on desktop.

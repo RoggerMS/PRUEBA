@@ -347,7 +347,10 @@ export default function MarketplacePage() {
   const filteredProducts = mockProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+                        (Array.isArray(product.tags)
+                          ? product.tags
+                          : (product.tags ?? '').split(',')
+                        ).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = selectedCategory === 'Todas' || product.category === selectedCategory;
     const matchesSubcategory = selectedSubcategory === 'Todas' || product.subcategory === selectedSubcategory;
     
