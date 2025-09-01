@@ -61,15 +61,19 @@ export function FacebookStyleComposer() {
   const [mentionQuery, setMentionQuery] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
 
-  // Extract hashtags from text
+  const trimmedText = typeof composer.text === 'string' ? composer.text.trim() : '';
+
+  // Extract hashtags from text safely
   const extractHashtags = useCallback((text: string): string[] => {
+    if (typeof text !== 'string') return [];
     const hashtagRegex = /#([a-zA-Z0-9_]+)/g;
     const matches = text.match(hashtagRegex);
     return matches ? matches.map(tag => tag.slice(1)) : [];
   }, []);
 
-  // Extract mentions from text
+  // Extract mentions from text safely
   const extractMentions = useCallback((text: string): string[] => {
+    if (typeof text !== 'string') return [];
     const mentionRegex = /@([a-zA-Z0-9_]+)/g;
     const matches = text.match(mentionRegex);
     return matches ? matches.map(mention => mention.slice(1)) : [];
@@ -151,7 +155,7 @@ export function FacebookStyleComposer() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!composer.text.trim() && composer.media.length === 0) {
+    if (!trimmedText && composer.media.length === 0) {
       toast.error('Agrega contenido o media para publicar');
       return;
     }
@@ -160,13 +164,13 @@ export function FacebookStyleComposer() {
 
     try {
       await createPost.mutateAsync({
-        text: composer.text.trim(),
+        text: trimmedText,
         kind: composer.activeTab,
         visibility: composer.visibility,
         hashtags: composer.hashtags,
         media: composer.media
       });
-      
+
       resetComposer();
       setMentions([]);
       toast.success('Post publicado exitosamente');
@@ -388,7 +392,8 @@ export function FacebookStyleComposer() {
                 ref={textareaRef}
                 placeholder={`¿Qué quieres ${composer.activeTab === 'note' ? 'enseñar' : composer.activeTab === 'question' ? 'preguntar' : 'compartir'}?`}
                 value={composer.text}
-                onChange={(e) => handleTextChange(e)}
+                // Pass only the textarea value to avoid runtime type errors
+                onChange={(e) => handleTextChange(e.target.value)}
                 className="min-h-[120px] resize-none border-0 focus-visible:ring-0 text-base"
                 maxLength={2000}
               />
@@ -520,9 +525,9 @@ export function FacebookStyleComposer() {
 
             {/* Botón de publicar */}
             <div className="flex justify-end">
-              <Button 
-                type="submit" 
-                disabled={(!composer.text.trim() && composer.media.length === 0) || composer.isSubmitting}
+              <Button
+                type="submit"
+                disabled={(!trimmedText && composer.media.length === 0) || composer.isSubmitting}
                 className="bg-blue-600 hover:bg-blue-700 px-8"
               >
                 {composer.isSubmitting ? 'Publicando...' : 'Publicar'}
