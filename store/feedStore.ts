@@ -313,42 +313,75 @@ export const useFeedStore = create<FeedStore>()(persist(
 
 // Selectors for better performance
 export const useComposer = () => useFeedStore((state) => state.composer);
-export const useComposerActions = () => useFeedStore((state) => ({
-  setComposerOpen: state.setComposerOpen,
-  setComposerTab: state.setComposerTab,
-  setComposerText: state.setComposerText,
-  setComposerMedia: state.setComposerMedia,
-  addComposerMedia: state.addComposerMedia,
-  removeComposerMedia: state.removeComposerMedia,
-  setComposerVisibility: state.setComposerVisibility,
-  setComposerHashtags: state.setComposerHashtags,
-  addComposerHashtag: state.addComposerHashtag,
-  removeComposerHashtag: state.removeComposerHashtag,
-  setComposerSubmitting: state.setComposerSubmitting,
-  resetComposer: state.resetComposer,
-}));
+export const useComposerActions = () => {
+  const setComposerOpen = useFeedStore((state) => state.setComposerOpen);
+  const setComposerTab = useFeedStore((state) => state.setComposerTab);
+  const setComposerText = useFeedStore((state) => state.setComposerText);
+  const setComposerMedia = useFeedStore((state) => state.setComposerMedia);
+  const addComposerMedia = useFeedStore((state) => state.addComposerMedia);
+  const removeComposerMedia = useFeedStore((state) => state.removeComposerMedia);
+  const setComposerVisibility = useFeedStore((state) => state.setComposerVisibility);
+  const setComposerHashtags = useFeedStore((state) => state.setComposerHashtags);
+  const addComposerHashtag = useFeedStore((state) => state.addComposerHashtag);
+  const removeComposerHashtag = useFeedStore((state) => state.removeComposerHashtag);
+  const setComposerSubmitting = useFeedStore((state) => state.setComposerSubmitting);
+  const resetComposer = useFeedStore((state) => state.resetComposer);
+
+  return {
+    setComposerOpen,
+    setComposerTab,
+    setComposerText,
+    setComposerMedia,
+    addComposerMedia,
+    removeComposerMedia,
+    setComposerVisibility,
+    setComposerHashtags,
+    addComposerHashtag,
+    removeComposerHashtag,
+    setComposerSubmitting,
+    resetComposer,
+  };
+};
 
 export const useUI = () => useFeedStore((state) => state.ui);
-export const useUIActions = () => useFeedStore((state) => ({
-  setSidebarCollapsed: state.setSidebarCollapsed,
-  setTheme: state.setTheme,
-  setCompactMode: state.setCompactMode,
-  setAutoPlayVideos: state.setAutoPlayVideos,
-  setShowNotifications: state.setShowNotifications,
-}));
+export const useUIActions = () => {
+  const setSidebarCollapsed = useFeedStore((state) => state.setSidebarCollapsed);
+  const setTheme = useFeedStore((state) => state.setTheme);
+  const setCompactMode = useFeedStore((state) => state.setCompactMode);
+  const setAutoPlayVideos = useFeedStore((state) => state.setAutoPlayVideos);
+  const setShowNotifications = useFeedStore((state) => state.setShowNotifications);
+
+  return {
+    setSidebarCollapsed,
+    setTheme,
+    setCompactMode,
+    setAutoPlayVideos,
+    setShowNotifications,
+  };
+};
 
 export const usePreferences = () => useFeedStore((state) => state.preferences);
 export const useKeyboard = () => useFeedStore((state) => state.keyboard);
-export const useCurrentFeed = () => useFeedStore((state) => ({
-  ranking: state.currentRanking,
-  filter: state.currentFilter,
-  selectedPostId: state.selectedPostId,
-}));
+export const useCurrentFeed = () => {
+  const ranking = useFeedStore((state) => state.currentRanking);
+  const filter = useFeedStore((state) => state.currentFilter);
+  const selectedPostId = useFeedStore((state) => state.selectedPostId);
 
-export const useFeedActions = () => useFeedStore((state) => ({
-  setCurrentRanking: state.setCurrentRanking,
-  setCurrentFilter: state.setCurrentFilter,
-  clearCurrentFilter: state.clearCurrentFilter,
-  setSelectedPostId: state.setSelectedPostId,
-  trackEvent: state.trackEvent,
-}));
+  return { ranking, filter, selectedPostId };
+};
+
+export const useFeedActions = () => {
+  const setCurrentRanking = useFeedStore((state) => state.setCurrentRanking);
+  const setCurrentFilter = useFeedStore((state) => state.setCurrentFilter);
+  const clearCurrentFilter = useFeedStore((state) => state.clearCurrentFilter);
+  const setSelectedPostId = useFeedStore((state) => state.setSelectedPostId);
+  const trackEvent = useFeedStore((state) => state.trackEvent);
+
+  return {
+    setCurrentRanking,
+    setCurrentFilter,
+    clearCurrentFilter,
+    setSelectedPostId,
+    trackEvent,
+  };
+};

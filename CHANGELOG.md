@@ -18,6 +18,8 @@
 - Wrap notifications API calls with a development debug fetch that counts usage.
 - Add global error boundary to log errors and offer reload or home navigation.
 - Guard club president access and details when data is missing to avoid runtime errors.
+- Split feed store selectors to prevent infinite re-render loops.
+- Correct missing Smile icon in Facebook-style composer.
 - Reorganize project by moving useful modules out of legacy `src` directory, consolidating components, hooks, types, store, and utilities under root paths.
 - Allow optional `includeActivity` parameter in `/api/clubs/my-clubs` to prevent validation failures when omitted.
 - Normalize club tag data to handle strings and prevent `slice(...).map` runtime errors in club cards and detail views.

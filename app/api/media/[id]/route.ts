@@ -190,3 +190,7 @@ export async function DELETE(
     console.error('Error deleting media:', error)
     return NextResponse.json(
       { error: 'Failed to delete media' },
+      { status: 500 }
+    )
+  }
+}
