@@ -715,3 +715,16 @@ SELECT id, true, true, true, true FROM users WHERE id NOT IN (SELECT userId FROM
 
 * **Service Workers**: Cache offline y actualizaciones en background
 
+## 8. Módulos del Feed
+
+| Módulo               | Ruta                      | Endpoint                    | Modelos Prisma                       | Esquema |
+|----------------------|---------------------------|-----------------------------|--------------------------------------|---------|
+| Feed Principal       | `/feed`                   | `/api/feed`                 | `Post`, `User`, `Like`, `Bookmark`   | Sí      |
+| Modal de Creación    | `/feed` (composer)        | `POST /api/feed`            | `Post`                               | Sí      |
+| Sistema de Comentarios | `/feed/[postId]`        | `/api/feed/[id]/comments`   | `Comment`, `Post`, `Like`            | Sí      |
+| Visor de Medios      | `/feed/media/[mediaId]`   | Pendiente                   | Pendiente                            | Pendiente |
+| Perfil de Usuario    | `/profile/[username]`     | `/api/users/[username]`     | `User`, `Post`, `Follow`             | Sí      |
+| Panel de Notificaciones | `/notifications`       | `/api/notifications`        | `Notification`                       | Sí      |
+
+Cada módulo indica su ruta principal, el endpoint asociado y los modelos de Prisma utilizados. Si el endpoint o el esquema aún no están implementados, se marca como pendiente.
+
