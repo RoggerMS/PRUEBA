@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -36,6 +37,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { UserMiniCard } from '@/components/sidebar/UserMiniCard';
 
 interface SidebarItem {
   name: string;
@@ -79,6 +81,7 @@ const quickActionItems: SidebarItem[] = [
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { data: session } = useSession();
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -143,6 +146,21 @@ export function Sidebar() {
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
         </div>
+
+        {/* User Mini Card */}
+        {!isCollapsed && session && session.user && (
+          <div className="mb-6">
+            <UserMiniCard
+              user={{
+                name: session.user.name || '',
+                username: (session.user as any).username || '',
+                level: 1,
+                xp: 0,
+                xpToNext: 100,
+              }}
+            />
+          </div>
+        )}
 
         {/* User Crolars Balance - Enhanced Visibility */}
         {!isCollapsed && (

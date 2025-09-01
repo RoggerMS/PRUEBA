@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { FacebookStyleComposer } from '@/components/feed/FacebookStyleComposer';
 import PostList from '@/components/feed/PostList';
-import { FeedSidebar } from '@/components/feed/FeedSidebar';
+import WeeklyChallengeInline from '@/components/feed/WeeklyChallengeInline';
 import { TrendingSidebar } from '@/components/feed/TrendingSidebar';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,49 +73,33 @@ export default function FeedPage() {
   const { data: session } = useSession();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Sidebar - Navigation & Quick Actions */}
-          <div className="hidden lg:block lg:col-span-3">
-            <div className="sticky top-6 space-y-6">
-              <Suspense fallback={<SidebarSkeleton />}>
-                <FeedSidebar />
+    <main className="min-h-screen w-full">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Timeline */}
+          <section className="lg:col-span-8 space-y-4">
+            {session && (
+              <Suspense fallback={<ComposerSkeleton />}>
+                <Composer />
               </Suspense>
-            </div>
-          </div>
+            )}
+            <WeeklyChallengeInline />
+            <Suspense fallback={<PostListSkeleton />}>
+              <PostList />
+            </Suspense>
+          </section>
 
-          {/* Main Feed Content */}
-          <div className="col-span-1 lg:col-span-6">
-            <div className="space-y-6">
-              {/* Composer (solo si está autenticado) */}
-              {session && (
-                <Suspense fallback={<ComposerSkeleton />}>
-          <FacebookStyleComposer />
-                </Suspense>
-              )}
+          {/* Sidebar derecha */}
+          <aside className="hidden lg:block lg:col-span-4 space-y-4">
+            <div className="space-y-4 sticky top-6">
 
-              {/* Post List */}
-              <Suspense fallback={<PostListSkeleton />}>
-                <PostList />
-              </Suspense>
-            </div>
-          </div>
-
-          {/* Right Sidebar - Suggestions & Trending */}
-          <div className="hidden lg:block lg:col-span-3">
-            <div className="sticky top-6 space-y-6">
               <Suspense fallback={<SidebarSkeleton />}>
                 <TrendingSidebar />
               </Suspense>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
-
-      {/* Mobile Bottom Navigation Spacer */}
-      <div className="h-20 lg:hidden" />
-    </div>
+    </main>
   );
 }
