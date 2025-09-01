@@ -125,9 +125,9 @@ export function Sidebar() {
   };
 
   return (
-    <aside 
+    <aside
       className={cn(
-        'sticky top-16 h-[calc(100vh-4rem)] bg-white border-r border-crunevo-200 transition-all duration-300 overflow-y-auto',
+        'hidden md:block sticky top-16 h-[calc(100vh-4rem)] bg-white border-r border-crunevo-200 transition-all duration-300 overflow-y-auto',
         isCollapsed ? 'w-16' : 'w-64'
       )}
     >
