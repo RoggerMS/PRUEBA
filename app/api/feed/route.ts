@@ -25,7 +25,8 @@ const feedQuerySchema = z.object({
   hashtag: z.string().optional(),
   author: z.string().optional(),
   following: z.coerce.boolean().default(false),
-  sort: z.enum(['recent', 'popular', 'trending']).default('recent')
+  sort: z.enum(['recent', 'popular', 'trending']).default('recent'),
+  saved: z.coerce.boolean().default(false)
 })
 
 // Helper function to extract hashtags from content
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const queryParams = feedQuerySchema.parse(Object.fromEntries(searchParams))
-    const { page, limit, type, hashtag, author, following, sort } = queryParams
+    const { page, limit, type, hashtag, author, following, sort, saved } = queryParams
     const skip = (page - 1) * limit
 
     const session = await getServerSession(authOptions)
@@ -104,6 +105,17 @@ export async function GET(request: NextRequest) {
             some: {
               followerId: userId
             }
+          }
+        }
+      })
+    }
+
+    // Saved posts filter
+    if (saved && userId) {
+      whereClause.AND.push({
+        bookmarks: {
+          some: {
+            userId
           }
         }
       })
@@ -212,8 +224,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform posts to include interaction flags and viewerState
+    const typeMap: Record<string, string> = {
+      TEXT: 'post',
+      IMAGE: 'photo',
+      VIDEO: 'video',
+      QUESTION: 'question',
+      NOTE: 'note'
+    }
+    const visibilityMap: Record<string, string> = {
+      PUBLIC: 'public',
+      FOLLOWERS: 'friends',
+      PRIVATE: 'private'
+    }
+
     const transformedPosts = posts.map(post => ({
       ...post,
+      kind: typeMap[post.type] || 'post',
+      visibility: visibilityMap[post.visibility] || 'public',
+      text: post.content,
       viewerState: {
         fired: userId ? post.likes?.length > 0 : false,
         saved: userId ? post.bookmarks?.length > 0 : false,
@@ -223,7 +251,7 @@ export async function GET(request: NextRequest) {
       stats: {
         fires: post._count.likes,
         comments: post._count.comments,
-        bookmarks: post._count.bookmarks,
+        saves: post._count.bookmarks,
         shares: post._count.shares,
         views: post.viewCount || 0
       },
@@ -235,6 +263,8 @@ export async function GET(request: NextRequest) {
       hashtags: post.hashtags.map(ph => ph.hashtag.name),
       mentions: post.mentions.map(pm => pm.mentioned),
       // Remove internal fields
+      content: undefined,
+      type: undefined,
       likes: undefined,
       bookmarks: undefined,
       reactions: undefined,
@@ -422,15 +452,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const typeMap: Record<string, string> = {
+      TEXT: 'post',
+      IMAGE: 'photo',
+      VIDEO: 'video',
+      QUESTION: 'question',
+      NOTE: 'note'
+    }
+    const visibilityMap: Record<string, string> = {
+      PUBLIC: 'public',
+      FOLLOWERS: 'friends',
+      PRIVATE: 'private'
+    }
+
     return NextResponse.json({
       id: post.id,
-      content: post.content,
-      type: post.type,
-      visibility: post.visibility,
+      kind: typeMap[post.type] || 'post',
+      text: post.content,
+      visibility: visibilityMap[post.visibility] || 'public',
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
       editedAt: post.editedAt,
-      author: post.author,
+      author: {
+        ...post.author,
+        avatar: post.author.image,
+      },
       media: post.media.map(pm => pm.media),
       hashtags: post.hashtags.map(ph => ph.hashtag.name),
       mentions: post.mentions.map(pm => ({
@@ -439,15 +485,16 @@ export async function POST(request: NextRequest) {
         name: pm.mentioned.name
       })),
       stats: {
-        likes: post._count.likes,
+        fires: post._count.likes,
         comments: post._count.comments,
-        bookmarks: post._count.bookmarks,
+        saves: post._count.bookmarks,
         shares: post._count.shares,
         views: post.viewCount
       },
       viewerState: {
-        liked: false,
-        bookmarked: false,
+        fired: false,
+        saved: false,
+        shared: false,
         reaction: null
       }
     }, { status: 201 })

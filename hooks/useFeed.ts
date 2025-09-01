@@ -1,22 +1,15 @@
 'use client';
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FeedPost, FeedKind, VisibilityLevel, FeedRanking } from '@/types/feed';
+import {
+  FeedPost,
+  FeedKind,
+  VisibilityLevel,
+  FeedRanking,
+  FeedResponse,
+  CreatePostData,
+} from '@/types/feed';
 import { toast } from 'sonner';
-
-interface FeedResponse {
-  posts: FeedPost[];
-  nextCursor?: string;
-  hasMore: boolean;
-}
-
-interface CreatePostData {
-  kind: FeedKind;
-  text?: string;
-  media?: File[];
-  visibility: VisibilityLevel;
-  hashtags?: string[];
-}
 
 interface FeedParams {
   ranking?: FeedRanking;
@@ -32,28 +25,50 @@ export function useFeed(params: FeedParams = {}) {
 
   return useInfiniteQuery({
     queryKey: ['feed', { ranking, kind, author, hashtag }],
-    queryFn: async ({ pageParam = undefined }) => {
+    queryFn: async ({ pageParam = 1 }) => {
       const searchParams = new URLSearchParams();
-      
-      if (pageParam) searchParams.set('cursor', pageParam);
+
+      searchParams.set('page', pageParam.toString());
       searchParams.set('limit', limit.toString());
-      searchParams.set('ranking', ranking);
-      if (kind) searchParams.set('kind', kind);
+
+      const sortMap: Record<FeedRanking, string> = {
+        home: 'recent',
+        recent: 'recent',
+        trending: 'trending',
+        saved: 'recent',
+      };
+      searchParams.set('sort', sortMap[ranking] || 'recent');
+      if (ranking === 'saved') {
+        searchParams.set('saved', 'true');
+      }
+
+      if (kind) {
+        const typeMap: Record<FeedKind, string> = {
+          post: 'TEXT',
+          photo: 'IMAGE',
+          video: 'VIDEO',
+          question: 'QUESTION',
+          note: 'NOTE',
+        };
+        searchParams.set('type', typeMap[kind]);
+      }
       if (author) searchParams.set('author', author);
       if (hashtag) searchParams.set('hashtag', hashtag);
 
       const response = await fetch(`/api/feed?${searchParams}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch feed');
       }
-      
+
       return response.json() as Promise<FeedResponse>;
     },
     getNextPageParam: (lastPage) => {
-      return lastPage.hasMore ? lastPage.nextCursor : undefined;
+      return lastPage.pagination.hasMore
+        ? lastPage.pagination.page + 1
+        : undefined;
     },
-    initialPageParam: undefined,
+    initialPageParam: 1,
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
     refetchOnWindowFocus: true,
@@ -67,35 +82,41 @@ export function useCreatePost() {
 
   return useMutation({
     mutationFn: async (data: CreatePostData) => {
-      const formData = new FormData();
-      
-      formData.append('kind', data.kind);
-      formData.append('visibility', data.visibility);
-      
-      if (data.text) {
-        formData.append('text', data.text);
-      }
-      
-      if (data.hashtags && data.hashtags.length > 0) {
-        formData.append('hashtags', JSON.stringify(data.hashtags));
-      }
-      
-      if (data.media && data.media.length > 0) {
-        data.media.forEach((file, index) => {
-          formData.append(`media_${index}`, file);
-        });
-      }
+      const typeMap: Record<FeedKind, string> = {
+        post: 'TEXT',
+        photo: 'IMAGE',
+        video: 'VIDEO',
+        question: 'QUESTION',
+        note: 'NOTE',
+      };
+
+      const visibilityMap: Record<VisibilityLevel, string> = {
+        public: 'PUBLIC',
+        university: 'PUBLIC',
+        friends: 'FOLLOWERS',
+        private: 'PRIVATE',
+      };
+
+      const payload = {
+        content: data.text || '',
+        type: typeMap[data.kind],
+        visibility: visibilityMap[data.visibility],
+        hashtags: data.hashtags,
+      };
 
       const response = await fetch('/api/feed', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to create post');
+        throw new Error(error.error || 'Failed to create post');
       }
-      
+
       return response.json() as Promise<FeedPost>;
     },
     onMutate: async (newPost) => {
@@ -312,12 +333,12 @@ export function useSavedPosts() {
   return useQuery({
     queryKey: ['saved-posts'],
     queryFn: async () => {
-      const response = await fetch('/api/feed?ranking=saved');
-      
+      const response = await fetch('/api/feed?saved=true');
+
       if (!response.ok) {
         throw new Error('Failed to fetch saved posts');
       }
-      
+
       return response.json() as Promise<FeedResponse>;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
