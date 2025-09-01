@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Align feed client with API pagination and add single post endpoint for local development.
+
 - Add aria-label to interest removal button for better accessibility.
 
 - Remove redundant Feed navigation item from sidebar and mobile menus.
