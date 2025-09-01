@@ -5,6 +5,8 @@
 - Fix duplicate default export in `CategoryFilter` component that caused Next.js build failures.
 - Hide main sidebar on mobile screens so it only appears on desktop.
 
+- Hide main sidebar on mobile so it only appears on desktop.
+
 - Add user stats and trending topics API endpoints to resolve profile and feed 404 errors.
 - Provide default and placeholder avatars to eliminate broken image requests.
 - Handle profile loading failures gracefully and display an error message instead of an endless spinner.
