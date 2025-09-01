@@ -80,7 +80,7 @@ export default function FeedPage() {
           <section className="lg:col-span-8 space-y-4">
             {session && (
               <Suspense fallback={<ComposerSkeleton />}>
-                <Composer />
+                <FacebookStyleComposer />
               </Suspense>
             )}
             <WeeklyChallengeInline />
