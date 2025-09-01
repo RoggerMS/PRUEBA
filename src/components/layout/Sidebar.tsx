@@ -3,17 +3,79 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Coins, Flame, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import {
+  Home,
+  User,
+  FileText,
+  MessageSquare,
+  Users,
+  Calendar,
+  BookOpen,
+  ShoppingCart,
+  Gamepad2,
+  Target,
+  Trophy,
+  Bot,
+  TrendingUp,
+  Bookmark,
+  Coins,
+  Flame,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+  HelpCircle,
+  UserPlus,
+  Award,
+  Star,
+  Grid3X3,
+  GraduationCap,
+  ShoppingBag,
+  Zap,
+  Rss
+} from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import {
-  mainNavItems,
-  gamificationItems,
-  utilityItems,
-  quickActionItems,
-  SidebarItem,
-} from './sidebarData';
+
+interface SidebarItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string | number;
+  color?: string;
+}
+
+const mainNavItems: SidebarItem[] = [
+  { name: 'Inicio', href: '/', icon: Home },
+  { name: 'Feed', href: '/feed', icon: Rss },
+  { name: 'Perfil', href: '/perfil', icon: User },
+  { name: 'Workspace', href: '/workspace', icon: Grid3X3, color: 'text-crunevo-600' },
+  { name: 'Apuntes', href: '/notes', icon: FileText },
+  { name: 'Foro', href: '/forum', icon: MessageSquare },
+  { name: 'Clubes', href: '/clubs', icon: Users },
+  { name: 'Eventos', href: '/events', icon: Calendar },
+  { name: 'Cursos', href: '/courses', icon: GraduationCap },
+  { name: 'Tienda', href: '/marketplace', icon: ShoppingBag },
+];
+
+const gamificationItems: SidebarItem[] = [
+  { name: 'Gamificación', href: '/perfil/gamification', icon: Zap, color: 'text-crunevo-600' },
+  { name: 'Misiones', href: '/challenges', icon: Target, badge: '3' },
+  { name: 'Ranking', href: '/ranking', icon: Trophy },
+  { name: 'Liga Académica', href: '/league', icon: Award },
+];
+
+const utilityItems: SidebarItem[] = [
+  { name: 'CruneBot', href: '/crunebot', icon: Bot, color: 'text-crunevo-600' },
+  { name: 'Tendencias', href: '/trending', icon: TrendingUp },
+  { name: 'Guardados', href: '/bookmarks', icon: Bookmark },
+];
+
+const quickActionItems: SidebarItem[] = [
+  { name: 'Subir Apunte', href: '/notes/upload', icon: Upload },
+  { name: 'Hacer Pregunta', href: '/forum/ask', icon: HelpCircle },
+  { name: 'Crear Club', href: '/clubs/create', icon: UserPlus },
+];
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
