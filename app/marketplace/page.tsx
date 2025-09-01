@@ -22,7 +22,9 @@ import ProductDetail from '@/components/marketplace/ProductDetail';
 import SellProductModal from '@/components/marketplace/SellProductModal';
 import CategoryFilter from '@/components/marketplace/CategoryFilter';
 import MarketplaceStats from '@/components/marketplace/MarketplaceStats';
-import ShoppingCartComponent from '@/components/marketplace/ShoppingCart';
+// Import ShoppingCart as a named export to ensure the component is defined
+// correctly when rendered in the page.
+import { ShoppingCart as ShoppingCartComponent } from '@/components/marketplace/ShoppingCart';
 
 // Mock data para productos del marketplace
 const mockProducts = [
@@ -299,6 +301,36 @@ export default function MarketplacePage() {
     // Aquí se implementaría la lógica de checkout
   };
 
+  // Transform simple cart items into detailed items expected by ShoppingCart
+  // component by merging with product information.
+  const cartItemsDetailed = cartItems
+    .map((item) => {
+      const product = mockProducts.find((p) => p.id === item.id);
+      if (!product) return null;
+      return {
+        id: item.id,
+        productId: product.id,
+        productName: product.name,
+        productImage: product.images[0],
+        price: product.price,
+        priceInSoles: product.priceInSoles,
+        quantity: item.quantity,
+        stock: product.stock,
+        seller: product.seller,
+      };
+    })
+    .filter(Boolean) as Array<{
+      id: string;
+      productId: string;
+      productName: string;
+      productImage: string;
+      price: number;
+      priceInSoles: number;
+      quantity: number;
+      stock: number;
+      seller: { id: string; name: string; avatar?: string };
+    }>;
+
   // Si hay un producto seleccionado, mostrar ProductDetail
   if (selectedProductId) {
     const selectedProduct = mockProducts.find(p => p.id === selectedProductId);
@@ -539,7 +571,7 @@ export default function MarketplacePage() {
       <ShoppingCartComponent
         isOpen={showCart}
         onClose={() => setShowCart(false)}
-        cartItems={cartItems}
+        items={cartItemsDetailed}
         onUpdateQuantity={updateCartQuantity}
         onRemoveItem={removeFromCart}
         onCheckout={handleCheckout}
