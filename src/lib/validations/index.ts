@@ -15,7 +15,7 @@ export const commonValidations = {
   url: z.string().url('URL inválida'),
   
   // Phone validation (basic)
-  phone: z.string().regex(/^[+]?[0-9\s\-\(\)]{10,}$/, 'Número de teléfono inválido'),
+  phone: z.string().regex(/^[+]?[0-9\s\-()]{10,}$/, 'Número de teléfono inválido'),
   
   // Date validation
   futureDate: z.string().refine((date) => {

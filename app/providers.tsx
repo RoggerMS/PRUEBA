@@ -6,6 +6,7 @@ import { Toaster } from 'sonner'
 import { useState } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { NotificationProvider as GamificationNotificationProvider } from '../components/notifications/NotificationProvider'
+import { ToastProvider } from '@/components/ui/toast'
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -32,7 +33,9 @@ export default function Providers({ children }: ProvidersProps) {
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
         <GamificationNotificationProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
           <Toaster
             position="top-right"
             richColors
