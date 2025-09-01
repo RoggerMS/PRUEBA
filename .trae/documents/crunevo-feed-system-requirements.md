@@ -44,6 +44,21 @@ Nuestro sistema de feed mejorado incluye las siguientes páginas principales:
 | Perfil Usuario | Gestión Seguidores | Seguir/dejar de seguir, ver lista de seguidores y seguidos |
 | Perfil Usuario | Configuración Feed | Personalizar qué tipo de contenido ver, notificaciones, privacidad |
 
+### 2.4 Perfil de Usuario
+
+#### Preferencias del Feed
+
+Los usuarios pueden personalizar cómo se muestra el contenido mediante los siguientes ajustes:
+
+- **showFollowingFirst**: prioriza las publicaciones de cuentas seguidas.
+- **showMediaPosts**: controla la visualización de posts con imágenes o videos.
+- **showQuestionPosts**: incluye o excluye preguntas de la comunidad.
+- **showNotePosts**: muestra u oculta apuntes.
+- **autoplayVideos**: reproduce automáticamente los videos en el timeline.
+- **emailNotifications** y **pushNotifications**: gestionan alertas externas sobre actividad del feed.
+
+Estas preferencias se editan en `/settings/feed` a través de interruptores. Al guardar los cambios se actualiza el registro `user_feed_settings` del usuario. El endpoint `GET /api/feed` lee estas opciones para construir su consulta: `showFollowingFirst` modifica el orden de los resultados, mientras que los demás toggles añaden filtros para incluir solo los tipos de posts permitidos. La opción `autoplayVideos` se aplica en el cliente para decidir si los videos comienzan a reproducirse automáticamente.
+
 ## 3. Flujo Principal de Usuario
 
 ### Flujo de Estudiante Regular
