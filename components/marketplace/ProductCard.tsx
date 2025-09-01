@@ -26,7 +26,7 @@ interface Product {
     username: string;
   } | null;
   images: string[];
-  tags?: string;
+  tags?: string[] | string;
   createdAt: Date | string;
   isFeatured: boolean;
   favoriteCount?: number;

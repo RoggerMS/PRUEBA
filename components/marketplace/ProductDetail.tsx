@@ -45,7 +45,7 @@ interface Product {
     username: string;
   } | null;
   images: string[];
-  tags?: string;
+  tags?: string[] | string;
   createdAt: Date | string;
   isFeatured: boolean;
   favoriteCount?: number;
@@ -234,7 +234,10 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                         <div>
                           <h4 className="font-semibold text-gray-900 mb-2">Etiquetas</h4>
                           <div className="flex flex-wrap gap-2">
-                            {product.tags.split(',').map((tag, index) => (
+                            {(Array.isArray(product.tags)
+                              ? product.tags
+                              : (product.tags as string).split(',')
+                            ).map((tag, index) => (
                               <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-700">
                                 <Tag className="w-3 h-3 mr-1" />
                                 {tag.trim()}
