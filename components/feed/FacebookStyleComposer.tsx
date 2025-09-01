@@ -277,31 +277,39 @@ export function FacebookStyleComposer() {
           else closeModal();
         }}
       >
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="flex items-center">
-            <DialogTitle className="text-xl font-semibold">Crear publicación</DialogTitle>
+        <DialogContent className="w-[95vw] sm:w-full sm:max-w-[600px] max-w-none max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="pb-3 sm:pb-4">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg font-semibold">
+              <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
+                <AvatarImage src={session?.user?.image || ''} />
+                <AvatarFallback className="text-xs sm:text-sm">{session?.user?.name?.[0] || 'U'}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm sm:text-base">Crear publicación</span>
+            </DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             {/* Header del modal con avatar */}
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-10 w-10">
+            <div className="flex items-start space-x-3">
+              <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                 <img 
                   src={session.user?.image || '/default-avatar.png'} 
                   alt={session.user?.name || 'Usuario'}
                   className="rounded-full"
                 />
               </Avatar>
-              <div>
-                <p className="font-medium text-sm">{session.user?.name}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <div className="flex space-x-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{session.user?.name}</p>
+                
+                {/* Tabs - Stack on mobile */}
+                <div className="mt-2 space-y-2 sm:space-y-0">
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
                     <Button
                       type="button"
                       variant={composer.activeTab === 'post' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setComposerTab('post')}
-                      className="text-xs"
+                      className="text-xs px-2 py-1 h-7 sm:h-8 sm:px-3"
                     >
                       💬 Post
                     </Button>
@@ -310,7 +318,7 @@ export function FacebookStyleComposer() {
                       variant={composer.activeTab === 'note' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setComposerTab('note')}
-                      className="text-xs"
+                      className="text-xs px-2 py-1 h-7 sm:h-8 sm:px-3"
                     >
                       📚 Apunte
                     </Button>
@@ -319,15 +327,15 @@ export function FacebookStyleComposer() {
                       variant={composer.activeTab === 'question' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setComposerTab('question')}
-                      className="text-xs"
+                      className="text-xs px-2 py-1 h-7 sm:h-8 sm:px-3"
                     >
                       ❓ Pregunta
                     </Button>
                   </div>
                   
-                  {/* Visibility selector */}
+                  {/* Visibility selector - Full width on mobile */}
                   <Select value={composer.visibility} onValueChange={(value: VisibilityLevel) => setComposerVisibility(value)}>
-                    <SelectTrigger className="w-32 h-8">
+                    <SelectTrigger className="w-full sm:w-32 h-8">
                       <SelectValue>
                         <div className="flex items-center space-x-1">
                           {(() => {
@@ -339,7 +347,7 @@ export function FacebookStyleComposer() {
                                 <span className="text-xs">{config.label}</span>
                               </>
                             );
-                          })()}
+                          })()} 
                         </div>
                       </SelectValue>
                     </SelectTrigger>
@@ -394,7 +402,7 @@ export function FacebookStyleComposer() {
                 value={composer.text}
                 // Pass only the textarea value to avoid runtime type errors
                 onChange={(e) => handleTextChange(e.target.value)}
-                className="min-h-[120px] resize-none border-0 focus-visible:ring-0 text-base"
+                className="min-h-[100px] sm:min-h-[120px] resize-none border-0 focus-visible:ring-0 text-sm sm:text-base"
                 maxLength={2000}
               />
               
@@ -424,25 +432,25 @@ export function FacebookStyleComposer() {
             {composer.media.length > 0 && (
               <div className="mt-3">
                 <div className="text-sm text-gray-600 mb-2">Archivos adjuntos:</div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {composer.media.map((file, index) => (
                     <div key={index} className="relative group">
                       {file.type.startsWith('image/') ? (
                         <img
                           src={URL.createObjectURL(file)}
                           alt="Preview"
-                          className="w-full h-24 object-cover rounded-lg"
+                          className="w-full h-20 sm:h-24 object-cover rounded-lg"
                         />
                       ) : (
-                        <div className="w-full h-24 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <Video className="h-8 w-8 text-gray-400" />
-                          <span className="ml-2 text-sm text-gray-600">{file.name}</span>
+                        <div className="w-full h-20 sm:h-24 bg-gray-100 rounded-lg flex items-center justify-center p-2">
+                          <Video className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 flex-shrink-0" />
+                          <span className="ml-2 text-xs sm:text-sm text-gray-600 truncate">{file.name}</span>
                         </div>
                       )}
                       <button
                         type="button"
                         onClick={() => removeComposerMedia(index)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-75 sm:opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -462,12 +470,12 @@ export function FacebookStyleComposer() {
               <h3 className="text-sm font-medium mb-3 text-gray-700">
                 Agregar a tu publicación
               </h3>
-              <div className="flex space-x-2">
+              <div className="grid grid-cols-2 sm:flex sm:space-x-2 gap-2 sm:gap-0">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   size="sm"
-                  className="flex-1 hover:bg-gray-100"
+                  className="flex-1 hover:bg-gray-100 h-9 sm:h-8 text-xs sm:text-sm"
                   onClick={() => {
                     const textarea = textareaRef.current;
                     if (textarea) {
@@ -481,56 +489,67 @@ export function FacebookStyleComposer() {
                     }
                   }}
                 >
-                  <SmileIcon className="h-4 w-4 mr-2" />
-                  Emoji 🙂
+                  <SmileIcon className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Emoji 🙂</span>
+                  <span className="sm:hidden">😊</span>
                 </Button>
                 <Button 
                   type="button" 
                   variant="ghost" 
                   size="sm"
-                  className="flex-1 hover:bg-gray-100"
+                  className="flex-1 hover:bg-gray-100 h-9 sm:h-8 text-xs sm:text-sm"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Camera className="h-4 w-4 mr-2" />
-                  Fotos/Videos 📷
+                  <Camera className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Fotos/Videos 📷</span>
+                  <span className="sm:hidden">Foto</span>
                 </Button>
                 <Button 
                   type="button" 
                   variant="ghost" 
                   size="sm"
-                  className="flex-1 hover:bg-gray-100"
+                  className="flex-1 hover:bg-gray-100 h-9 sm:h-8 text-xs sm:text-sm"
                   onClick={() => {
                     setComposerTab('note');
                     textareaRef.current?.focus();
                   }}
                 >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Apuntes 📘
+                  <BookOpen className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Apuntes 📘</span>
+                  <span className="sm:hidden">Nota</span>
                 </Button>
                 <Button 
                   type="button" 
                   variant="ghost" 
                   size="sm"
-                  className="flex-1 hover:bg-gray-100"
+                  className="flex-1 hover:bg-gray-100 h-9 sm:h-8 text-xs sm:text-sm"
                   onClick={() => {
                     setComposerTab('question');
                     textareaRef.current?.focus();
                   }}
                 >
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Preguntas ❓
+                  <HelpCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Preguntas ❓</span>
+                  <span className="sm:hidden">?</span>
                 </Button>
               </div>
             </div>
 
             {/* Botón de publicar */}
-            <div className="flex justify-end">
+            <div className="flex justify-end mt-4 pt-3 border-t">
               <Button
                 type="submit"
                 disabled={(!trimmedText && composer.media.length === 0) || composer.isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700 px-8"
+                className="px-4 sm:px-6 w-full sm:w-auto h-10 sm:h-9 text-sm font-medium bg-blue-600 hover:bg-blue-700"
               >
-                {composer.isSubmitting ? 'Publicando...' : 'Publicar'}
+                {composer.isSubmitting ? (
+                  <>
+                    <span className="hidden sm:inline">Publicando...</span>
+                    <span className="sm:hidden">...</span>
+                  </>
+                ) : (
+                  'Publicar'
+                )}
               </Button>
             </div>
           </form>

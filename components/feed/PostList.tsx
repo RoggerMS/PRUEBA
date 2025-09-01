@@ -5,6 +5,12 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   HeartIcon, 
   MessageCircleIcon, 
@@ -15,7 +21,10 @@ import {
   DownloadIcon,
   StarIcon,
   LoaderIcon,
-  FlameIcon
+  FlameIcon,
+  EditIcon,
+  TrashIcon,
+  FlagIcon
 } from 'lucide-react';
 import { useFeed, useFireReaction } from '@/hooks/useFeed';
 import { FeedPost } from '@/types/feed';
@@ -104,9 +113,34 @@ function PostCard({ post }: { post: FeedPost }) {
             @{post.author.username} • {formatTimeAgo(post.createdAt)}
           </p>
         </div>
-        <Button variant="ghost" size="sm">
-          <MoreHorizontalIcon className="h-4 w-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => toast.info('Función de editar próximamente')}>
+              <EditIcon className="h-4 w-4 mr-2" />
+              Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleBookmark}>
+              <BookmarkIcon className="h-4 w-4 mr-2" />
+              {isBookmarked ? 'Quitar de guardados' : 'Guardar'}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toast.info('Función de reportar próximamente')}>
+              <FlagIcon className="h-4 w-4 mr-2" />
+              Reportar
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => toast.info('Función de eliminar próximamente')}
+              className="text-red-600 focus:text-red-600"
+            >
+              <TrashIcon className="h-4 w-4 mr-2" />
+              Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Contenido específico por tipo */}
