@@ -1,245 +1,372 @@
-import { gamificationEventBus, GamificationEvents } from '@/lib/eventBus';
-export { LEVELS, calculateUserLevel } from '@/src/services/gamificationService';
+import { User, Level, XPGain, Badge, Achievement, Notification } from '@/types/gamification'
+import { notificationService } from './notificationService'
 
-export interface GamificationEvent {
-  type: 'xp_gained' | 'badge_earned' | 'level_up' | 'achievement_unlocked' | 'streak_updated';
-  userId: string;
-  data: {
-    amount?: number;
-    badgeId?: string;
-    achievementId?: string;
-    level?: number;
-    streak?: number;
-    source?: string;
-    metadata?: Record<string, any>;
-  };
-  timestamp: Date;
-}
+// Configuración de niveles
+export const LEVELS: Level[] = [
+  { level: 1, name: 'Novato', minXp: 0, maxXp: 100, rewards: { crolars: 50 } },
+  { level: 2, name: 'Aprendiz', minXp: 100, maxXp: 250, rewards: { crolars: 75 } },
+  { level: 3, name: 'Estudiante', minXp: 250, maxXp: 500, rewards: { crolars: 100, badges: ['Primer Paso'] } },
+  { level: 4, name: 'Dedicado', minXp: 500, maxXp: 850, rewards: { crolars: 125 } },
+  { level: 5, name: 'Comprometido', minXp: 850, maxXp: 1300, rewards: { crolars: 150, badges: ['Constancia'] } },
+  { level: 6, name: 'Avanzado', minXp: 1300, maxXp: 1850, rewards: { crolars: 200 } },
+  { level: 7, name: 'Experto', minXp: 1850, maxXp: 2500, rewards: { crolars: 250 } },
+  { level: 8, name: 'Maestro', minXp: 2500, maxXp: 3300, rewards: { crolars: 300, badges: ['Maestría'] } },
+  { level: 9, name: 'Sabio', minXp: 3300, maxXp: 4250, rewards: { crolars: 400 } },
+  { level: 10, name: 'Leyenda', minXp: 4250, maxXp: 5350, rewards: { crolars: 500, badges: ['Leyenda Académica'] } },
+  { level: 11, name: 'Titán', minXp: 5350, maxXp: 6600, rewards: { crolars: 600 } },
+  { level: 12, name: 'Inmortal', minXp: 6600, maxXp: 8100, rewards: { crolars: 750, badges: ['Inmortal del Saber'] } },
+  { level: 13, name: 'Divino', minXp: 8100, maxXp: 10000, rewards: { crolars: 1000 } },
+  { level: 14, name: 'Trascendente', minXp: 10000, maxXp: 12500, rewards: { crolars: 1250, badges: ['Trascendencia'] } },
+  { level: 15, name: 'Omnisciente', minXp: 12500, maxXp: Infinity, rewards: { crolars: 1500, badges: ['Omnisciencia'] } }
+]
 
-export interface UserProgress {
-  userId: string;
-  totalXP: number;
-  level: number;
-  badges: string[];
-  achievements: string[];
-  streaks: Record<string, number>;
-  lastActivity: Date;
+// Configuración de XP por actividad
+export const XP_REWARDS = {
+  COURSE_LESSON_COMPLETE: 25,
+  COURSE_COMPLETE: 200,
+  CHALLENGE_COMPLETE: 100,
+  FORUM_QUESTION: 15,
+  FORUM_ANSWER: 20,
+  FORUM_BEST_ANSWER: 50,
+  NOTE_UPLOAD: 10,
+  NOTE_SHARED: 5,
+  EVENT_ATTEND: 30,
+  CLUB_JOIN: 20,
+  CLUB_POST: 10,
+  DAILY_STREAK: 15,
+  WEEKLY_STREAK: 100,
+  MONTHLY_STREAK: 500,
+  ACHIEVEMENT_UNLOCK: 50,
+  BADGE_EARN: 25
 }
 
 class GamificationService {
-  private userProgress: Map<string, UserProgress> = new Map();
-
-  // Initialize user progress
-  initializeUser(userId: string): UserProgress {
-    if (!this.userProgress.has(userId)) {
-      const progress: UserProgress = {
-        userId,
-        totalXP: 0,
-        level: 1,
-        badges: [],
-        achievements: [],
-        streaks: {},
-        lastActivity: new Date()
-      };
-      this.userProgress.set(userId, progress);
-      return progress;
-    }
-    return this.userProgress.get(userId)!;
-  }
-
-  // Get user progress
-  getUserProgress(userId: string): UserProgress | null {
-    return this.userProgress.get(userId) || null;
-  }
-
-  // Award XP to user
-  async awardXP(userId: string, amount: number, source: string = 'general'): Promise<void> {
-    const progress = this.initializeUser(userId);
-    const oldLevel = progress.level;
-    
-    progress.totalXP += amount;
-    progress.level = this.calculateLevel(progress.totalXP);
-    progress.lastActivity = new Date();
-    
-    // Emit XP gained event using existing event bus structure
-    // For now, we'll use the closest matching event type
-    gamificationEventBus.emitGamificationEvent('profile_updated', {
-      userId
-    });
-    
-    // Check for level up
-    if (progress.level > oldLevel) {
-      await this.handleLevelUp(userId, progress.level, oldLevel);
-    }
-    
-    // Check for achievements
-    await this.checkAchievements(userId, progress);
-  }
-
-  // Award badge to user
-  async awardBadge(userId: string, badgeId: string): Promise<void> {
-    const progress = this.initializeUser(userId);
-    
-    if (!progress.badges.includes(badgeId)) {
-      progress.badges.push(badgeId);
-      progress.lastActivity = new Date();
-      
-      gamificationEventBus.emitGamificationEvent('badge_earned', {
-        userId,
-        badgeId
-      });
-    }
-  }
-
-  // Unlock achievement
-  async unlockAchievement(userId: string, achievementId: string): Promise<void> {
-    const progress = this.initializeUser(userId);
-    
-    if (!progress.achievements.includes(achievementId)) {
-      progress.achievements.push(achievementId);
-      progress.lastActivity = new Date();
-      
-      // Use profile_updated as closest match for achievement unlocked
-      gamificationEventBus.emitGamificationEvent('profile_updated', {
-        userId
-      });
-    }
-  }
-
-  // Update streak
-  async updateStreak(userId: string, streakType: string, count: number): Promise<void> {
-    const progress = this.initializeUser(userId);
-    const oldStreak = progress.streaks[streakType] || 0;
-    
-    progress.streaks[streakType] = count;
-    progress.lastActivity = new Date();
-    
-    gamificationEventBus.emitGamificationEvent('login_streak', {
-      userId,
-      streakDays: count
-    });
-  }
-
-  // Handle level up
-  private async handleLevelUp(userId: string, newLevel: number, oldLevel: number): Promise<void> {
-    gamificationEventBus.emitGamificationEvent('level_reached', {
-      userId,
-      level: newLevel
-    });
-    
-    // Award level-up badge if applicable
-    if (newLevel % 5 === 0) {
-      await this.awardBadge(userId, `level_${newLevel}`);
-    }
-  }
-
-  // Calculate level from XP
-  private calculateLevel(totalXP: number): number {
-    // Simple level calculation: 100 XP per level, with increasing requirements
-    let level = 1;
-    let xpRequired = 100;
-    let currentXP = totalXP;
-    
-    while (currentXP >= xpRequired) {
-      currentXP -= xpRequired;
-      level++;
-      xpRequired = Math.floor(xpRequired * 1.2); // 20% increase per level
-    }
-    
-    return level;
-  }
-
-  // Check for achievements based on progress
-  private async checkAchievements(userId: string, progress: UserProgress): Promise<void> {
-    const achievements = [
-      { id: 'first_100_xp', condition: () => progress.totalXP >= 100 },
-      { id: 'first_500_xp', condition: () => progress.totalXP >= 500 },
-      { id: 'first_1000_xp', condition: () => progress.totalXP >= 1000 },
-      { id: 'badge_collector', condition: () => progress.badges.length >= 5 },
-      { id: 'level_5', condition: () => progress.level >= 5 },
-      { id: 'level_10', condition: () => progress.level >= 10 },
-      { id: 'streak_master', condition: () => Object.values(progress.streaks).some(s => s >= 7) }
-    ];
-    
-    for (const achievement of achievements) {
-      if (achievement.condition() && !progress.achievements.includes(achievement.id)) {
-        await this.unlockAchievement(userId, achievement.id);
+  // Calcular nivel basado en XP
+  calculateLevel(totalXp: number): Level {
+    for (let i = LEVELS.length - 1; i >= 0; i--) {
+      if (totalXp >= LEVELS[i].minXp) {
+        return LEVELS[i]
       }
     }
+    return LEVELS[0]
   }
 
-  // Get XP for next level
-  getXPForNextLevel(userId: string): { current: number; required: number; progress: number } {
-    const progress = this.getUserProgress(userId);
-    if (!progress) {
-      return { current: 0, required: 100, progress: 0 };
+  // Calcular XP necesario para el siguiente nivel
+  getXpToNextLevel(currentXp: number): { needed: number; total: number } {
+    const currentLevel = this.calculateLevel(currentXp)
+    const nextLevel = LEVELS.find(l => l.level === currentLevel.level + 1)
+    
+    if (!nextLevel) {
+      return { needed: 0, total: 0 }
     }
-    
-    let level = 1;
-    let xpRequired = 100;
-    let totalXPUsed = 0;
-    
-    // Calculate XP used for current level
-    while (level < progress.level) {
-      totalXPUsed += xpRequired;
-      level++;
-      xpRequired = Math.floor(xpRequired * 1.2);
-    }
-    
-    const currentLevelXP = progress.totalXP - totalXPUsed;
-    const progressPercent = (currentLevelXP / xpRequired) * 100;
     
     return {
-      current: currentLevelXP,
-      required: xpRequired,
-      progress: Math.min(progressPercent, 100)
-    };
-  }
-
-  // Get leaderboard
-  getLeaderboard(limit: number = 10): UserProgress[] {
-    return Array.from(this.userProgress.values())
-      .sort((a, b) => b.totalXP - a.totalXP)
-      .slice(0, limit);
-  }
-
-  // Activity tracking methods
-  async trackChatMessage(userId: string): Promise<void> {
-    await this.awardXP(userId, 5, 'chat_message');
-  }
-
-  async trackQuestionAsked(userId: string): Promise<void> {
-    await this.awardXP(userId, 10, 'question_asked');
-  }
-
-  async trackHelpfulResponse(userId: string): Promise<void> {
-    await this.awardXP(userId, 15, 'helpful_response');
-  }
-
-  async trackDailyLogin(userId: string): Promise<void> {
-    const today = new Date().toDateString();
-    const progress = this.getUserProgress(userId);
-    
-    if (progress && progress.lastActivity.toDateString() !== today) {
-      await this.awardXP(userId, 20, 'daily_login');
-      
-      // Update daily streak
-      const currentStreak = progress.streaks['daily_login'] || 0;
-      await this.updateStreak(userId, 'daily_login', currentStreak + 1);
+      needed: nextLevel.minXp - currentXp,
+      total: nextLevel.minXp - currentLevel.minXp
     }
   }
 
-  async trackQuickActionUsed(userId: string): Promise<void> {
-    await this.awardXP(userId, 8, 'quick_action');
+  // Otorgar XP a un usuario
+  async grantXP(
+    userId: string, 
+    amount: number, 
+    source: XPGain['source'], 
+    sourceId: string, 
+    description: string
+  ): Promise<{ levelUp: boolean; newLevel?: Level; notifications: Notification[] }> {
+    // En una implementación real, esto interactuaría con la base de datos
+    const user = await this.getUser(userId)
+    const oldLevel = this.calculateLevel(user.totalXp)
+    
+    user.xp += amount
+    user.totalXp += amount
+    
+    const newLevel = this.calculateLevel(user.totalXp)
+    const levelUp = newLevel.level > oldLevel.level
+    
+    const notifications: Notification[] = []
+    
+    // Notificación de XP ganado
+    notifications.push({
+      id: `xp_${Date.now()}`,
+      userId,
+      type: 'GAMIFICATION',
+      title: `¡+${amount} XP ganados!`,
+      message: `Has ganado ${amount} XP por ${description}`,
+      data: { amount, source, sourceId },
+      read: false,
+      createdAt: new Date()
+    })
+    
+    // Enviar notificación usando el servicio
+    await notificationService.notifyXPGained(amount, description)
+    
+    // Si subió de nivel, enviar notificación de nivel
+    if (levelUp) {
+      notificationService.notifyLevelUp(newLevel.level)
+    }
+    
+    // Si subió de nivel
+    if (levelUp) {
+      user.level = newLevel.level
+      user.crolars += newLevel.rewards.crolars
+      
+      notifications.push({
+        id: `level_${Date.now()}`,
+        userId,
+        type: 'GAMIFICATION',
+        title: '¡Subiste de Nivel!',
+        message: `¡Felicidades! Ahora eres ${newLevel.name} (Nivel ${newLevel.level})`,
+        data: { newLevel, rewards: newLevel.rewards },
+        read: false,
+        createdAt: new Date()
+      })
+      
+      // Otorgar badges de nivel si los hay
+      if (newLevel.rewards.badges) {
+        for (const badgeName of newLevel.rewards.badges) {
+          const badge = await this.grantBadge(userId, badgeName)
+          if (badge) {
+            notifications.push({
+              id: `badge_${Date.now()}_${badge.id}`,
+              userId,
+              type: 'GAMIFICATION',
+              title: '¡Nueva Insignia!',
+              message: `Has desbloqueado la insignia: ${badge.name}`,
+              data: { badge },
+              read: false,
+              createdAt: new Date()
+            })
+          }
+        }
+      }
+    }
+    
+    // Guardar cambios del usuario
+    await this.updateUser(user)
+    
+    // Registrar ganancia de XP
+    await this.logXPGain({
+      id: `xp_${userId}_${Date.now()}`,
+      userId,
+      amount,
+      source,
+      sourceId,
+      description,
+      timestamp: new Date().toISOString()
+    })
+    
+    return {
+      levelUp,
+      newLevel: levelUp ? newLevel : undefined,
+      notifications
+    }
   }
 
-  async trackLongConversation(userId: string): Promise<void> {
-    await this.awardXP(userId, 25, 'long_conversation');
+  // Otorgar badge a un usuario
+  async grantBadge(userId: string, badgeName: string): Promise<Badge | null> {
+    const user = await this.getUser(userId)
+    
+    // Verificar si ya tiene el badge
+    if (user.badges.some(b => b.name === badgeName)) {
+      return null
+    }
+    
+    const badge = await this.getBadgeByName(badgeName)
+    if (!badge) return null
+    
+    badge.earnedAt = new Date().toISOString()
+    user.badges.push(badge)
+    
+    // Enviar notificación de badge obtenido
+    notificationService.notifyBadgeEarned(badge.name);
+    
+    await this.updateUser(user)
+    
+    return badge
+  }
+
+  // Verificar y desbloquear logros
+  async checkAchievements(userId: string): Promise<Achievement[]> {
+    const user = await this.getUser(userId)
+    const unlockedAchievements: Achievement[] = []
+    
+    // Obtener logros disponibles que el usuario no ha desbloqueado
+    const availableAchievements = await this.getAvailableAchievements(userId)
+    
+    for (const achievement of availableAchievements) {
+      if (this.checkAchievementRequirements(user, achievement)) {
+        achievement.earned = true
+        achievement.earnedDate = new Date().toISOString()
+        
+        // Otorgar recompensas del logro
+        await this.grantXP(
+          userId,
+          achievement.reward.xp,
+          'achievement',
+          achievement.id,
+          `Logro desbloqueado: ${achievement.title}`
+        )
+        
+        user.crolars += achievement.reward.crolars
+        
+        if (achievement.reward.badge) {
+          await this.grantBadge(userId, achievement.reward.badge)
+        }
+        
+        unlockedAchievements.push(achievement)
+      }
+    }
+    
+    if (unlockedAchievements.length > 0) {
+      await this.updateUser(user)
+    }
+    
+    return unlockedAchievements
+  }
+
+  // Verificar requisitos de un logro
+  private checkAchievementRequirements(user: User, achievement: Achievement): boolean {
+    switch (achievement.id) {
+      case 'first_course':
+        return user.stats.coursesCompleted >= 1
+      case 'course_master':
+        return user.stats.coursesCompleted >= 10
+      case 'challenge_warrior':
+        return user.stats.challengesCompleted >= 5
+      case 'forum_helper':
+        return user.stats.forumAnswers >= 10
+      case 'streak_keeper':
+        return user.streak.current >= 7
+      case 'social_butterfly':
+        return user.stats.friendsCount >= 20
+      case 'knowledge_sharer':
+        return user.stats.notesUploaded >= 50
+      case 'event_enthusiast':
+        return user.stats.eventsAttended >= 5
+      case 'club_leader':
+        return user.stats.clubsJoined >= 3
+      case 'study_marathon':
+        return user.stats.totalStudyTime >= 1000 // 1000 minutos
+      default:
+        return false
+    }
+  }
+
+  // Actualizar racha diaria
+  async updateDailyStreak(userId: string): Promise<{ streakUpdated: boolean; notifications: Notification[] }> {
+    const user = await this.getUser(userId)
+    const today = new Date().toDateString()
+    const lastActivity = new Date(user.streak.lastActivity).toDateString()
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString()
+    
+    const notifications: Notification[] = []
+    
+    if (lastActivity === today) {
+      // Ya registró actividad hoy
+      return { streakUpdated: false, notifications }
+    }
+    
+    if (lastActivity === yesterday) {
+      // Continúa la racha
+      user.streak.current += 1
+      user.streak.lastActivity = new Date().toISOString()
+      
+      if (user.streak.current > user.streak.longest) {
+        user.streak.longest = user.streak.current
+      }
+      
+      // Otorgar XP por racha
+      let xpReward = XP_REWARDS.DAILY_STREAK
+      if (user.streak.current % 7 === 0) {
+        xpReward = XP_REWARDS.WEEKLY_STREAK
+      } else if (user.streak.current % 30 === 0) {
+        xpReward = XP_REWARDS.MONTHLY_STREAK
+      }
+      
+      const xpResult = await this.grantXP(
+        userId,
+        xpReward,
+        'streak',
+        'daily',
+        `Racha de ${user.streak.current} días`
+      )
+      
+      notifications.push(...xpResult.notifications)
+      
+      // Notificación de racha
+      if (user.streak.current % 7 === 0) {
+        notifications.push({
+          id: `streak_${Date.now()}`,
+          userId,
+          type: 'GAMIFICATION',
+          title: '¡Racha Semanal!',
+          message: `¡Increíble! Has mantenido una racha de ${user.streak.current} días`,
+          data: { streak: user.streak.current },
+          read: false,
+          createdAt: new Date()
+        })
+      }
+    } else {
+      // Se rompió la racha
+      user.streak.current = 1
+      user.streak.lastActivity = new Date().toISOString()
+    }
+    
+    await this.updateUser(user)
+    
+    return { streakUpdated: true, notifications }
+  }
+
+  // Métodos auxiliares (en una implementación real, estos interactuarían con la base de datos)
+  private async getUser(userId: string): Promise<User> {
+    // Implementación mock - en producción vendría de la base de datos
+    throw new Error('Method not implemented - requires database integration')
+  }
+
+  private async updateUser(user: User): Promise<void> {
+    // Implementación mock - en producción actualizaría la base de datos
+    throw new Error('Method not implemented - requires database integration')
+  }
+
+  private async logXPGain(xpGain: XPGain): Promise<void> {
+    // Implementación mock - en producción guardaría en la base de datos
+    throw new Error('Method not implemented - requires database integration')
+  }
+
+  private async getBadgeByName(name: string): Promise<Badge | null> {
+    // Implementación mock - en producción vendría de la base de datos
+    throw new Error('Method not implemented - requires database integration')
+  }
+
+  private async getAvailableAchievements(userId: string): Promise<Achievement[]> {
+    // Implementación mock - en producción vendría de la base de datos
+    throw new Error('Method not implemented - requires database integration')
   }
 }
 
-// Export singleton instance
-export const gamificationService = new GamificationService();
+export const gamificationService = new GamificationService()
 
-// Export types
-export type { GamificationEvent, UserProgress };
+// Exportar funciones de utilidad
+export const calculateUserLevel = (totalXp: number): Level => {
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (totalXp >= LEVELS[i].minXp) {
+      return LEVELS[i]
+    }
+  }
+  return LEVELS[0]
+}
+
+export const getXpToNextLevel = (currentXp: number): { needed: number; total: number } => {
+  const currentLevel = calculateUserLevel(currentXp)
+  const nextLevel = LEVELS.find(l => l.level === currentLevel.level + 1)
+  
+  if (!nextLevel) {
+    return { needed: 0, total: 0 }
+  }
+  
+  return {
+    needed: nextLevel.minXp - currentXp,
+    total: nextLevel.minXp - currentLevel.minXp
+  }
+}
