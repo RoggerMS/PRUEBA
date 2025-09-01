@@ -9,6 +9,8 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import workspaceRoutes from './routes/workspace.js';
+import marketplaceRoutes from './routes/marketplace.js';
+import { staticMiddleware } from './middleware/static.js';
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url);
@@ -24,6 +26,9 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve static files (including uploaded images)
+app.use('/uploads', staticMiddleware);
+
 // Workspace routes
 app.use('/api/workspace', workspaceRoutes);
 
@@ -31,6 +36,7 @@ app.use('/api/workspace', workspaceRoutes);
  * API Routes
  */
 app.use('/api/auth', authRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
 
 /**
  * health

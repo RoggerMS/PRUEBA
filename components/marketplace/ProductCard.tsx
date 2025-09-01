@@ -3,7 +3,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, Download, Eye, ShoppingCart, Heart, Zap } from 'lucide-react';
+import { formatPrice } from '@/shared/constants/currency';
+import { Star, Heart, Eye, ShoppingCart, Zap } from 'lucide-react';
 import { useState } from 'react';
 
 interface Product {
@@ -11,21 +12,25 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  priceInSoles?: number;
   rating: number;
-  downloads: number;
+  ratingCount: number;
   views: number;
+  stock: number;
+  sold: number;
   category: string;
-  subject: string;
-  seller: {
+  subcategory?: string;
+  seller?: {
+    id: string;
     name: string;
-    avatar: string;
-    rating: number;
-    verified: boolean;
-  };
+    username: string;
+  } | null;
   images: string[];
-  tags: string[];
-  createdAt: Date;
-  featured: boolean;
+  tags?: string;
+  createdAt: Date | string;
+  isFeatured: boolean;
+  favoriteCount?: number;
+  reviewCount?: number;
 }
 
 interface ProductCardProps {
@@ -48,8 +53,12 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return price === 0 ? 'Gratis' : `$${price.toLocaleString()}`;
+  const formatPriceDisplay = (price: number, priceInSoles?: number) => {
+    if (price === 0) return 'Gratis';
+    if (priceInSoles) {
+      return `S/ ${priceInSoles.toFixed(2)}`;
+    }
+    return formatPrice(price, false);
   };
 
   const formatNumber = (num: number) => {
@@ -71,13 +80,16 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
           onMouseEnter={handleImageHover}
         >
           <img
-            src={product.images[currentImageIndex]}
+            src={product.images[currentImageIndex].startsWith('http') 
+              ? product.images[currentImageIndex] 
+              : `http://localhost:3001${product.images[currentImageIndex]}`
+            }
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           
           {/* Featured Badge */}
-          {product.featured && (
+          {product.isFeatured && (
             <Badge className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs font-semibold">
               <Star className="w-3 h-3 mr-1" />
               Destacado
@@ -90,7 +102,7 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
               ? 'bg-green-500 text-white' 
               : 'bg-purple-600 text-white'
           }`}>
-            {formatPrice(product.price)}
+            {formatPriceDisplay(product.price, product.priceInSoles)}
           </Badge>
           
           {/* Like Button */}
@@ -143,41 +155,41 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
             {product.name}
           </h3>
           
-          {/* Category & Subject */}
-          <div className="flex gap-1">
+          {/* Category & Subcategory */}
+          <div className="flex gap-1 flex-wrap">
             <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700">
               {product.category}
             </Badge>
-            <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700">
-              {product.subject}
-            </Badge>
+            {product.subcategory && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700">
+                {product.subcategory}
+              </Badge>
+            )}
           </div>
           
           {/* Seller Info */}
-          <div className="flex items-center gap-2">
-            <img
-              src={product.seller.avatar}
-              alt={product.seller.name}
-              className="w-5 h-5 rounded-full"
-            />
-            <span className="text-xs text-gray-600 truncate flex-1">
-              {product.seller.name}
-            </span>
-            {product.seller.verified && (
-              <Zap className="w-3 h-3 text-blue-500" />
-            )}
-          </div>
+          {product.seller && (
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white text-xs font-semibold">
+                {product.seller.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <span className="text-xs text-gray-600 truncate flex-1">
+                {product.seller.name || product.seller.username}
+              </span>
+            </div>
+          )}
           
           {/* Rating & Stats */}
           <div className="flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 text-yellow-500 fill-current" />
-              <span className="font-medium">{product.rating}</span>
+              <span className="font-medium">{product.rating.toFixed(1)}</span>
+              <span className="text-gray-400">({product.ratingCount})</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
-                <Download className="w-3 h-3" />
-                <span>{formatNumber(product.downloads)}</span>
+                <ShoppingCart className="w-3 h-3" />
+                <span>{formatNumber(product.sold)}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Eye className="w-3 h-3" />
@@ -185,6 +197,17 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
               </div>
             </div>
           </div>
+          
+          {/* Stock Info */}
+          {product.stock > 0 ? (
+            <div className="text-xs text-green-600 font-medium">
+              {product.stock} disponibles
+            </div>
+          ) : (
+            <div className="text-xs text-red-600 font-medium">
+              Agotado
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

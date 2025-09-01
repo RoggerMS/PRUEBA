@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatPrice } from '@/shared/constants/currency';
 import { 
   ArrowLeft, 
   Star, 
@@ -30,21 +31,25 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  priceInSoles?: number;
   rating: number;
-  downloads: number;
+  ratingCount: number;
   views: number;
+  stock: number;
+  sold: number;
   category: string;
-  subject: string;
-  seller: {
+  subcategory?: string;
+  seller?: {
+    id: string;
     name: string;
-    avatar: string;
-    rating: number;
-    verified: boolean;
-  };
+    username: string;
+  } | null;
   images: string[];
-  tags: string[];
-  createdAt: Date;
-  featured: boolean;
+  tags?: string;
+  createdAt: Date | string;
+  isFeatured: boolean;
+  favoriteCount?: number;
+  reviewCount?: number;
 }
 
 interface ProductDetailProps {
@@ -119,8 +124,12 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
     console.log('Comprar producto:', product.id);
   };
 
-  const formatPrice = (price: number) => {
-    return price === 0 ? 'Gratis' : `$${price.toLocaleString()}`;
+  const formatPriceDisplay = (price: number, priceInSoles?: number) => {
+    if (price === 0) return 'Gratis';
+    if (priceInSoles) {
+      return `S/ ${priceInSoles.toFixed(2)}`;
+    }
+    return formatPrice(price, false);
   };
 
   const formatNumber = (num: number) => {
@@ -170,7 +179,9 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                 {/* Main Image */}
                 <div className="aspect-video bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg overflow-hidden mb-4">
                   <img
-                    src={product.images[currentImageIndex]}
+                    src={product.images[currentImageIndex]?.startsWith('http') 
+                      ? product.images[currentImageIndex] 
+                      : `http://localhost:3001${product.images[currentImageIndex]}`}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
@@ -190,7 +201,9 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                         }`}
                       >
                         <img
-                          src={image}
+                          src={image?.startsWith('http') 
+                            ? image 
+                            : `http://localhost:3001${image}`}
                           alt={`${product.name} ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -217,17 +230,19 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                         {product.description}
                       </p>
                       
-                      <div>
-                        <h4 className="font-semibold text-gray-900 mb-2">Etiquetas</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {product.tags.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-700">
-                              <Tag className="w-3 h-3 mr-1" />
-                              {tag}
-                            </Badge>
-                          ))}
+                      {product.tags && (
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">Etiquetas</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {product.tags.split(',').map((tag, index) => (
+                              <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-700">
+                                <Tag className="w-3 h-3 mr-1" />
+                                {tag.trim()}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </TabsContent>
                   
@@ -236,11 +251,11 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                       {/* Reviews Summary */}
                       <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                         <div className="text-center">
-                          <div className="text-3xl font-bold text-gray-900">{product.rating}</div>
+                          <div className="text-3xl font-bold text-gray-900">{product.rating.toFixed(1)}</div>
                           <div className="flex justify-center mb-1">
                             {renderStars(Math.floor(product.rating))}
                           </div>
-                          <div className="text-sm text-gray-500">{mockReviews.length} reseñas</div>
+                          <div className="text-sm text-gray-500">{product.ratingCount} reseñas</div>
                         </div>
                         <Separator orientation="vertical" className="h-16" />
                         <div className="flex-1">
@@ -306,30 +321,37 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   
                   <TabsContent value="seller" className="mt-6">
                     <div className="space-y-6">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="w-16 h-16">
-                          <AvatarImage src={product.seller.avatar} />
-                          <AvatarFallback>{product.seller.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-semibold text-gray-900">{product.seller.name}</h3>
-                            {product.seller.verified && (
+                      {product.seller ? (
+                        <div className="flex items-center gap-4">
+                          <Avatar className="w-16 h-16">
+                            <AvatarFallback className="bg-gradient-to-br from-purple-400 to-blue-500 text-white text-xl font-semibold">
+                              {product.seller.name?.charAt(0).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-xl font-semibold text-gray-900">
+                                {product.seller.name || product.seller.username}
+                              </h3>
                               <Badge className="bg-blue-500 text-white">
                                 <Zap className="w-3 h-3 mr-1" />
                                 Verificado
                               </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 mb-2">
-                            {renderStars(Math.floor(product.seller.rating))}
-                            <span className="text-sm text-gray-600 ml-1">({product.seller.rating})</span>
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Miembro desde enero 2023
+                            </div>
+                            <div className="flex items-center gap-1 mb-2">
+                              {renderStars(5)}
+                              <span className="text-sm text-gray-600 ml-1">(5.0)</span>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Miembro desde enero 2023
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="text-center text-gray-500 py-8">
+                          Información del vendedor no disponible
+                        </div>
+                      )}
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -360,13 +382,15 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                 <CardTitle className="text-xl font-bold text-gray-900">
                   {product.name}
                 </CardTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="secondary" className="bg-purple-100 text-purple-700">
                     {product.category}
                   </Badge>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                    {product.subject}
-                  </Badge>
+                  {product.subcategory && (
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                      {product.subcategory}
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
               
@@ -376,7 +400,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   <div className={`text-4xl font-bold ${
                     product.price === 0 ? 'text-green-600' : 'text-purple-600'
                   }`}>
-                    {formatPrice(product.price)}
+                    {formatPriceDisplay(product.price, product.priceInSoles)}
                   </div>
                   {product.price > 0 && (
                     <div className="text-sm text-gray-500 mt-1">
@@ -396,10 +420,10 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   </div>
                   <div>
                     <div className="flex items-center justify-center gap-1 text-blue-500 mb-1">
-                      <Download className="w-4 h-4" />
-                      <span className="font-semibold">{formatNumber(product.downloads)}</span>
+                      <ShoppingCart className="w-4 h-4" />
+                      <span className="font-semibold">{formatNumber(product.sold)}</span>
                     </div>
-                    <div className="text-xs text-gray-500">Descargas</div>
+                    <div className="text-xs text-gray-500">Vendidos</div>
                   </div>
                   <div>
                     <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
@@ -446,14 +470,18 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-2 text-gray-600">
                     <Calendar className="w-4 h-4" />
-                    <span>Publicado el {formatDate(product.createdAt)}</span>
+                    <span>Publicado el {formatDate(new Date(product.createdAt))}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <User className="w-4 h-4" />
-                    <span>Por {product.seller.name}</span>
-                    {product.seller.verified && (
+                  {product.seller && (
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <User className="w-4 h-4" />
+                      <span>Por {product.seller.name || product.seller.username}</span>
                       <Zap className="w-3 h-3 text-blue-500" />
-                    )}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>{product.stock} disponibles</span>
                   </div>
                 </div>
               </CardContent>
