@@ -3,7 +3,7 @@ import { MessageCircle, Heart, Share, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Composer } from '@/components/feed/Composer';
+import { FacebookStyleComposer } from '@/components/feed/FacebookStyleComposer';
 import { useSession } from 'next-auth/react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -62,7 +62,7 @@ export function ProfileFeed({ isOwnProfile = false, username, isPublicView = fal
       {isOwnProfile && session && !isPublicView && (
         <Card>
           <CardContent className="p-0">
-            <Composer />
+            <FacebookStyleComposer />
           </CardContent>
         </Card>
       )}

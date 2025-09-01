@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { Composer } from '@/components/feed/Composer';
+import { FacebookStyleComposer } from '@/components/feed/FacebookStyleComposer';
 import PostList from '@/components/feed/PostList';
 import { FeedSidebar } from '@/components/feed/FeedSidebar';
 import { TrendingSidebar } from '@/components/feed/TrendingSidebar';
@@ -98,7 +98,7 @@ export default async function HomePage() {
             <div className="space-y-6">
               {/* Composer para crear posts */}
               <Suspense fallback={<ComposerSkeleton />}>
-                <Composer />
+          <FacebookStyleComposer />
               </Suspense>
 
               {/* Lista de posts del feed */}

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { MobileNavbar } from './MobileNavbar';
+import { MobileTabBar } from './MobileTabBar';
 
 interface MobileTopBarProps {
   onMenuToggle?: () => void;
@@ -76,6 +77,9 @@ export function MobileTopBar({ onMenuToggle }: MobileTopBarProps) {
           </div>
         </div>
       </nav>
+
+      {/* NUEVO: accesos rápidos arriba, estilo Facebook */}
+      <MobileTabBar />
 
       {/* Mobile Drawer */}
       <MobileNavbar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />

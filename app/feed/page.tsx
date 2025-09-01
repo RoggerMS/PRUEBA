@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { useSession } from 'next-auth/react';
-import { Composer } from '@/components/feed/Composer';
+import { FacebookStyleComposer } from '@/components/feed/FacebookStyleComposer';
 import PostList from '@/components/feed/PostList';
 import { FeedSidebar } from '@/components/feed/FeedSidebar';
 import { TrendingSidebar } from '@/components/feed/TrendingSidebar';
@@ -92,7 +92,7 @@ export default function FeedPage() {
               {/* Composer (solo si está autenticado) */}
               {session && (
                 <Suspense fallback={<ComposerSkeleton />}>
-                  <Composer />
+          <FacebookStyleComposer />
                 </Suspense>
               )}
 
