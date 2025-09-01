@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add aria-label to interest removal button for better accessibility.
+
 - Provide toast and loading components for events pages and coerce `page` and `limit` query parameters to numbers to avoid module resolution and validation errors.
 - Add missing events components and helpers so the events pages build without module resolution errors.
 - Default cart items to an empty array in `ShoppingCart` to prevent `reduce` on `undefined` errors when the cart is uninitialized.
