@@ -31,8 +31,7 @@ import {
   Grid3X3,
   GraduationCap,
   ShoppingBag,
-  Zap,
-  Rss
+  Zap
 } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +48,6 @@ interface SidebarItem {
 
 const mainNavItems: SidebarItem[] = [
   { name: 'Inicio', href: '/', icon: Home },
-  { name: 'Feed', href: '/feed', icon: Rss },
   { name: 'Perfil', href: '/perfil', icon: User },
   { name: 'Workspace', href: '/workspace', icon: Grid3X3, color: 'text-crunevo-600' },
   { name: 'Apuntes', href: '/notes', icon: FileText },
