@@ -26,22 +26,30 @@ interface Event {
   id: string;
   title: string;
   description: string;
-  image: string;
-  date: string;
-  time: string;
-  endTime?: string;
+  startDate: string;
+  endDate: string;
   location: string;
+  isOnline: boolean;
   category: string;
-  type: string;
-  organizer: string;
-  organizerAvatar: string;
-  attendees: number;
-  maxAttendees: number;
-  price: number;
   tags: string[];
-  status: string;
+  maxAttendees: number | null;
+  currentAttendees: number;
+  imageUrl: string | null;
+  price: number;
   isRegistered: boolean;
-  isFeatured: boolean;
+  canEdit: boolean;
+  organizer: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  club: {
+    id: string;
+    name: string;
+    imageUrl: string | null;
+  } | null;
+  createdAt: string;
+  isFeatured?: boolean;
   difficulty?: string;
   duration?: string;
 }
@@ -58,20 +66,25 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
-  const categories = ['all', 'Académico', 'Tecnología', 'Arte', 'Deportivo', 'Extracurricular'];
-  const eventTypes = ['all', 'Presencial', 'Virtual', 'Híbrido'];
+  const categories = ['all', 'TECHNOLOGY', 'ACADEMIC', 'SPORTS', 'CULTURAL', 'WORKSHOP'];
+  const eventTypes = ['all', 'Presencial', 'Virtual'];
 
   // Filter events based on selected filters
   const filteredEvents = events.filter(event => {
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
-    const matchesType = selectedType === 'all' || event.type === selectedType;
+    const matchesType = selectedType === 'all' || 
+      (selectedType === 'Virtual' && event.isOnline) ||
+      (selectedType === 'Presencial' && !event.isOnline);
     return matchesCategory && matchesType;
   });
 
   // Get events for a specific date
   const getEventsForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
-    return filteredEvents.filter(event => event.date === dateString);
+    return filteredEvents.filter(event => {
+      const eventDate = new Date(event.startDate).toISOString().split('T')[0];
+      return eventDate === dateString;
+    });
   };
 
   // Calendar navigation
@@ -154,19 +167,43 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
     });
   };
 
-  const formatTime = (time: string) => {
-    return time;
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Tecnología': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'Académico': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Arte': return 'bg-pink-100 text-pink-800 border-pink-200';
-      case 'Deportivo': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Extracurricular': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'TECHNOLOGY': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'ACADEMIC': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'CULTURAL': return 'bg-pink-100 text-pink-800 border-pink-200';
+      case 'SPORTS': return 'bg-green-100 text-green-800 border-green-200';
+      case 'WORKSHOP': return 'bg-orange-100 text-orange-800 border-orange-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'TECHNOLOGY': return 'Tecnología';
+      case 'ACADEMIC': return 'Académico';
+      case 'CULTURAL': return 'Cultural';
+      case 'SPORTS': return 'Deportivo';
+      case 'WORKSHOP': return 'Taller';
+      default: return category;
+    }
+  };
+
+  const getEventStatus = (event: Event) => {
+    const now = new Date();
+    const startDate = new Date(event.startDate);
+    const endDate = new Date(event.endDate);
+    
+    if (now < startDate) return 'upcoming';
+    if (now >= startDate && now <= endDate) return 'ongoing';
+    return 'completed';
   };
 
   const getStatusIcon = (status: string) => {
@@ -240,12 +277,12 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                     title={event.title}
                   >
                     <div className="flex items-center gap-1">
-                      {getStatusIcon(event.status)}
+                      {getStatusIcon(getEventStatus(event))}
                       <span className="truncate">{event.title}</span>
                       {event.isFeatured && <Star className="h-2 w-2 fill-current" />}
                     </div>
                     <div className="text-xs opacity-75">
-                      {formatTime(event.time)}
+                      {formatTime(event.startDate)}
                     </div>
                   </div>
                 ))}
@@ -296,19 +333,19 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                   >
                     <CardContent className="p-3">
                       <div className="flex items-start gap-2">
-                        {getStatusIcon(event.status)}
+                        {getStatusIcon(getEventStatus(event))}
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-sm truncate">{event.title}</h4>
                           <p className="text-xs text-gray-600 flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {formatTime(event.time)}
+                            {formatTime(event.startDate)}
                           </p>
                           <p className="text-xs text-gray-600 flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            <span className="truncate">{event.location}</span>
+                            <span className="truncate">{event.isOnline ? 'Evento Virtual' : event.location}</span>
                           </p>
                           <Badge className={`text-xs mt-1 ${getCategoryColor(event.category)}`}>
-                            {event.category}
+                            {getCategoryLabel(event.category)}
                           </Badge>
                         </div>
                         {event.isFeatured && (
@@ -356,7 +393,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <img 
-                      src={event.image} 
+                      src={event.imageUrl || `https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(`${event.title} academic event`)}&image_size=square`} 
                       alt={event.title}
                       className="w-16 h-16 rounded-lg object-cover"
                     />
@@ -364,7 +401,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-lg text-gray-900">{event.title}</h3>
                         <div className="flex items-center gap-2">
-                          {getStatusIcon(event.status)}
+                          {getStatusIcon(getEventStatus(event))}
                           {event.isFeatured && (
                             <Star className="h-4 w-4 text-yellow-500 fill-current" />
                           )}
@@ -376,25 +413,25 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
                       <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          <span>{formatTime(event.time)}</span>
-                          {event.endTime && <span>- {formatTime(event.endTime)}</span>}
+                          <span>{formatTime(event.startDate)}</span>
+                          <span>- {formatTime(event.endDate)}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
-                          <span>{event.location}</span>
+                          <span>{event.isOnline ? 'Evento Virtual' : event.location}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
-                          <span>{event.attendees}/{event.maxAttendees}</span>
+                          <span>{event.currentAttendees}/{event.maxAttendees || 'Sin límite'}</span>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-2 mt-3">
                         <Badge className={getCategoryColor(event.category)}>
-                          {event.category}
+                          {getCategoryLabel(event.category)}
                         </Badge>
                         <Badge variant="outline">
-                          {event.type}
+                          {event.isOnline ? 'Virtual' : 'Presencial'}
                         </Badge>
                         {event.price > 0 && (
                           <Badge variant="secondary">

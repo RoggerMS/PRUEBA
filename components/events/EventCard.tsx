@@ -10,42 +10,48 @@ import {
   Users, 
   Star,
   Award,
-  DollarSign
+  DollarSign,
+  Building
 } from "lucide-react";
 
 interface Event {
   id: string;
   title: string;
   description: string;
-  image: string;
-  date: string;
-  time: string;
-  endTime?: string;
+  startDate: string;
+  endDate: string;
   location: string;
+  isOnline: boolean;
   category: string;
-  type: string;
-  organizer: string;
-  organizerAvatar: string;
-  attendees: number;
-  maxAttendees: number;
-  price: number;
   tags: string[];
-  status: string;
+  maxAttendees: number | null;
+  currentAttendees: number;
+  imageUrl: string | null;
+  price: number;
   isRegistered: boolean;
-  isFeatured: boolean;
-  difficulty?: string;
-  duration?: string;
-  prizes?: string[];
-  requirements?: string[];
-  speakers?: string[];
+  canEdit: boolean;
+  organizer: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  club: {
+    id: string;
+    name: string;
+    imageUrl: string | null;
+  } | null;
+  createdAt: string;
 }
 
 interface EventCardProps {
   event: Event;
   onClick: () => void;
+  onRegister?: (eventId: string) => void;
+  onUnregister?: (eventId: string) => void;
+  loading?: boolean;
 }
 
-export function EventCard({ event, onClick }: EventCardProps) {
+export function EventCard({ event, onClick, onRegister, onUnregister, loading = false }: EventCardProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -54,26 +60,52 @@ export function EventCard({ event, onClick }: EventCardProps) {
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'upcoming': return 'bg-green-100 text-green-800';
-      case 'ongoing': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getEventStatus = () => {
+    const now = new Date();
+    const startDate = new Date(event.startDate);
+    const endDate = new Date(event.endDate);
+    
+    if (now < startDate) return { status: 'upcoming', label: 'Próximo', color: 'bg-green-100 text-green-800' };
+    if (now >= startDate && now <= endDate) return { status: 'ongoing', label: 'En curso', color: 'bg-blue-100 text-blue-800' };
+    return { status: 'completed', label: 'Finalizado', color: 'bg-gray-100 text-gray-800' };
   };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Tecnología': return 'bg-purple-100 text-purple-800';
-      case 'Académico': return 'bg-blue-100 text-blue-800';
-      case 'Arte': return 'bg-pink-100 text-pink-800';
-      case 'Deportivo': return 'bg-green-100 text-green-800';
-      case 'Extracurricular': return 'bg-orange-100 text-orange-800';
+      case 'TECHNOLOGY': return 'bg-purple-100 text-purple-800';
+      case 'ACADEMIC': return 'bg-blue-100 text-blue-800';
+      case 'ARTS': return 'bg-pink-100 text-pink-800';
+      case 'SPORTS': return 'bg-green-100 text-green-800';
+      case 'SOCIAL': return 'bg-orange-100 text-orange-800';
+      case 'WORKSHOP': return 'bg-indigo-100 text-indigo-800';
+      case 'CONFERENCE': return 'bg-teal-100 text-teal-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'TECHNOLOGY': return 'Tecnología';
+      case 'ACADEMIC': return 'Académico';
+      case 'ARTS': return 'Arte';
+      case 'SPORTS': return 'Deportivo';
+      case 'SOCIAL': return 'Social';
+      case 'WORKSHOP': return 'Taller';
+      case 'CONFERENCE': return 'Conferencia';
+      default: return category;
+    }
+  };
+
+  const eventStatus = getEventStatus();
+  const defaultImage = "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=academic%20event%20university%20students%20modern%20colorful&image_size=landscape_4_3";
 
   return (
     <Card 
@@ -82,26 +114,23 @@ export function EventCard({ event, onClick }: EventCardProps) {
     >
       <div className="relative">
         <img 
-          src={event.image} 
+          src={event.imageUrl || defaultImage} 
           alt={event.title}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute top-3 left-3 flex gap-2">
-          {event.isFeatured && (
-            <Badge className="bg-yellow-500 text-white border-0">
-              <Star className="h-3 w-3 mr-1" />
-              Destacado
+          <Badge className={getCategoryColor(event.category)}>
+            {getCategoryLabel(event.category)}
+          </Badge>
+          {event.isOnline && (
+            <Badge className="bg-blue-500 text-white border-0">
+              Online
             </Badge>
           )}
-          <Badge className={getCategoryColor(event.category)}>
-            {event.category}
-          </Badge>
         </div>
         <div className="absolute top-3 right-3">
-          <Badge className={getStatusColor(event.status)}>
-            {event.status === 'upcoming' ? 'Próximo' : 
-             event.status === 'ongoing' ? 'En curso' :
-             event.status === 'completed' ? 'Finalizado' : 'Cancelado'}
+          <Badge className={eventStatus.color}>
+            {eventStatus.label}
           </Badge>
         </div>
         {event.price === 0 && (
@@ -118,7 +147,7 @@ export function EventCard({ event, onClick }: EventCardProps) {
           <h3 className="font-semibold text-lg text-gray-900 line-clamp-2 group-hover:text-purple-600 transition-colors">
             {event.title}
           </h3>
-          {event.prizes && event.prizes.length > 0 && (
+          {event.price > 0 && (
             <Award className="h-5 w-5 text-yellow-500 flex-shrink-0" />
           )}
         </div>
@@ -132,20 +161,20 @@ export function EventCard({ event, onClick }: EventCardProps) {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Calendar className="h-4 w-4" />
-            <span>{formatDate(event.date)}</span>
+            <span>{formatDate(event.startDate)}</span>
             <Clock className="h-4 w-4 ml-2" />
-            <span>{event.time}</span>
-            {event.endTime && <span>- {event.endTime}</span>}
+            <span>{formatTime(event.startDate)}</span>
+            {event.endDate && <span>- {formatTime(event.endDate)}</span>}
           </div>
           
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <MapPin className="h-4 w-4" />
-            <span className="truncate">{event.location}</span>
+            <span className="truncate">{event.isOnline ? 'Evento Online' : event.location}</span>
           </div>
           
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Users className="h-4 w-4" />
-            <span>{event.attendees}/{event.maxAttendees} participantes</span>
+            <span>{event.currentAttendees}/{event.maxAttendees || '∞'} participantes</span>
           </div>
 
           {event.price > 0 && (
@@ -159,19 +188,38 @@ export function EventCard({ event, onClick }: EventCardProps) {
         {/* Organizer */}
         <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
           <img 
-            src={event.organizerAvatar} 
-            alt={event.organizer}
+            src={event.organizer.image || '/default-avatar.png'} 
+            alt={event.organizer.name}
             className="w-8 h-8 rounded-full object-cover"
           />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {event.organizer}
+              {event.organizer.name}
             </p>
             <p className="text-xs text-gray-500">
               Organizador
             </p>
           </div>
         </div>
+
+        {/* Club */}
+        {event.club && (
+          <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+            <img 
+              src={event.club.imageUrl || '/default-club.png'} 
+              alt={event.club.name}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {event.club.name}
+              </p>
+              <p className="text-xs text-gray-500">
+                Club
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Tags */}
         {event.tags && event.tags.length > 0 && (
@@ -191,24 +239,38 @@ export function EventCard({ event, onClick }: EventCardProps) {
 
         {/* Action Button */}
         <div className="pt-2">
-          {event.isRegistered ? (
-            <Button 
-              variant="outline" 
-              className="w-full border-green-200 text-green-700 hover:bg-green-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Handle unregister
-              }}
-            >
-              <Star className="h-4 w-4 mr-2 fill-current" />
-              Registrado
-            </Button>
+          {(onRegister || onUnregister) && eventStatus.status === 'upcoming' ? (
+            event.isRegistered ? (
+              <Button 
+                variant="outline" 
+                className="w-full border-green-200 text-green-700 hover:bg-green-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnregister?.(event.id);
+                }}
+                disabled={loading}
+              >
+                <Star className="h-4 w-4 mr-2 fill-current" />
+                {loading ? 'Cancelando...' : 'Registrado'}
+              </Button>
+            ) : (
+              <Button 
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRegister?.(event.id);
+                }}
+                disabled={loading || (event.maxAttendees && event.currentAttendees >= event.maxAttendees)}
+              >
+                {loading ? 'Registrando...' : 
+                 (event.maxAttendees && event.currentAttendees >= event.maxAttendees) ? 'Evento Lleno' : 'Registrarse'}
+              </Button>
+            )
           ) : (
             <Button 
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               onClick={(e) => {
                 e.stopPropagation();
-                // Handle register
               }}
             >
               Ver Detalles
@@ -217,18 +279,20 @@ export function EventCard({ event, onClick }: EventCardProps) {
         </div>
 
         {/* Progress Bar for Attendees */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>Ocupación</span>
-            <span>{Math.round((event.attendees / event.maxAttendees) * 100)}%</span>
+        {event.maxAttendees && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Ocupación</span>
+              <span>{Math.round((event.currentAttendees / event.maxAttendees) * 100)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${(event.currentAttendees / event.maxAttendees) * 100}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(event.attendees / event.maxAttendees) * 100}%` }}
-            />
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

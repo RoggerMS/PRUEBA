@@ -137,7 +137,7 @@ export function EventCard({ event, onClick }: EventCardProps) {
     }
   };
 
-  const attendancePercentage = (event.attendees / event.maxAttendees) * 100;
+  const attendancePercentage = (event.currentAttendees / event.maxAttendees) * 100;
 
   return (
     <Card 
@@ -146,7 +146,7 @@ export function EventCard({ event, onClick }: EventCardProps) {
     >
       <div className="relative">
         <img 
-          src={event.image} 
+          src={event.imageUrl} 
           alt={event.title}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -237,14 +237,14 @@ export function EventCard({ event, onClick }: EventCardProps) {
         <div className="space-y-2 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-purple-500" />
-            <span>{formatDate(event.date)}</span>
+            <span>{formatDate(event.startDate)}</span>
           </div>
           
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-blue-500" />
             <span>
-              {event.time}
-              {event.endTime && ` - ${event.endTime}`}
+              {new Date(event.startDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+              {event.endDate && ` - ${new Date(event.endDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
               {event.duration && ` (${event.duration})`}
             </span>
           </div>
@@ -258,12 +258,12 @@ export function EventCard({ event, onClick }: EventCardProps) {
         {/* Organizer */}
         <div className="flex items-center gap-3">
           <img 
-            src={event.organizerAvatar} 
-            alt={event.organizer}
+            src={event.organizer?.avatar || '/default-avatar.png'} 
+            alt={event.organizer?.name || 'Organizador'}
             className="w-8 h-8 rounded-full object-cover"
           />
           <div>
-            <p className="text-sm font-medium text-gray-900">{event.organizer}</p>
+            <p className="text-sm font-medium text-gray-900">{event.organizer?.name || 'Organizador'}</p>
             <p className="text-xs text-gray-500">Organizador</p>
           </div>
         </div>
@@ -273,7 +273,7 @@ export function EventCard({ event, onClick }: EventCardProps) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1 text-gray-600">
               <Users className="h-4 w-4" />
-              <span>{event.attendees} / {event.maxAttendees} participantes</span>
+              <span>{event.currentAttendees} / {event.maxAttendees} participantes</span>
             </div>
             <span className="text-xs text-gray-500">
               {Math.round(attendancePercentage)}% ocupado
@@ -337,7 +337,7 @@ export function EventCard({ event, onClick }: EventCardProps) {
                 : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600'
               }`}
               onClick={handleRegister}
-              disabled={isRegistering || event.attendees >= event.maxAttendees}
+              disabled={isRegistering || event.currentAttendees >= event.maxAttendees}
             >
               {isRegistering ? (
                 <div className="flex items-center gap-2">
@@ -349,7 +349,7 @@ export function EventCard({ event, onClick }: EventCardProps) {
                   <CheckCircle className="h-4 w-4" />
                   Registrado
                 </div>
-              ) : event.attendees >= event.maxAttendees ? (
+              ) : event.currentAttendees >= event.maxAttendees ? (
                 "Lleno"
               ) : (
                 <div className="flex items-center gap-2">

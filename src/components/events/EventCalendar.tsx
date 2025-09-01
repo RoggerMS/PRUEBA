@@ -24,16 +24,17 @@ interface Event {
   id: string;
   title: string;
   description: string;
-  image: string;
-  date: string;
-  time: string;
-  endTime?: string;
+  imageUrl: string;
+  startDate: string;
+  endDate?: string;
   location: string;
   category: string;
-  type: string;
-  organizer: string;
-  organizerAvatar: string;
-  attendees: number;
+  isOnline: boolean;
+  organizer: {
+    name: string;
+    avatar: string;
+  };
+  currentAttendees: number;
   maxAttendees: number;
   price: number;
   tags: string[];
@@ -54,16 +55,17 @@ const mockCalendarEvents = [
     id: "1",
     title: "Hackathon IA",
     description: "Competencia de 48 horas para desarrollar soluciones innovadoras con IA",
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=AI%20hackathon%20event&image_size=landscape_4_3",
-    date: "2024-02-15",
-    time: "09:00",
-    endTime: "18:00",
+    imageUrl: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=AI%20hackathon%20event&image_size=landscape_4_3",
+    startDate: "2024-02-15T09:00:00",
+    endDate: "2024-02-15T18:00:00",
     location: "Auditorio Principal",
     category: "Tecnología",
-    type: "Competencia",
-    organizer: "Club de Programación",
-    organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=programming%20club%20logo&image_size=square",
-    attendees: 156,
+    isOnline: false,
+    organizer: {
+      name: "Club de Programación",
+      avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=programming%20club%20logo&image_size=square"
+    },
+    currentAttendees: 156,
     maxAttendees: 200,
     price: 0,
     tags: ["IA", "Programación"],
@@ -75,16 +77,17 @@ const mockCalendarEvents = [
     id: "2",
     title: "Conferencia Sostenibilidad",
     description: "Charlas sobre medio ambiente y desarrollo sostenible",
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=sustainability%20conference&image_size=landscape_4_3",
-    date: "2024-02-20",
-    time: "14:00",
-    endTime: "17:00",
+    imageUrl: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=sustainability%20conference&image_size=landscape_4_3",
+    startDate: "2024-02-20T14:00:00",
+    endDate: "2024-02-20T17:00:00",
     location: "Sala de Conferencias",
     category: "Académico",
-    type: "Conferencia",
-    organizer: "Club de Medio Ambiente",
-    organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=environmental%20club%20logo&image_size=square",
-    attendees: 89,
+    isOnline: false,
+    organizer: {
+      name: "Club de Medio Ambiente",
+      avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=environmental%20club%20logo&image_size=square"
+    },
+    currentAttendees: 89,
     maxAttendees: 150,
     price: 15,
     tags: ["Sostenibilidad", "Medio Ambiente"],
@@ -96,16 +99,17 @@ const mockCalendarEvents = [
     id: "3",
     title: "Taller React",
     description: "Aprende las últimas tecnologías de React",
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=react%20workshop%20coding&image_size=landscape_4_3",
-    date: "2024-02-22",
-    time: "10:00",
-    endTime: "16:00",
+    imageUrl: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=react%20workshop%20coding&image_size=landscape_4_3",
+    startDate: "2024-02-22T10:00:00",
+    endDate: "2024-02-22T16:00:00",
     location: "Lab de Computación",
     category: "Tecnología",
-    type: "Taller",
-    organizer: "Departamento de Sistemas",
-    organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=computer%20science%20department&image_size=square",
-    attendees: 25,
+    isOnline: false,
+    organizer: {
+      name: "Departamento de Sistemas",
+      avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=computer%20science%20department&image_size=square"
+    },
+    currentAttendees: 25,
     maxAttendees: 30,
     price: 20,
     tags: ["React", "JavaScript"],
@@ -117,16 +121,17 @@ const mockCalendarEvents = [
     id: "4",
     title: "Seminario Emprendimiento",
     description: "Estrategias para crear y hacer crecer tu startup",
-    image: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=entrepreneurship%20seminar&image_size=landscape_4_3",
-    date: "2024-02-25",
-    time: "15:00",
-    endTime: "18:00",
+    imageUrl: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=entrepreneurship%20seminar&image_size=landscape_4_3",
+    startDate: "2024-02-25T15:00:00",
+    endDate: "2024-02-25T18:00:00",
     location: "Aula de Negocios",
     category: "Extracurricular",
-    type: "Seminario",
-    organizer: "Centro de Emprendimiento",
-    organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=entrepreneurship%20center&image_size=square",
-    attendees: 45,
+    isOnline: false,
+    organizer: {
+      name: "Centro de Emprendimiento",
+      avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=entrepreneurship%20center&image_size=square"
+    },
+    currentAttendees: 45,
     maxAttendees: 50,
     price: 0,
     tags: ["Emprendimiento", "Startup"],
@@ -173,7 +178,7 @@ export function EventCalendar({ events, onEventClick, onCreateEvent }: EventCale
 
   const getEventsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return calendarEvents.filter(event => event.date === dateStr);
+    return calendarEvents.filter(event => event.startDate.split('T')[0] === dateStr);
   };
 
   const isToday = (date: Date) => {
@@ -256,13 +261,13 @@ export function EventCalendar({ events, onEventClick, onCreateEvent }: EventCale
   const renderListView = () => {
     const today = new Date();
     const upcomingEvents = calendarEvents
-      .filter(event => new Date(event.date) >= today)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .filter(event => new Date(event.startDate) >= today)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
     return (
       <div className="space-y-4">
         {upcomingEvents.map(event => {
-          const eventDate = new Date(event.date);
+          const eventDate = new Date(event.startDate);
           const isEventToday = isToday(eventDate);
           
           return (
@@ -320,8 +325,8 @@ export function EventCalendar({ events, onEventClick, onCreateEvent }: EventCale
                     <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        {event.time}
-                        {event.endTime && ` - ${event.endTime}`}
+                        {new Date(event.startDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        {event.endDate && ` - ${new Date(event.endDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                       
                       <div className="flex items-center gap-1">
@@ -331,7 +336,7 @@ export function EventCalendar({ events, onEventClick, onCreateEvent }: EventCale
                       
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        {event.attendees}/{event.maxAttendees}
+                        {event.currentAttendees}/{event.maxAttendees}
                       </div>
                       
                       {event.price > 0 && (
@@ -523,7 +528,7 @@ export function EventCalendar({ events, onEventClick, onCreateEvent }: EventCale
                         <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {event.time}
+                            {new Date(event.startDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />

@@ -35,24 +35,24 @@ interface Event {
   id: string;
   title: string;
   description: string;
-  image: string;
-  date: string;
-  time: string;
-  endTime?: string;
-  location: string;
+  imageUrl: string;
+  startDate: string;
+  endDate: string;
+  duration?: string;
+  location?: string;
+  isOnline: boolean;
   category: string;
-  type: string;
-  organizer: string;
-  organizerAvatar: string;
-  attendees: number;
+  difficulty?: string;
+  organizer: {
+    name: string;
+    avatar: string;
+  };
+  currentAttendees: number;
   maxAttendees: number;
   price: number;
-  tags: string[];
-  status: string;
-  isRegistered: boolean;
+  status: 'upcoming' | 'ongoing' | 'completed';
   isFeatured: boolean;
-  difficulty?: string;
-  duration?: string;
+  tags: string[];
   prizes?: string[];
   requirements?: string[];
   speakers?: string[];
@@ -199,7 +199,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
     }
   };
 
-  const attendancePercentage = (event.attendees / event.maxAttendees) * 100;
+  const attendancePercentage = (event.currentAttendees / event.maxAttendees) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
@@ -226,7 +226,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
               {event.category}
             </Badge>
             <Badge variant="outline">
-              {event.type}
+              {event.isOnline ? 'Online' : 'Presencial'}
             </Badge>
           </div>
         </div>
@@ -235,7 +235,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
         <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
           <div className="relative">
             <img 
-              src={event.image} 
+              src={event.imageUrl} 
               alt={event.title}
               className="w-full h-64 md:h-80 object-cover"
             />
@@ -291,7 +291,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                     <Calendar className="h-6 w-6 text-purple-600" />
                     <div>
                       <p className="font-medium text-gray-900">Fecha</p>
-                      <p className="text-gray-600">{formatDate(event.date)}</p>
+                      <p className="text-gray-600">{formatDate(event.startDate)}</p>
                     </div>
                   </div>
                   
@@ -300,8 +300,8 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                     <div>
                       <p className="font-medium text-gray-900">Horario</p>
                       <p className="text-gray-600">
-                        {event.time}
-                        {event.endTime && ` - ${event.endTime}`}
+                        {new Date(event.startDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        {event.endDate && ` - ${new Date(event.endDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
                         {event.duration && ` (${event.duration})`}
                       </p>
                     </div>
@@ -311,7 +311,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                     <MapPin className="h-6 w-6 text-green-600" />
                     <div>
                       <p className="font-medium text-gray-900">Ubicación</p>
-                      <p className="text-gray-600">{event.location}</p>
+                      <p className="text-gray-600">{event.isOnline ? 'Evento Online' : event.location}</p>
                     </div>
                   </div>
                   
@@ -319,7 +319,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                     <Users className="h-6 w-6 text-orange-600" />
                     <div>
                       <p className="font-medium text-gray-900">Participantes</p>
-                      <p className="text-gray-600">{event.attendees} / {event.maxAttendees}</p>
+                      <p className="text-gray-600">{event.currentAttendees} / {event.maxAttendees}</p>
                     </div>
                   </div>
                 </div>
@@ -358,7 +358,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                         />
                       </div>
                       <p className="text-xs text-gray-600 text-center">
-                        {event.attendees} de {event.maxAttendees} lugares ocupados
+                        {event.currentAttendees} de {event.maxAttendees} lugares ocupados
                       </p>
                     </div>
 
@@ -370,7 +370,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                           : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600'
                         }`}
                         onClick={handleRegister}
-                        disabled={isRegistering || event.attendees >= event.maxAttendees}
+                        disabled={isRegistering || event.currentAttendees >= event.maxAttendees}
                       >
                         {isRegistering ? (
                           <div className="flex items-center gap-2">
@@ -382,7 +382,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                             <CheckCircle className="h-4 w-4" />
                             Registrado
                           </div>
-                        ) : event.attendees >= event.maxAttendees ? (
+                        ) : event.currentAttendees >= event.maxAttendees ? (
                           "Evento Lleno"
                         ) : (
                           <div className="flex items-center gap-2">
@@ -403,12 +403,12 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                   <CardContent>
                     <div className="flex items-center gap-3">
                       <img 
-                        src={event.organizerAvatar} 
-                        alt={event.organizer}
+                        src={event.organizer.avatar} 
+                        alt={event.organizer.name}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                       <div>
-                        <p className="font-medium text-gray-900">{event.organizer}</p>
+                        <p className="font-medium text-gray-900">{event.organizer.name}</p>
                         <p className="text-sm text-gray-600">Organizador del evento</p>
                       </div>
                     </div>

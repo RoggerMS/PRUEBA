@@ -152,8 +152,8 @@ export default function ClubDetail({
     ));
   };
 
-  const upcomingEvents = club.events.filter(event => new Date(event.date) > new Date());
-  const pastEvents = club.events.filter(event => new Date(event.date) <= new Date());
+  const upcomingEvents = club.events.filter(event => new Date(event.startDate) > new Date());
+  const pastEvents = club.events.filter(event => new Date(event.startDate) <= new Date());
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -456,7 +456,7 @@ export default function ClubDetail({
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-semibold">{event.title}</h4>
                         <Badge variant="outline">
-                          {event.attendees}
+                          {event.currentAttendees}
                           {event.maxAttendees && `/${event.maxAttendees}`} asistentes
                         </Badge>
                       </div>
@@ -464,7 +464,7 @@ export default function ClubDetail({
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          <span>{new Date(event.date).toLocaleDateString()}</span>
+                          <span>{new Date(event.startDate).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
@@ -491,11 +491,11 @@ export default function ClubDetail({
                         <div>
                           <h5 className="font-medium">{event.title}</h5>
                           <p className="text-sm text-gray-600">
-                            {new Date(event.date).toLocaleDateString()} • {event.location}
+                            {new Date(event.startDate).toLocaleDateString()} • {event.location}
                           </p>
                         </div>
                         <Badge variant="secondary">
-                          {event.attendees} asistentes
+                          {event.currentAttendees} asistentes
                         </Badge>
                       </div>
                     </div>

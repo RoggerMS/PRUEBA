@@ -30,22 +30,30 @@ interface Event {
   id: string;
   title: string;
   description: string;
-  image: string;
-  date: string;
-  time: string;
-  endTime?: string;
+  startDate: string;
+  endDate: string;
   location: string;
+  isOnline: boolean;
   category: string;
-  type: string;
-  organizer: string;
-  organizerAvatar: string;
-  attendees: number;
-  maxAttendees: number;
-  price: number;
   tags: string[];
-  status: string;
+  maxAttendees: number | null;
+  currentAttendees: number;
+  imageUrl: string | null;
+  price: number;
   isRegistered: boolean;
-  isFeatured: boolean;
+  canEdit: boolean;
+  organizer: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  club: {
+    id: string;
+    name: string;
+    imageUrl: string | null;
+  } | null;
+  createdAt: string;
+  isFeatured?: boolean;
   difficulty?: string;
   duration?: string;
   prizes?: string[];
@@ -73,6 +81,24 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
     });
   };
 
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getEventStatus = (event: Event) => {
+    const now = new Date();
+    const startDate = new Date(event.startDate);
+    const endDate = new Date(event.endDate);
+    
+    if (now < startDate) return 'upcoming';
+    if (now >= startDate && now <= endDate) return 'ongoing';
+    return 'completed';
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming': return 'bg-green-100 text-green-800';
@@ -85,12 +111,23 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Tecnología': return 'bg-purple-100 text-purple-800';
-      case 'Académico': return 'bg-blue-100 text-blue-800';
-      case 'Arte': return 'bg-pink-100 text-pink-800';
-      case 'Deportivo': return 'bg-green-100 text-green-800';
-      case 'Extracurricular': return 'bg-orange-100 text-orange-800';
+      case 'TECHNOLOGY': return 'bg-purple-100 text-purple-800';
+      case 'ACADEMIC': return 'bg-blue-100 text-blue-800';
+      case 'ARTS': return 'bg-pink-100 text-pink-800';
+      case 'SPORTS': return 'bg-green-100 text-green-800';
+      case 'EXTRACURRICULAR': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'TECHNOLOGY': return 'Tecnología';
+      case 'ACADEMIC': return 'Académico';
+      case 'ARTS': return 'Arte';
+      case 'SPORTS': return 'Deportivo';
+      case 'EXTRACURRICULAR': return 'Extracurricular';
+      default: return category;
     }
   };
 
@@ -195,7 +232,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
         <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
           <div className="relative">
             <img 
-              src={event.image} 
+              src={event.imageUrl || `https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(event.title + ' academic event')}&image_size=landscape_16_9`} 
               alt={event.title}
               className="w-full h-64 md:h-80 object-cover"
             />
@@ -209,12 +246,12 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                   </Badge>
                 )}
                 <Badge className={getCategoryColor(event.category)}>
-                  {event.category}
+                  {getCategoryLabel(event.category)}
                 </Badge>
-                <Badge className={getStatusColor(event.status)}>
-                  {event.status === 'upcoming' ? 'Próximo' : 
-                   event.status === 'ongoing' ? 'En curso' :
-                   event.status === 'completed' ? 'Finalizado' : 'Cancelado'}
+                <Badge className={getStatusColor(getEventStatus(event))}>
+                  {getEventStatus(event) === 'upcoming' ? 'Próximo' : 
+                   getEventStatus(event) === 'ongoing' ? 'En curso' :
+                   getEventStatus(event) === 'completed' ? 'Finalizado' : 'Cancelado'}
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{event.title}</h1>
@@ -416,15 +453,15 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                   <div className="flex items-center gap-3">
                     <Calendar className="h-5 w-5 text-purple-600" />
                     <div>
-                      <p className="font-medium text-gray-900">{formatDate(event.date)}</p>
-                      <p className="text-sm text-gray-600">{event.time} - {event.endTime}</p>
+                      <p className="font-medium text-gray-900">{formatDate(event.startDate)}</p>
+                      <p className="text-sm text-gray-600">{formatTime(event.startDate)} - {formatTime(event.endDate)}</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-purple-600" />
                     <div>
-                      <p className="font-medium text-gray-900">{event.location}</p>
+                      <p className="font-medium text-gray-900">{event.isOnline ? 'Evento Virtual' : event.location}</p>
                       <p className="text-sm text-gray-600">Ubicación del evento</p>
                     </div>
                   </div>
@@ -432,7 +469,7 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                   <div className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-purple-600" />
                     <div>
-                      <p className="font-medium text-gray-900">{event.attendees}/{event.maxAttendees}</p>
+                      <p className="font-medium text-gray-900">{event.currentAttendees}/{event.maxAttendees || 'Sin límite'}</p>
                       <p className="text-sm text-gray-600">Participantes</p>
                     </div>
                   </div>
@@ -469,18 +506,20 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Ocupación</span>
-                    <span className="font-medium">{Math.round((event.attendees / event.maxAttendees) * 100)}%</span>
+                {event.maxAttendees && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Ocupación</span>
+                      <span className="font-medium">{Math.round((event.currentAttendees / event.maxAttendees) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full"
+                        style={{ width: `${(event.currentAttendees / event.maxAttendees) * 100}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full"
-                      style={{ width: `${(event.attendees / event.maxAttendees) * 100}%` }}
-                    />
-                  </div>
-                </div>
+                )}
 
                 {/* Registration Button */}
                 <div className="pt-4">
@@ -514,12 +553,12 @@ export function EventDetail({ event, onBack }: EventDetailProps) {
               <CardContent>
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={event.organizerAvatar} />
-                    <AvatarFallback>{event.organizer.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarImage src={event.organizer?.image || event.club?.imageUrl || undefined} />
+                    <AvatarFallback>{(event.organizer?.name || event.club?.name || 'O').split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{event.organizer}</h4>
-                    <p className="text-sm text-gray-600">Organizador del evento</p>
+                    <h4 className="font-semibold text-gray-900">{event.organizer?.name || event.club?.name}</h4>
+                    <p className="text-sm text-gray-600">{event.club?.name ? 'Club' : 'Organizador'} del evento</p>
                   </div>
                 </div>
                 <Button variant="outline" className="w-full mt-4">

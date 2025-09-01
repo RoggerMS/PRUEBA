@@ -420,9 +420,9 @@ export function ClubDetail({ club, onBack }: ClubDetailProps) {
                         <div>
                           <h3 className="font-semibold text-lg">{event.title}</h3>
                           <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                            <span>{event.date} - {event.time}</span>
+                            <span>{new Date(event.startDate).toLocaleDateString('es-ES')} - {new Date(event.startDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
                             <span>{event.location}</span>
-                            <span>{event.attendees} asistentes</span>
+                            <span>{event.currentAttendees} asistentes</span>
                           </div>
                         </div>
                         <Button size="sm" variant="outline">

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useMyEvents } from "@/hooks/useEvents";
 import { 
   Calendar, 
   Clock, 
@@ -21,69 +23,81 @@ import {
   TrendingUp,
   Award,
   Heart,
-  Share2
+  Share2,
+  Building
 } from "lucide-react";
 
 interface Event {
   id: string;
   title: string;
   description: string;
-  image: string;
-  date: string;
-  time: string;
-  endTime?: string;
+  startDate: string;
+  endDate: string;
   location: string;
   category: string;
   type: string;
-  organizer: string;
-  organizerAvatar: string;
-  attendees: number;
+  organizer: {
+    name: string;
+    image?: string;
+  };
+  club: {
+    name: string;
+    imageUrl?: string;
+  };
+  currentAttendees: number;
   maxAttendees: number;
   price: number;
-  tags: string[];
-  status: string;
   isRegistered: boolean;
-  isFeatured: boolean;
-  difficulty?: string;
-  duration?: string;
-  prizes?: string[];
-  requirements?: string[];
-  speakers?: string[];
+  isOnline: boolean;
+  imageUrl?: string;
+  canEdit: boolean;
+  tags?: string[];
 }
 
 interface MyEventsProps {
-  events: Event[];
   onEventClick: (eventId: string) => void;
 }
 
-export function MyEvents({ events, onEventClick }: MyEventsProps) {
+export function MyEvents({ onEventClick }: MyEventsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [activeTab, setActiveTab] = useState("registered");
+  const [page, setPage] = useState(1);
 
-  // Filter events based on user registration
-  const registeredEvents = events.filter(event => event.isRegistered);
-  const favoriteEvents = events.filter(event => event.isFeatured); // Mock favorite logic
-  const attendedEvents = events.filter(event => event.status === 'completed' && event.isRegistered);
-  const upcomingEvents = registeredEvents.filter(event => event.status === 'upcoming');
+  const { data: myEventsData, isLoading, error } = useMyEvents({
+    type: activeTab === 'registered' ? 'registered' : activeTab === 'organized' ? 'organized' : 'past',
+    page,
+    limit: 10
+  });
 
+  const events = myEventsData?.events || [];
+  const stats = myEventsData?.stats || { totalOrganized: 0, totalAttended: 0 };
+
+  // Filter events based on current tab
   const getEventsForTab = () => {
+    const now = new Date();
     switch (activeTab) {
-      case 'registered': return registeredEvents;
-      case 'favorites': return favoriteEvents;
-      case 'attended': return attendedEvents;
-      case 'upcoming': return upcomingEvents;
-      default: return registeredEvents;
+      case 'registered': 
+        return events.filter(event => event.isRegistered);
+      case 'organized': 
+        return events.filter(event => event.canEdit);
+      case 'attended': 
+        return events.filter(event => new Date(event.endDate) < now && event.isRegistered);
+      case 'upcoming': 
+        return events.filter(event => new Date(event.startDate) > now && event.isRegistered);
+      default: 
+        return events;
     }
   };
 
   const filteredEvents = getEventsForTab().filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = selectedStatus === "all" || event.status === selectedStatus;
+                         (event.tags && event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
+    const eventStatus = getEventStatus(event);
+    const matchesStatus = selectedStatus === "all" || eventStatus === selectedStatus;
     const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
     
     return matchesSearch && matchesStatus && matchesCategory;
@@ -92,7 +106,7 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
   const sortedEvents = [...filteredEvents].sort((a, b) => {
     switch (sortBy) {
       case 'date':
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
       case 'name':
         return a.title.localeCompare(b.title);
       case 'category':
@@ -111,6 +125,24 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
     });
   };
 
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getEventStatus = (event: Event) => {
+    const now = new Date();
+    const startDate = new Date(event.startDate);
+    const endDate = new Date(event.endDate);
+    
+    if (now < startDate) return 'upcoming';
+    if (now >= startDate && now <= endDate) return 'ongoing';
+    return 'completed';
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming': return 'bg-green-100 text-green-800';
@@ -123,12 +155,27 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'Tecnología': return 'bg-purple-100 text-purple-800';
-      case 'Académico': return 'bg-blue-100 text-blue-800';
-      case 'Arte': return 'bg-pink-100 text-pink-800';
-      case 'Deportivo': return 'bg-green-100 text-green-800';
-      case 'Extracurricular': return 'bg-orange-100 text-orange-800';
+      case 'TECHNOLOGY': return 'bg-purple-100 text-purple-800';
+      case 'ACADEMIC': return 'bg-blue-100 text-blue-800';
+      case 'ARTS': return 'bg-pink-100 text-pink-800';
+      case 'SPORTS': return 'bg-green-100 text-green-800';
+      case 'SOCIAL': return 'bg-orange-100 text-orange-800';
+      case 'WORKSHOP': return 'bg-indigo-100 text-indigo-800';
+      case 'CONFERENCE': return 'bg-teal-100 text-teal-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'TECHNOLOGY': return 'Tecnología';
+      case 'ACADEMIC': return 'Académico';
+      case 'ARTS': return 'Arte';
+      case 'SPORTS': return 'Deportes';
+      case 'SOCIAL': return 'Social';
+      case 'WORKSHOP': return 'Taller';
+      case 'CONFERENCE': return 'Conferencia';
+      default: return category;
     }
   };
 
@@ -142,15 +189,21 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
     }
   };
 
-  const stats = {
-    registered: registeredEvents.length,
-    favorites: favoriteEvents.length,
-    attended: attendedEvents.length,
-    upcoming: upcomingEvents.length
+  const eventStats = {
+    registered: events.filter(event => event.isRegistered).length,
+    organized: events.filter(event => event.canEdit).length,
+    attended: events.filter(event => {
+      const now = new Date();
+      return new Date(event.endDate) < now && event.isRegistered;
+    }).length,
+    upcoming: events.filter(event => {
+      const now = new Date();
+      return new Date(event.startDate) > now && event.isRegistered;
+    }).length
   };
 
-  const categories = ["all", "Académico", "Tecnología", "Arte", "Deportivo", "Extracurricular"];
-  const statuses = ["all", "upcoming", "ongoing", "completed", "cancelled"];
+  const categories = ["all", "TECHNOLOGY", "ACADEMIC", "ARTS", "SPORTS", "SOCIAL", "WORKSHOP", "CONFERENCE"];
+  const statuses = ["all", "upcoming", "ongoing", "completed"];
   const sortOptions = [
     { value: "date", label: "Fecha" },
     { value: "name", label: "Nombre" },
@@ -178,7 +231,7 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.registered}</p>
+                <p className="text-2xl font-bold text-gray-900">{eventStats.registered}</p>
                 <p className="text-sm text-gray-600">Registrados</p>
               </div>
             </div>
@@ -188,12 +241,12 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
         <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-red-100 rounded-full">
-                <Heart className="h-6 w-6 text-red-600" />
+              <div className="p-3 bg-purple-100 rounded-full">
+                <Building className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.favorites}</p>
-                <p className="text-sm text-gray-600">Favoritos</p>
+                <p className="text-2xl font-bold text-gray-900">{eventStats.organized}</p>
+                <p className="text-sm text-gray-600">Organizados</p>
               </div>
             </div>
           </CardContent>
@@ -206,7 +259,7 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
                 <Award className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.attended}</p>
+                <p className="text-2xl font-bold text-gray-900">{eventStats.attended}</p>
                 <p className="text-sm text-gray-600">Completados</p>
               </div>
             </div>
@@ -220,7 +273,7 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
                 <Calendar className="h-6 w-6 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{stats.upcoming}</p>
+                <p className="text-2xl font-bold text-gray-900">{eventStats.upcoming}</p>
                 <p className="text-sm text-gray-600">Próximos</p>
               </div>
             </div>
@@ -228,28 +281,34 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
         </Card>
       </div>
 
-      {/* Navigation Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 bg-white/90 backdrop-blur-sm">
-          <TabsTrigger value="registered" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Registrados ({stats.registered})
-          </TabsTrigger>
-          <TabsTrigger value="favorites" className="flex items-center gap-2">
-            <Heart className="h-4 w-4" />
-            Favoritos ({stats.favorites})
-          </TabsTrigger>
-          <TabsTrigger value="attended" className="flex items-center gap-2">
-            <Award className="h-4 w-4" />
-            Completados ({stats.attended})
-          </TabsTrigger>
-          <TabsTrigger value="upcoming" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Próximos ({stats.upcoming})
-          </TabsTrigger>
-        </TabsList>
+      {/* Tabs */}
+      <div className="flex space-x-1 bg-white/50 backdrop-blur-sm p-1 rounded-lg">
+        {[
+          { id: 'registered', label: 'Registrados', icon: CheckCircle },
+          { id: 'organized', label: 'Organizados', icon: Building },
+          { id: 'attended', label: 'Completados', icon: Calendar },
+          { id: 'upcoming', label: 'Próximos', icon: Clock }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === tab.id
+                  ? 'bg-white text-purple-600 shadow-sm'
+                  : 'text-gray-600 hover:text-purple-600'
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-        <TabsContent value={activeTab} className="space-y-6">
+      {/* Content */}
+      <div className="space-y-6">
           {/* Search and Filters */}
           <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="p-6">
@@ -310,144 +369,159 @@ export function MyEvents({ events, onEventClick }: MyEventsProps) {
             </CardContent>
           </Card>
 
-          {/* Events List */}
-          {sortedEvents.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {sortedEvents.map(event => (
-                <Card 
-                  key={event.id}
-                  className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden"
-                  onClick={() => onEventClick(event.id)}
-                >
-                  <div className="relative">
-                    <img 
-                      src={event.image} 
-                      alt={event.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-3 left-3 flex gap-2">
-                      <Badge className={getCategoryColor(event.category)}>
-                        {event.category}
-                      </Badge>
-                      <Badge className={getStatusColor(event.status)}>
-                        {event.status === 'upcoming' ? 'Próximo' : 
-                         event.status === 'ongoing' ? 'En curso' :
-                         event.status === 'completed' ? 'Finalizado' : 'Cancelado'}
-                      </Badge>
+        {/* Events List */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+                <Skeleton className="h-48 w-full" />
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-1/2 mb-2" />
+                  <Skeleton className="h-4 w-2/3" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : sortedEvents.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {sortedEvents.map(event => (
+              <Card 
+                key={event.id}
+                className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden"
+                onClick={() => onEventClick(event.id)}
+              >
+                <div className="relative">
+                  <img 
+                    src={event.imageUrl || `https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=academic%20event%20${encodeURIComponent(event.category)}&image_size=landscape_4_3`}
+                    alt={event.title}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <Badge className={getCategoryColor(event.category)}>
+                      {getCategoryLabel(event.category)}
+                    </Badge>
+                    <Badge className={getStatusColor(getEventStatus(event))}>
+                      {getEventStatus(event) === 'upcoming' ? 'Próximo' : 
+                       getEventStatus(event) === 'ongoing' ? 'En curso' :
+                       getEventStatus(event) === 'completed' ? 'Finalizado' : 'Cancelado'}
+                    </Badge>
+                  </div>
+                  <div className="absolute top-3 right-3">
+                    {getStatusIcon(getEventStatus(event))}
+                  </div>
+                </div>
+
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-lg text-gray-900 line-clamp-2 group-hover:text-purple-600 transition-colors">
+                      {event.title}
+                    </h3>
+                    {event.isFeatured && (
+                      <Star className="h-5 w-5 text-yellow-500 flex-shrink-0 fill-current" />
+                    )}
+                  </div>
+                  <p className="text-gray-600 text-sm line-clamp-2">
+                    {event.description}
+                  </p>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  {/* Event Details */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar className="h-4 w-4" />
+                      <span>{formatDate(event.startDate)}</span>
+                      <Clock className="h-4 w-4 ml-2" />
+                      <span>{formatTime(event.startDate)}</span>
+                      {event.endDate && <span>- {formatTime(event.endDate)}</span>}
                     </div>
-                    <div className="absolute top-3 right-3">
-                      {getStatusIcon(event.status)}
+                    
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <MapPin className="h-4 w-4" />
+                      <span className="truncate">
+                        {event.isOnline ? 'Evento Virtual' : event.location}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Users className="h-4 w-4" />
+                      <span>{event.currentAttendees}/{event.maxAttendees} participantes</span>
                     </div>
                   </div>
 
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-lg text-gray-900 line-clamp-2 group-hover:text-purple-600 transition-colors">
-                        {event.title}
-                      </h3>
-                      {event.isFeatured && (
-                        <Star className="h-5 w-5 text-yellow-500 flex-shrink-0 fill-current" />
-                      )}
+                  {/* Organizer */}
+                  <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+                      <Building className="h-4 w-4 text-white" />
                     </div>
-                    <p className="text-gray-600 text-sm line-clamp-2">
-                      {event.description}
-                    </p>
-                  </CardHeader>
-
-                  <CardContent className="space-y-4">
-                    {/* Event Details */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(event.date)}</span>
-                        <Clock className="h-4 w-4 ml-2" />
-                        <span>{event.time}</span>
-                        {event.endTime && <span>- {event.endTime}</span>}
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <MapPin className="h-4 w-4" />
-                        <span className="truncate">{event.location}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Users className="h-4 w-4" />
-                        <span>{event.attendees}/{event.maxAttendees} participantes</span>
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {event.organizer?.name || event.club?.name || 'Organizador'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {event.club?.name ? 'Club' : 'Organizador'}
+                      </p>
                     </div>
+                  </div>
 
-                    {/* Organizer */}
-                    <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-                      <img 
-                        src={event.organizerAvatar} 
-                        alt={event.organizer}
-                        className="w-8 h-8 rounded-full object-cover"
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1">
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs ${getCategoryColor(event.category)}`}
+                    >
+                      {getCategoryLabel(event.category)}
+                    </Badge>
+                    {event.tags?.map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Handle share
+                      }}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Compartir
+                    </Button>
+                    <Button 
+                      size="sm"
+                      className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEventClick(event.id);
+                      }}
+                    >
+                      Ver Detalles
+                    </Button>
+                  </div>
+
+                  {/* Progress Bar for Attendees */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Ocupación</span>
+                      <span>{Math.round((event.currentAttendees / event.maxAttendees) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(event.currentAttendees / event.maxAttendees) * 100}%` }}
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {event.organizer}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Organizador
-                        </p>
-                      </div>
                     </div>
-
-                    {/* Tags */}
-                    {event.tags && event.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {event.tags.slice(0, 3).map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {event.tags.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{event.tags.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="flex-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle share
-                        }}
-                      >
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Compartir
-                      </Button>
-                      <Button 
-                        size="sm"
-                        className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEventClick(event.id);
-                        }}
-                      >
-                        Ver Detalles
-                      </Button>
-                    </div>
-
-                    {/* Progress Bar for Attendees */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>Ocupación</span>
-                        <span>{Math.round((event.attendees / event.maxAttendees) * 100)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${(event.attendees / event.maxAttendees) * 100}%` }}
-                        />
-                      </div>
-                    </div>
+                  </div>
                   </CardContent>
                 </Card>
               ))}

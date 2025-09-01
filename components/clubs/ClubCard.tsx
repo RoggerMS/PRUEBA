@@ -194,7 +194,7 @@ export default function ClubCard({
             </div>
             <p className="text-sm text-blue-700">{club.nextEvent.title}</p>
             <p className="text-xs text-blue-600">
-              {new Date(club.nextEvent.date).toLocaleDateString('es-ES', {
+              {new Date(club.nextEvent.startDate).toLocaleDateString('es-ES', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',

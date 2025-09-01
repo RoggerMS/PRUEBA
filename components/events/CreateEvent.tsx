@@ -42,14 +42,13 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
     title: "",
     description: "",
     category: "",
-    type: "",
-    date: "",
-    time: "",
-    endTime: "",
+    startDate: "",
+    endDate: "",
     location: "",
+    isOnline: false,
     maxAttendees: "",
     price: "",
-    image: "",
+    imageUrl: "",
     tags: [] as string[],
     requirements: [] as string[],
     prizes: [] as string[],
@@ -78,20 +77,11 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const categories = [
-    "Académico",
-    "Tecnología",
-    "Arte",
-    "Deportivo",
-    "Extracurricular",
-    "Conferencia",
-    "Taller",
-    "Seminario"
-  ];
-
-  const eventTypes = [
-    "Presencial",
-    "Virtual",
-    "Híbrido"
+    { value: "TECHNOLOGY", label: "Tecnología" },
+    { value: "ACADEMIC", label: "Académico" },
+    { value: "CULTURAL", label: "Cultural" },
+    { value: "SPORTS", label: "Deportivo" },
+    { value: "WORKSHOP", label: "Taller" }
   ];
 
   const difficulties = [
@@ -200,13 +190,12 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
       if (!formData.title.trim()) newErrors.title = "El título es requerido";
       if (!formData.description.trim()) newErrors.description = "La descripción es requerida";
       if (!formData.category) newErrors.category = "La categoría es requerida";
-      if (!formData.type) newErrors.type = "El tipo de evento es requerido";
     }
 
     if (step === 2) {
-      if (!formData.date) newErrors.date = "La fecha es requerida";
-      if (!formData.time) newErrors.time = "La hora es requerida";
-      if (!formData.location.trim()) newErrors.location = "La ubicación es requerida";
+      if (!formData.startDate) newErrors.startDate = "La fecha de inicio es requerida";
+      if (!formData.endDate) newErrors.endDate = "La fecha de fin es requerida";
+      if (!formData.isOnline && !formData.location.trim()) newErrors.location = "La ubicación es requerida para eventos presenciales";
       if (!formData.maxAttendees || parseInt(formData.maxAttendees) <= 0) {
         newErrors.maxAttendees = "El número de participantes debe ser mayor a 0";
       }
@@ -231,13 +220,16 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
       const newEvent = {
         id: Date.now().toString(),
         ...formData,
-        attendees: 0,
-        status: 'upcoming',
+        currentAttendees: 0,
+        status: 'UPCOMING',
         isRegistered: false,
         isFeatured: false,
-        organizer: "Usuario Actual", // This would come from auth
-        organizerAvatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20avatar%20portrait&image_size=square",
-        image: formData.image || "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20event%20banner%20design&image_size=landscape_16_9"
+        canEdit: true,
+        organizer: {
+          name: "Usuario Actual", // This would come from auth
+          avatar: "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20avatar%20portrait&image_size=square"
+        },
+        imageUrl: formData.imageUrl || "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20event%20banner%20design&image_size=landscape_16_9"
       };
 
       onEventCreated?.(newEvent);
@@ -247,14 +239,13 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
         title: "",
         description: "",
         category: "",
-        type: "",
-        date: "",
-        time: "",
-        endTime: "",
+        startDate: "",
+        endDate: "",
         location: "",
+        isOnline: false,
         maxAttendees: "",
         price: "",
-        image: "",
+        imageUrl: "",
         tags: [],
         requirements: [],
         prizes: [],
@@ -304,16 +295,16 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
         <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
           <div className="relative">
             <img 
-              src={formData.image || "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20event%20banner%20design&image_size=landscape_16_9"} 
+              src={formData.imageUrl || "https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20event%20banner%20design&image_size=landscape_16_9"} 
               alt={formData.title}
               className="w-full h-64 object-cover"
             />
             <div className="absolute top-4 left-4 flex gap-2">
               <Badge className="bg-purple-100 text-purple-800">
-                {formData.category}
+                {categories.find(cat => cat.value === formData.category)?.label || formData.category}
               </Badge>
               <Badge className="bg-blue-100 text-blue-800">
-                {formData.type}
+                {formData.isOnline ? "Virtual" : "Presencial"}
               </Badge>
             </div>
           </div>
@@ -328,15 +319,15 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-gray-500" />
-                <span>{formData.date}</span>
+                <span>{new Date(formData.startDate).toLocaleDateString()}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-gray-500" />
-                <span>{formData.time} {formData.endTime && `- ${formData.endTime}`}</span>
+                <span>{new Date(formData.startDate).toLocaleTimeString()} - {new Date(formData.endDate).toLocaleTimeString()}</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-gray-500" />
-                <span>{formData.location}</span>
+                <span>{formData.isOnline ? "Evento Virtual" : formData.location}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-gray-500" />
@@ -453,8 +444,8 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -467,26 +458,15 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
                   )}
                 </div>
 
-                <div>
-                  <Label htmlFor="type">Tipo de Evento *</Label>
-                  <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
-                    <SelectTrigger className={errors.type ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Selecciona el tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {eventTypes.map(type => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.type && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.type}
-                    </p>
-                  )}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isOnline"
+                    checked={formData.isOnline}
+                    onChange={(e) => handleInputChange('isOnline', e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="isOnline">Evento Virtual</Label>
                 </div>
               </div>
 
@@ -509,11 +489,11 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
               </div>
 
               <div>
-                <Label htmlFor="image">URL de Imagen (Opcional)</Label>
+                <Label htmlFor="imageUrl">URL de Imagen (Opcional)</Label>
                 <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => handleInputChange('image', e.target.value)}
+                  id="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={(e) => handleInputChange('imageUrl', e.target.value)}
                   placeholder="https://ejemplo.com/imagen.jpg"
                 />
                 <p className="text-sm text-gray-500 mt-1">
@@ -526,68 +506,60 @@ export function CreateEvent({ onEventCreated }: CreateEventProps) {
           {/* Step 2: Date and Location */}
           {activeStep === 2 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="date">Fecha *</Label>
+                  <Label htmlFor="startDate">Fecha y Hora de Inicio *</Label>
                   <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => handleInputChange('date', e.target.value)}
-                    className={errors.date ? 'border-red-500' : ''}
+                    id="startDate"
+                    type="datetime-local"
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                    className={errors.startDate ? 'border-red-500' : ''}
                   />
-                  {errors.date && (
+                  {errors.startDate && (
                     <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                       <AlertCircle className="h-4 w-4" />
-                      {errors.date}
+                      {errors.startDate}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="time">Hora de Inicio *</Label>
+                  <Label htmlFor="endDate">Fecha y Hora de Fin *</Label>
                   <Input
-                    id="time"
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => handleInputChange('time', e.target.value)}
-                    className={errors.time ? 'border-red-500' : ''}
+                    id="endDate"
+                    type="datetime-local"
+                    value={formData.endDate}
+                    onChange={(e) => handleInputChange('endDate', e.target.value)}
+                    className={errors.endDate ? 'border-red-500' : ''}
                   />
-                  {errors.time && (
+                  {errors.endDate && (
                     <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                       <AlertCircle className="h-4 w-4" />
-                      {errors.time}
+                      {errors.endDate}
                     </p>
                   )}
                 </div>
+              </div>
 
+              {!formData.isOnline && (
                 <div>
-                  <Label htmlFor="endTime">Hora de Fin (Opcional)</Label>
+                  <Label htmlFor="location">Ubicación *</Label>
                   <Input
-                    id="endTime"
-                    type="time"
-                    value={formData.endTime}
-                    onChange={(e) => handleInputChange('endTime', e.target.value)}
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    placeholder="Ej: Auditorio Principal, Aula 101, etc."
+                    className={errors.location ? 'border-red-500' : ''}
                   />
+                  {errors.location && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      {errors.location}
+                    </p>
+                  )}
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="location">Ubicación *</Label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  placeholder="Ej: Auditorio Principal, Aula 101, Zoom, etc."
-                  className={errors.location ? 'border-red-500' : ''}
-                />
-                {errors.location && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4" />
-                    {errors.location}
-                  </p>
-                )}
-              </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
