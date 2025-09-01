@@ -90,7 +90,7 @@ export function MediaViewer({ isOpen, onClose, post, initialMediaIndex = 0 }: Me
   const [likeCount, setLikeCount] = useState(post.stats.likes);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
-  const currentMedia = post.media[currentIndex];
+  const currentMedia = post.media?.[currentIndex];
   const hasMultipleMedia = post.media.length > 1;
 
   // Load comments when viewer opens
@@ -165,6 +165,7 @@ export function MediaViewer({ isOpen, onClose, post, initialMediaIndex = 0 }: Me
   };
 
   const handleDownload = async () => {
+    if (!currentMedia) return;
     try {
       const response = await fetch(currentMedia.url);
       const blob = await response.blob();
@@ -244,7 +245,7 @@ export function MediaViewer({ isOpen, onClose, post, initialMediaIndex = 0 }: Me
           handleNext();
           break;
         case ' ':
-          if (currentMedia.type === 'video') {
+          if (currentMedia?.type === 'video') {
             e.preventDefault();
             setIsPlaying(prev => !prev);
           }
@@ -254,9 +255,9 @@ export function MediaViewer({ isOpen, onClose, post, initialMediaIndex = 0 }: Me
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, handlePrevious, handleNext, currentMedia.type]);
+  }, [isOpen, onClose, handlePrevious, handleNext, currentMedia?.type]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !currentMedia) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
