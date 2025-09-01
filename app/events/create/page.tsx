@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
+import { useToast, eventToasts } from '@/components/ui/toast'
+import { PageTransition, AnimatedContainer, StaggeredList, StaggeredItem, HoverScale, FadeTransition } from '@/components/ui/animations'
 import {
   Calendar,
   Clock,
@@ -64,6 +65,7 @@ const difficultyLevels = [
 
 export default function CreateEventPage() {
   const router = useRouter()
+  const { success, error, warning } = useToast()
   const [loading, setLoading] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
   const [tags, setTags] = useState<string[]>([])
@@ -135,7 +137,7 @@ export default function CreateEventPage() {
     e.preventDefault()
     
     if (!validateForm()) {
-      toast.error('Por favor corrige los errores en el formulario')
+      error('Error de validación', 'Por favor corrige los errores en el formulario')
       return
     }
     
@@ -157,15 +159,17 @@ export default function CreateEventPage() {
       
       if (response.ok) {
         const newEvent = await response.json()
-        toast.success('¡Evento creado exitosamente!')
+        const toastData = eventToasts.eventCreated(formData.title || 'Nuevo evento')
+        success(toastData.title, toastData.description)
         router.push(`/events/${newEvent.id}`)
       } else {
         const errorData = await response.json()
-        toast.error(errorData.message || 'Error al crear el evento')
+        error('Error al crear evento', errorData.message || 'No se pudo crear el evento. Inténtalo de nuevo.')
       }
-    } catch (error) {
-      console.error('Error creating event:', error)
-      toast.error('Error al crear el evento')
+    } catch (err) {
+      console.error('Error creating event:', err)
+      const networkToast = eventToasts.networkError()
+      error(networkToast.title, networkToast.description)
     } finally {
       setLoading(false)
     }
@@ -173,7 +177,7 @@ export default function CreateEventPage() {
   
   const handleSaveDraft = () => {
     localStorage.setItem('eventDraft', JSON.stringify({ ...formData, tags }))
-    toast.success('Borrador guardado')
+    success('Borrador guardado', 'Tus cambios han sido guardados localmente')
   }
   
   const loadDraft = () => {
@@ -182,26 +186,34 @@ export default function CreateEventPage() {
       const draftData = JSON.parse(draft)
       setFormData(draftData)
       setTags(draftData.tags || [])
-      toast.success('Borrador cargado')
+      success('Borrador cargado', 'Se han restaurado los datos guardados previamente')
+    } else {
+      warning('Sin borradores', 'No se encontraron borradores guardados')
     }
   }
   
   if (previewMode) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => setPreviewMode(false)}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver al Editor
-          </Button>
-          <h1 className="text-2xl font-bold">Vista Previa del Evento</h1>
-        </div>
-        
-        <Card>
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <AnimatedContainer>
+            <div className="flex items-center gap-4 mb-6">
+              <HoverScale scale={1.05}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setPreviewMode(false)}
+                  className="flex items-center gap-2 transition-all duration-200"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver al Editor
+                </Button>
+              </HoverScale>
+              <h1 className="text-2xl font-bold">Vista Previa del Evento</h1>
+            </div>
+          </AnimatedContainer>
+          
+          <FadeTransition>
+            <Card className="transition-all duration-300 hover:shadow-lg">
           <CardHeader>
             <div className="flex flex-wrap gap-2 mb-3">
               <Badge variant="secondary">{formData.category}</Badge>
@@ -257,60 +269,77 @@ export default function CreateEventPage() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+            </Card>
+          </FadeTransition>
+        </div>
+      </PageTransition>
     )
   }
   
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver
-          </Button>
-          <h1 className="text-2xl font-bold">Crear Nuevo Evento</h1>
-        </div>
+    <PageTransition>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header */}
+        <AnimatedContainer>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <HoverScale scale={1.05}>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.back()}
+                  className="flex items-center gap-2 transition-all duration-200"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver
+                </Button>
+              </HoverScale>
+              <h1 className="text-2xl font-bold">Crear Nuevo Evento</h1>
+            </div>
         
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={loadDraft}
-            size="sm"
-          >
-            Cargar Borrador
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={handleSaveDraft}
-            size="sm"
-          >
-            Guardar Borrador
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => setPreviewMode(true)}
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            Vista Previa
-          </Button>
-        </div>
-      </div>
+            <div className="flex gap-2">
+              <HoverScale scale={1.02}>
+                <Button
+                  variant="outline"
+                  onClick={loadDraft}
+                  size="sm"
+                  className="transition-all duration-200"
+                >
+                  Cargar Borrador
+                </Button>
+              </HoverScale>
+              
+              <HoverScale scale={1.02}>
+                <Button
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  size="sm"
+                  className="transition-all duration-200"
+                >
+                  Guardar Borrador
+                </Button>
+              </HoverScale>
+              
+              <HoverScale scale={1.02}>
+                <Button
+                  variant="outline"
+                  onClick={() => setPreviewMode(true)}
+                  size="sm"
+                  className="flex items-center gap-2 transition-all duration-200"
+                >
+                  <Eye className="h-4 w-4" />
+                  Vista Previa
+                </Button>
+              </HoverScale>
+            </div>
+          </div>
+        </AnimatedContainer>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
-        <Card>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <StaggeredList>
+            {/* Basic Information */}
+            <StaggeredItem>
+              <Card className="transition-all duration-300 hover:shadow-lg">
           <CardHeader>
             <CardTitle>Información Básica</CardTitle>
           </CardHeader>
@@ -350,11 +379,13 @@ export default function CreateEventPage() {
               />
               {errors.organizer && <p className="text-sm text-red-500 mt-1">{errors.organizer}</p>}
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Date and Location */}
-        <Card>
+              </CardContent>
+              </Card>
+            </StaggeredItem>
+            
+            {/* Date and Location */}
+            <StaggeredItem>
+              <Card className="transition-all duration-300 hover:shadow-lg">
           <CardHeader>
             <CardTitle>Fecha y Ubicación</CardTitle>
           </CardHeader>
@@ -405,11 +436,13 @@ export default function CreateEventPage() {
               />
               {errors.location && <p className="text-sm text-red-500 mt-1">{errors.location}</p>}
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Category and Type */}
-        <Card>
+              </CardContent>
+              </Card>
+            </StaggeredItem>
+            
+            {/* Category and Type */}
+            <StaggeredItem>
+              <Card className="transition-all duration-300 hover:shadow-lg">
           <CardHeader>
             <CardTitle>Categorización</CardTitle>
           </CardHeader>
@@ -513,11 +546,13 @@ export default function CreateEventPage() {
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Capacity and Pricing */}
-        <Card>
+              </CardContent>
+              </Card>
+            </StaggeredItem>
+            
+            {/* Capacity and Pricing */}
+            <StaggeredItem>
+              <Card className="transition-all duration-300 hover:shadow-lg">
           <CardHeader>
             <CardTitle>Capacidad y Precio</CardTitle>
           </CardHeader>
@@ -569,28 +604,40 @@ export default function CreateEventPage() {
                 <Label htmlFor="allowWaitlist">Permitir lista de espera cuando esté lleno</Label>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* Submit Buttons */}
-        <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-          >
-            Cancelar
-          </Button>
+              </CardContent>
+              </Card>
+            </StaggeredItem>
+          </StaggeredList>
           
-          <Button
-            type="submit"
-            disabled={loading}
-            className="min-w-[120px]"
-          >
-            {loading ? 'Creando...' : 'Crear Evento'}
-          </Button>
-        </div>
-      </form>
-    </div>
+          {/* Submit Buttons */}
+          <AnimatedContainer>
+            <div className="flex justify-end gap-4">
+              <HoverScale scale={1.02}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                  className="transition-all duration-200"
+                >
+                  Cancelar
+                </Button>
+              </HoverScale>
+              
+              <HoverScale scale={1.02}>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="min-w-[120px] transition-all duration-200"
+                >
+                  <FadeTransition>
+                    {loading ? 'Creando...' : 'Crear Evento'}
+                  </FadeTransition>
+                </Button>
+              </HoverScale>
+            </div>
+          </AnimatedContainer>
+        </form>
+      </div>
+    </PageTransition>
   )
 }

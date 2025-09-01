@@ -8,7 +8,10 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { toast } from 'sonner'
+import { useToast, eventToasts } from '@/components/ui/toast'
+import { LoadingSpinner } from '@/components/ui/loading'
+import { EventCardSkeleton } from '@/components/ui/skeleton'
+import { PageTransition, AnimatedContainer, StaggeredList, StaggeredItem, HoverScale, FadeTransition } from '@/components/ui/animations'
 import {
   Calendar,
   Clock,
@@ -56,6 +59,7 @@ interface MyEvent extends Event {
 
 export default function MyEventsPage() {
   const router = useRouter()
+  const { success, error, warning } = useToast()
   const [activeTab, setActiveTab] = useState('created')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<EventStatus | 'all'>('all')
@@ -63,6 +67,7 @@ export default function MyEventsPage() {
   const [registeredEvents, setRegisteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   
   const { events } = useEvents()
   const { registrations, cancelRegistration } = useEventRegistration()
@@ -197,6 +202,7 @@ export default function MyEventsPage() {
   })
   
   const handleDeleteEvent = async (eventId: string) => {
+    setDeleteLoading(true)
     try {
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'DELETE'
@@ -204,24 +210,30 @@ export default function MyEventsPage() {
       
       if (response.ok) {
         setCreatedEvents(prev => prev.filter(event => event.id !== eventId))
-        toast.success('Evento eliminado exitosamente')
+        const toastData = eventToasts.eventDeleted()
+        success(toastData.title, toastData.description)
       } else {
-        toast.error('Error al eliminar el evento')
+        error('Error al eliminar', 'No se pudo eliminar el evento. Inténtalo de nuevo.')
       }
-    } catch (error) {
-      console.error('Error deleting event:', error)
-      toast.error('Error al eliminar el evento')
+    } catch (err) {
+      console.error('Error deleting event:', err)
+      const networkToast = eventToasts.networkError()
+      error(networkToast.title, networkToast.description)
+    } finally {
+      setDeleteLoading(false)
+      setDeleteEventId(null)
     }
-    setDeleteEventId(null)
   }
   
   const handleCancelRegistration = async (eventId: string) => {
     try {
       await cancelRegistration(eventId)
       setRegisteredEvents(prev => prev.filter(event => event.id !== eventId))
-      toast.success('Registro cancelado exitosamente')
-    } catch (error) {
-      toast.error('Error al cancelar el registro')
+      const event = registeredEvents.find(e => e.id === eventId)
+      const toastData = eventToasts.registrationCancelled(event?.title || 'evento')
+      warning(toastData.title, toastData.description)
+    } catch (err) {
+      error('Error al cancelar', 'No se pudo cancelar tu registro. Inténtalo de nuevo.')
     }
   }
   
@@ -244,7 +256,7 @@ export default function MyEventsPage() {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
     
-    toast.success('Datos exportados exitosamente')
+    success('Datos exportados', 'Los datos del evento han sido descargados exitosamente')
   }
   
   const getStatusBadge = (status: EventStatus) => {
@@ -367,7 +379,7 @@ export default function MyEventsPage() {
                     })
                   } else {
                     navigator.clipboard.writeText(`${window.location.origin}/events/${event.id}`)
-                    toast.success('Enlace copiado')
+                    success('Enlace copiado', 'El enlace del evento ha sido copiado al portapapeles')
                   }
                 }}>
                   <Share2 className="h-4 w-4 mr-2" />
@@ -390,11 +402,11 @@ export default function MyEventsPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+        <div className="space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded"></div>
+              <EventCardSkeleton key={i} />
             ))}
           </div>
         </div>
@@ -403,62 +415,71 @@ export default function MyEventsPage() {
   }
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver
-          </Button>
-          <h1 className="text-2xl font-bold">Mis Eventos</h1>
-        </div>
-        
-        <Button
-          onClick={() => router.push('/events/create')}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Crear Evento
-        </Button>
-      </div>
-      
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar eventos..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+    <PageTransition>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <AnimatedContainer>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <HoverScale scale={1.05}>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.back()}
+                  className="flex items-center gap-2 transition-all duration-200"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Volver
+                </Button>
+              </HoverScale>
+              <h1 className="text-2xl font-bold">Mis Eventos</h1>
             </div>
             
-            <Select value={statusFilter} onValueChange={(value: EventStatus | 'all') => setStatusFilter(value)}>
-              <SelectTrigger className="w-full md:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="upcoming">Próximos</SelectItem>
-                <SelectItem value="ongoing">En curso</SelectItem>
-                <SelectItem value="completed">Completados</SelectItem>
-                <SelectItem value="cancelled">Cancelados</SelectItem>
-              </SelectContent>
-            </Select>
+            <HoverScale scale={1.05}>
+              <Button
+                onClick={() => router.push('/events/create')}
+                className="flex items-center gap-2 transition-all duration-200"
+              >
+                <Plus className="h-4 w-4" />
+                Crear Evento
+              </Button>
+            </HoverScale>
           </div>
-        </CardContent>
-      </Card>
+        </AnimatedContainer>
+      
+        {/* Filters */}
+        <FadeTransition>
+          <Card className="mb-6">
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar eventos..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 transition-all duration-200 focus:ring-2"
+                    />
+                  </div>
+                </div>
+                
+                <Select value={statusFilter} onValueChange={(value: EventStatus | 'all') => setStatusFilter(value)}>
+                  <SelectTrigger className="w-full md:w-48 transition-all duration-200">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    <SelectItem value="upcoming">Próximos</SelectItem>
+                    <SelectItem value="ongoing">En curso</SelectItem>
+                    <SelectItem value="completed">Completados</SelectItem>
+                    <SelectItem value="cancelled">Cancelados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </FadeTransition>
       
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -490,11 +511,15 @@ export default function MyEventsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <StaggeredList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCreatedEvents.map((event) => (
-                <EventCard key={event.id} event={event} isCreated={true} />
+                <StaggeredItem key={event.id}>
+                  <HoverScale scale={1.02}>
+                    <EventCard event={event} isCreated={true} />
+                  </HoverScale>
+                </StaggeredItem>
               ))}
-            </div>
+            </StaggeredList>
           )}
         </TabsContent>
         
@@ -521,11 +546,15 @@ export default function MyEventsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <StaggeredList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRegisteredEvents.map((event) => (
-                <EventCard key={event.id} event={event} isCreated={false} />
+                <StaggeredItem key={event.id}>
+                  <HoverScale scale={1.02}>
+                    <EventCard event={event} isCreated={false} />
+                  </HoverScale>
+                </StaggeredItem>
               ))}
-            </div>
+            </StaggeredList>
           )}
         </TabsContent>
       </Tabs>
@@ -544,13 +573,22 @@ export default function MyEventsPage() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteEventId && handleDeleteEvent(deleteEventId)}
+              disabled={deleteLoading}
               className="bg-red-600 hover:bg-red-700"
             >
-              Eliminar
+              {deleteLoading ? (
+                <>
+                  <LoadingSpinner className="mr-2 h-4 w-4" />
+                  Eliminando...
+                </>
+              ) : (
+                'Eliminar'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </div>
+    </PageTransition>
   )
 }

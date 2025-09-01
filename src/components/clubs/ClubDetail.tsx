@@ -119,11 +119,12 @@ const mockPosts = [
   }
 ];
 
+// Club events will be fetched from API or use seed data
 const mockEvents = [
   {
     id: "1",
     title: "Sesión de Estudio: Límites y Continuidad",
-    date: "2024-01-25",
+    date: "2024-03-15",
     time: "16:00",
     location: "Aula 205",
     attendees: 15
@@ -131,10 +132,18 @@ const mockEvents = [
   {
     id: "2",
     title: "Competencia Interna de Matemáticas",
-    date: "2024-01-30",
+    date: "2024-03-20",
     time: "14:00",
     location: "Auditorio Principal",
     attendees: 25
+  },
+  {
+    id: "3",
+    title: "Workshop de React Avanzado",
+    date: "2024-03-25",
+    time: "10:00",
+    location: "Lab de Computación",
+    attendees: 30
   }
 ];
 
