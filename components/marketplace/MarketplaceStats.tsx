@@ -186,3 +186,5 @@ export function MarketplaceStats({
     </div>
   );
 }
+
+export default MarketplaceStats;
