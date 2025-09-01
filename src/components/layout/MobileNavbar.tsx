@@ -86,13 +86,13 @@ export function MobileNavbar({ isOpen, onClose }: MobileNavbarProps) {
   // Close drawer on route change
   useEffect(() => {
     const handleRouteChange = () => {
-      setIsDrawerOpen(false);
+      onClose();
     };
     
     // Listen for route changes
     window.addEventListener('popstate', handleRouteChange);
     return () => window.removeEventListener('popstate', handleRouteChange);
-  }, []);
+  }, [onClose]);
 
   // Close drawer
   const closeDrawer = () => {

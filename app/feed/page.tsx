@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { useSession } from 'next-auth/react';
-import { Composer } from '@/components/feed/Composer';
+import { FacebookStyleComposer } from '@/components/feed/FacebookStyleComposer';
 import PostList from '@/components/feed/PostList';
 import WeeklyChallengeInline from '@/components/feed/WeeklyChallengeInline';
 import { TrendingSidebar } from '@/components/feed/TrendingSidebar';
@@ -92,6 +92,7 @@ export default function FeedPage() {
           {/* Sidebar derecha */}
           <aside className="hidden lg:block lg:col-span-4 space-y-4">
             <div className="space-y-4 sticky top-6">
+
               <Suspense fallback={<SidebarSkeleton />}>
                 <TrendingSidebar />
               </Suspense>

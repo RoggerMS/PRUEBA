@@ -5,7 +5,6 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
 import { FloatingActionButton } from './FloatingActionButton';
-import { MobileTabBar } from './MobileTabBar';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -23,7 +22,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <Sidebar />
         
         {/* Main Content Area - Full Width Responsive */}
-        <main className="flex-1 min-h-screen w-full pt-0 md:pt-0 pb-14 md:pb-0">
+        <main className="flex-1 min-h-screen w-full pt-0 md:pt-0">
           <div className="w-full h-full">
             {children}
           </div>
@@ -34,9 +33,6 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="hidden md:block">
         <Footer />
       </div>
-      
-      {/* Mobile Tab Bar - Only show on mobile */}
-      <MobileTabBar />
       
       {/* Floating Action Button */}
       <FloatingActionButton />
