@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  ImageIcon, 
-  FileTextIcon, 
-  SmileIcon, 
-  X, 
+import {
+  ImageIcon,
+  FileTextIcon,
+  SmileIcon,
   Camera,
   BookOpen,
   HelpCircle
@@ -93,8 +92,8 @@ export function FacebookStyleComposer() {
         
         {/* Botones de opciones rápidas */}
         <div className="flex justify-between mt-3 pt-3 border-t border-gray-200">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="flex-1 text-gray-600 hover:bg-gray-100"
             onClick={() => {
               setPostType('note');
@@ -102,10 +101,10 @@ export function FacebookStyleComposer() {
             }}
           >
             <BookOpen className="h-4 w-4 mr-2" />
-            Publicar un Apunte 📘
+            Apunte 📘
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="flex-1 text-gray-600 hover:bg-gray-100"
             onClick={() => {
               setPostType('question');
@@ -113,32 +112,30 @@ export function FacebookStyleComposer() {
             }}
           >
             <HelpCircle className="h-4 w-4 mr-2" />
-            Publicar una Pregunta ❓
+            Pregunta ❓
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="flex-1 text-gray-600 hover:bg-gray-100"
             onClick={openModal}
           >
             <Camera className="h-4 w-4 mr-2" />
-            Publicar Foto/Video 🖼️
+            Foto/Video 🖼️
           </Button>
         </div>
       </Card>
 
       {/* Modal de creación */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (open) setIsModalOpen(true);
+          else closeModal();
+        }}
+      >
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogHeader className="flex items-center">
             <DialogTitle className="text-xl font-semibold">Crear publicación</DialogTitle>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={closeModal}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix undefined composer and redundant close button in feed; simplify quick action labels.
 - Fix duplicate default export in `CategoryFilter` component that caused Next.js build failures.
 - Hide main sidebar on mobile screens so it only appears on desktop.
 - Simplify feed layout by removing the left column, widening the timeline, adding a closable weekly challenge banner, and moving the user level card to the global sidebar.
