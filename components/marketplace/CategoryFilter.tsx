@@ -13,8 +13,6 @@ interface Category {
   children?: Category[];
   }
 
-export default CategoryFilter;
-
 interface CategoryFilterProps {
   categories: Category[];
   selectedCategory?: string;
