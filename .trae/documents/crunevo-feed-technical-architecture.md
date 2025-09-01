@@ -205,6 +205,46 @@ Request:
 GET /api/media/[mediaId]
 ```
 
+### 4.2 Autorización
+
+La API utiliza **NextAuth.js** con adaptador de **Prisma** para autenticar a los usuarios y asociarles un `role` almacenado en el modelo `User`. Cada endpoint consulta la sesión mediante `getServerSession` y valida que el rol tenga permiso antes de ejecutar la lógica.
+
+| Endpoint                     | Estudiante                                         | Instructor                                 | Administrador                           |
+|-----------------------------|----------------------------------------------------|--------------------------------------------|-----------------------------------------|
+| `GET /api/feed`             | Lee posts públicos y de usuarios seguidos          | Igual que estudiante                       | Acceso completo                         |
+| `POST /api/feed`            | Crea posts propios                                 | Crea y modera posts                        | Crea, modera y configura                |
+| `POST /api/feed/[id]/comment` | Comenta posts visibles                             | Comenta y modera                           | Control total sobre comentarios         |
+
+**Ejemplo de guardia por rol**
+
+```ts
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+
+function roleGuard(roles: string[], role?: string) {
+  if (!role || !roles.includes(role)) {
+    throw NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  roleGuard(['STUDENT', 'INSTRUCTOR', 'ADMIN'], session?.user?.role)
+  // lógica para crear post
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions)
+  roleGuard(['ADMIN', 'INSTRUCTOR'], session?.user?.role)
+  // lógica para eliminar o moderar post
+}
+```
+
+
 ## 5. Arquitectura del Servidor
 
 ```mermaid
