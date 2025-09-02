@@ -13,7 +13,6 @@ import {
   ShoppingBagIcon,
   StarIcon,
   EyeIcon,
-  HeartIcon,
   ArrowUpIcon
 } from 'lucide-react';
 import Link from 'next/link';
@@ -198,7 +197,7 @@ export function TrendingSidebar() {
                       <span>{note.views.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <HeartIcon className="h-3 w-3" />
+                      <FlameIcon className="h-3 w-3" />
                       <span>{note.likes}</span>
                     </div>
                   </div>
