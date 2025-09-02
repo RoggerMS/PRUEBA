@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Align feed client with API pagination and add single post endpoint for local development.
+- Improve feed post actions: link user names to profiles, move follow button beside author info, restore flame reaction, and add share handling.
 
 - Add aria-label to interest removal button for better accessibility.
 

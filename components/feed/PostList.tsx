@@ -1,22 +1,28 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  HeartIcon, 
-  MessageCircleIcon, 
-  ShareIcon, 
-  BookmarkIcon, 
+import {
+  FlameIcon,
+  MessageCircleIcon,
+  ShareIcon,
+  BookmarkIcon,
   MoreHorizontalIcon,
   FileTextIcon,
   DownloadIcon,
   StarIcon,
-  LoaderIcon,
-  FlameIcon
+  LoaderIcon
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem
+} from '@/components/ui/dropdown-menu';
 import { useFeed, useFireReaction, useFollowUser, useReportPost, useBookmarkPost } from '@/hooks/useFeed';
 import { FeedPost } from '@/types/feed';
 import { toast } from 'sonner';
@@ -63,12 +69,26 @@ function PostCard({ post }: { post: FeedPost }) {
 
   const handleFollow = async () => {
     try {
-      await followUser.mutateAsync({ 
-        userId: post.author.id, 
-        action: 'follow' 
+      await followUser.mutateAsync({
+        userId: post.author.id,
+        action: 'follow'
       });
     } catch (error) {
       // Error handling is done in the hook
+    }
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/post/${post.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success('Enlace copiado al portapapeles');
+      }
+    } catch (error) {
+      toast.error('Error al compartir el post');
     }
   };
 
@@ -104,16 +124,20 @@ function PostCard({ post }: { post: FeedPost }) {
     <Card className="p-6 hover:shadow-md transition-shadow">
       {/* Header del post */}
       <div className="flex items-start space-x-3 mb-4">
-        <Avatar className="h-10 w-10">
-          <img 
-            src={post.author.avatar || '/default-avatar.png'} 
-            alt={post.author.name}
-            className="rounded-full"
-          />
-        </Avatar>
+        <Link href={`/u/${post.author.username}`} className="h-10 w-10">
+          <Avatar className="h-10 w-10">
+            <img
+              src={post.author.avatar || '/default-avatar.png'}
+              alt={post.author.name}
+              className="rounded-full"
+            />
+          </Avatar>
+        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2">
-            <h3 className="font-semibold text-sm truncate">{post.author.name}</h3>
+            <Link href={`/u/${post.author.username}`} className="hover:underline">
+              <h3 className="font-semibold text-sm truncate">{post.author.name}</h3>
+            </Link>
             <span className="text-xs">{getPostIcon()}</span>
             {post.author.verified && (
               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
@@ -125,9 +149,27 @@ function PostCard({ post }: { post: FeedPost }) {
             @{post.author.username} • {formatTimeAgo(post.createdAt)}
           </p>
         </div>
-        <Button variant="ghost" size="sm">
-          <MoreHorizontalIcon className="h-4 w-4" />
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleFollow}
+          className="mr-2"
+          disabled={followUser.isPending}
+        >
+          Seguir
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreHorizontalIcon className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={() => setShowReportModal(true)}>
+              Reportar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Contenido específico por tipo */}
@@ -245,9 +287,9 @@ function PostCard({ post }: { post: FeedPost }) {
       {/* Acciones del post */}
       <div className="flex items-center justify-between pt-3 border-t">
         <div className="flex items-center space-x-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleFire}
             className={`flex items-center space-x-1 ${post.viewerState.fired ? 'text-orange-600' : 'text-gray-600'}`}
             disabled={fireReaction.isPending}
@@ -255,51 +297,37 @@ function PostCard({ post }: { post: FeedPost }) {
             <FlameIcon className={`h-4 w-4 ${post.viewerState.fired ? 'fill-orange-600' : ''}`} />
             <span className="text-xs">{post.stats.fires}</span>
           </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
+
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowCommentModal(true)}
             className="flex items-center space-x-1 text-gray-600"
           >
             <MessageCircleIcon className="h-4 w-4" />
             <span className="text-xs">{post.stats.comments}</span>
           </Button>
-          
-          <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-600">
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            className="flex items-center space-x-1 text-gray-600"
+          >
             <ShareIcon className="h-4 w-4" />
             <span className="text-xs">Compartir</span>
           </Button>
         </div>
-        
+
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleBookmark}
             className={`${post.viewerState.saved ? 'text-blue-600' : 'text-gray-600'}`}
             disabled={bookmarkPost.isPending}
           >
             <BookmarkIcon className={`h-4 w-4 ${post.viewerState.saved ? 'fill-blue-600' : ''}`} />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleFollow}
-            className="text-green-600 hover:text-green-700"
-            disabled={followUser.isPending}
-          >
-            <span className="text-xs">Seguir</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setShowReportModal(true)}
-            className="text-red-600 hover:text-red-700"
-          >
-            <span className="text-xs">Reportar</span>
           </Button>
         </div>
       </div>
