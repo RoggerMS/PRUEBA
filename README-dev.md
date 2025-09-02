@@ -8,7 +8,7 @@ Crea un archivo `.env.local` con:
 NEXTAUTH_URL=http://localhost:3000
 AUTH_TRUST_HOST=true
 NEXTAUTH_SECRET=some-long-random-string
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/trae?schema=public"
 ```
 
 ## Pasos
@@ -29,6 +29,18 @@ DATABASE_URL="file:./prisma/dev.db"
    ```bash
    npm run dev
    ```
+
+## Base de datos PostgreSQL con Docker
+
+1. Construir la imagen:
+   ```bash
+   docker build -t trae-postgres .
+   ```
+2. Levantar el contenedor:
+   ```bash
+   docker run --name trae-postgres -p 5432:5432 -d trae-postgres
+   ```
+   Las credenciales por defecto son `postgres`/`postgres` y la base de datos se llama `trae`.
 
 ## Endpoints útiles
 

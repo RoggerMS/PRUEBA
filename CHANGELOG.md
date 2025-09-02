@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add Dockerfile and documentation for running PostgreSQL locally with Docker.
+
 - Align feed client with API pagination and add single post endpoint for local development.
 - Improve feed post actions: link user names to profiles, move follow button beside author info, restore flame reaction, and add share handling.
 
