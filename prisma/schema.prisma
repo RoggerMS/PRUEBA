@@ -146,6 +146,18 @@ model User {
   productReviews ProductReview[]
   productFavorites ProductFavorite[]
   
+  // Enhanced user profile fields
+  sentMessages      Message[]             @relation("MessageSender")
+  conversations     ConversationParticipant[]
+  reportsMade       Report[]  @relation("ReporterUser")
+  moderationActions ModerationAction[]    @relation("ModeratorActions")
+  
+  // New relations for comprehensive user system
+  notificationPreferences NotificationPreference?
+  searchHistory         SearchHistory[]
+  userVerification      UserVerification?
+  userAnalytics         UserAnalytics?
+  
   @@map("users")
 }
 
@@ -1245,7 +1257,10 @@ model Report {
   status    ReportStatus @default(PENDING)
   
   reporterId String
-  reporter  User       @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reporter  User       @relation("ReporterUser", fields: [reporterId], references: [id], onDelete: Cascade)
+  
+  reportedUserId String?
+  reportedUser   User?   @relation(fields: [reportedUserId], references: [id], onDelete: Cascade)
   
   postId    String?
   post      Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -1379,6 +1394,226 @@ model Activity {
 
   @@index([userId, createdAt])
   @@index([type, createdAt])
+}
+
+// ============================================================================
+// MESSAGING SYSTEM
+// ============================================================================
+
+model Conversation {
+  id          String   @id @default(cuid())
+  type        ConversationType @default(DIRECT)
+  name        String?
+  metadata    String?  @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  messages    Message[]
+  participants ConversationParticipant[]
+  
+  @@index([createdAt])
+  @@index([type])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           MessageType @default(TEXT)
+  attachments    String?  @default("[]")
+  edited         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model ConversationParticipant {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  role           ParticipantRole @default(MEMBER)
+  joinedAt       DateTime @default(now())
+  lastReadAt     DateTime?
+  
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+// ============================================================================
+// MODERATION SYSTEM
+// ============================================================================
+
+model ModerationAction {
+  id          String   @id @default(cuid())
+  moderatorId String
+  targetType  String   // 'user', 'post', 'comment', etc.
+  targetId    String
+  action      ModerationActionType
+  reason      String?
+  duration    Int?     // Duration in hours for temporary actions
+  metadata    String?  @default("{}")
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+  
+  // Relations
+  moderator   User     @relation("ModeratorActions", fields: [moderatorId], references: [id], onDelete: Cascade)
+  
+  @@index([moderatorId])
+  @@index([targetType, targetId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("moderation_actions")
+}
+
+// ============================================================================
+// ENHANCED NOTIFICATION SYSTEM
+// ============================================================================
+
+model NotificationPreference {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  emailNotifications    Boolean @default(true)
+  pushNotifications     Boolean @default(true)
+  smsNotifications      Boolean @default(false)
+  
+  // Specific notification types
+  likes                 Boolean @default(true)
+  comments              Boolean @default(true)
+  follows               Boolean @default(true)
+  mentions              Boolean @default(true)
+  messages              Boolean @default(true)
+  forumActivity         Boolean @default(true)
+  courseUpdates         Boolean @default(true)
+  eventReminders        Boolean @default(true)
+  systemAnnouncements   Boolean @default(true)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notification_preferences")
+}
+
+model NotificationTemplate {
+  id          String   @id @default(cuid())
+  type        NotificationType
+  title       String
+  content     String
+  variables   String?  @default("[]")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([type])
+  @@map("notification_templates")
+}
+
+// ============================================================================
+// SEARCH AND TAGGING SYSTEM
+// ============================================================================
+
+model SearchHistory {
+  id        String   @id @default(cuid())
+  userId    String?
+  query     String
+  filters   String?  @default("{}")
+  results   Int      @default(0)
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId, createdAt])
+  @@index([query])
+  @@map("search_history")
+}
+
+model Tag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  color       String?  @default("#3B82F6")
+  usageCount  Int      @default(0)
+  isOfficial  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  @@index([usageCount(sort: Desc)])
+  @@index([name])
+  @@map("tags")
+}
+
+// ============================================================================
+// USER VERIFICATION SYSTEM
+// ============================================================================
+
+model UserVerification {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
+  idVerified    Boolean  @default(false)
+  
+  emailToken    String?
+  phoneToken    String?
+  
+  emailTokenExpiresAt DateTime?
+  phoneTokenExpiresAt DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_verifications")
+}
+
+// ============================================================================
+// ANALYTICS AND METRICS
+// ============================================================================
+
+model UserAnalytics {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  profileViews      Int      @default(0)
+  postsViews        Int      @default(0)
+  engagementScore   Float    @default(0.0)
+  lastActiveAt      DateTime @default(now())
+  totalTimeSpent    Int      @default(0) // in minutes
+  
+  // Weekly/Monthly stats
+  weeklyPosts       Int      @default(0)
+  weeklyComments    Int      @default(0)
+  weeklyLikes       Int      @default(0)
+  monthlyPosts      Int      @default(0)
+  monthlyComments   Int      @default(0)
+  monthlyLikes      Int      @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_analytics")
 }
 
 
@@ -1523,4 +1758,35 @@ enum BadgeRarity {
   RARE
   EPIC
   LEGENDARY
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  AUDIO
+  VIDEO
+  SYSTEM
+}
+
+enum ParticipantRole {
+  MEMBER
+  ADMIN
+  MODERATOR
+}
+
+enum ModerationActionType {
+  WARN
+  MUTE
+  SUSPEND
+  BAN
+  DELETE_CONTENT
+  FEATURE_CONTENT
+  UNBAN
+  UNMUTE
 }

@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { Plus, Edit3, Check, Grid3X3, Maximize2 } from 'lucide-react';
+import { Plus, Edit3, Check, Grid3X3, Maximize2, Users, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -24,29 +25,12 @@ import {
 import { toast } from 'sonner';
 import { WorkspaceBlock } from '../../components/workspace/WorkspaceBlock';
 import { CreateBlockModal } from '../../components/workspace/CreateBlockModal';
+import { CollaboratorManager } from '@/components/workspace/CollaboratorManager';
+import { WorkspaceStats } from '@/components/workspace/WorkspaceStats';
+import { WorkspaceSettings } from '@/components/workspace/WorkspaceSettings';
+import { useWorkspace } from '@/hooks/useWorkspace';
 
-interface WorkspaceBoard {
-  id: string;
-  name: string;
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
-  blocks: WorkspaceBlockData[];
-}
-
-interface WorkspaceBlockData {
-  id: string;
-  type: 'DOCS' | 'KANBAN' | 'FRASES';
-  title: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  zIndex: number;
-  completed: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+// Types are now imported from useWorkspace hook
 
 const CANVAS_SIZE = 5000; // 5000x5000 infinite canvas
 const GRID_SIZE = 20;
@@ -54,69 +38,29 @@ const MIN_BLOCK_SIZE = { width: 300, height: 200 };
 const MAX_BLOCK_SIZE = { width: 800, height: 600 };
 
 export default function WorkspacePage() {
-  const { status } = useSession();
-  const [boards, setBoards] = useState<WorkspaceBoard[]>([]);
-  const [currentBoard, setCurrentBoard] = useState<WorkspaceBoard | null>(null);
+  const { data: session, status } = useSession();
+  const {
+    boards,
+    currentBoard,
+    setCurrentBoard,
+    isLoading,
+    error,
+    loadBoards,
+    createBoard,
+    createBlock
+  } = useWorkspace();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCollaborators, setShowCollaborators] = useState(false);
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
 
-
-  const fetcher = async (url: string) => {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
-    const res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
-    clearTimeout(t);
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  };
-
-  const normalizeBlock = (b: any): WorkspaceBlockData => ({
-    ...b,
-    width: b.width ?? b.w ?? 300,
-    height: b.height ?? b.h ?? 200,
-  });
-
-  const loadBoards = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetcher('/api/workspace/boards');
-      const mapped = (data.boards || []).map((b: any) => ({
-        ...b,
-        blocks: (b.blocks || []).map(normalizeBlock),
-      }));
-      setBoards(mapped);
-      const def = mapped.find((b: WorkspaceBoard) => b.id === data.defaultBoard) || mapped[0] || null;
-      setCurrentBoard(def);
-    } catch (e: any) {
-      console.error("Error loading boards", e);
-      setError("No se pudo cargar las pizarras");
-      toast.error("Error al cargar las pizarras");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  const createBoard = async (name: string) => {
-    try {
-      await fetch('/api/workspace/boards', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
-      await loadBoards();
-      toast.success('Pizarra creada exitosamente');
-    } catch (error) {
-      console.error('Error creating board:', error);
-      toast.error('Error al crear la pizarra');
-    }
-  };
+  const GRID_SIZE = 20;
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 2;
 
   // Handle canvas panning
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -153,40 +97,24 @@ export default function WorkspacePage() {
   };
 
   // Handle block creation
-  const handleCreateBlock = async (type: 'DOCS' | 'KANBAN' | 'FRASES', title: string) => {
+  const handleCreateBlock = async (blockData: any) => {
     if (!currentBoard) return;
-
+    
     try {
-      const response = await fetch('/api/workspace/blocks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          title,
-          boardId: currentBoard.id,
-          x: Math.random() * 500, // Random position
-          y: Math.random() * 500,
-          w: MIN_BLOCK_SIZE.width,
-          h: MIN_BLOCK_SIZE.height,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to create block');
-
-      const data = await response.json();
-      const block = normalizeBlock(data.block);
-
-      // Update current board with new block
-      setCurrentBoard(prev => prev ? {
-        ...prev,
-        blocks: [...prev.blocks, block]
-      } : null);
+      // Generate random position
+      const position = {
+        x: Math.random() * 400 + 100,
+        y: Math.random() * 300 + 100
+      };
       
-      toast.success('Bloque creado exitosamente');
+      await createBlock(currentBoard.id, {
+        ...blockData,
+        position,
+      });
+      
       setShowCreateModal(false);
     } catch (error) {
-      console.error('Error creating block:', error);
-      toast.error('Error al crear el bloque');
+      // Error handled by hook
     }
   };
 
@@ -242,139 +170,131 @@ export default function WorkspacePage() {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-gray-900">Workspace</h1>
-          
-          {/* Board Selector */}
-          <Select
-            value={currentBoard?.id || ''}
-            onValueChange={(boardId) => {
-              const board = boards.find(b => b.id === boardId);
-              setCurrentBoard(board || null);
-            }}
-          >
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Seleccionar pizarra" />
-            </SelectTrigger>
-            <SelectContent>
-              {boards.map((board) => (
-                <SelectItem key={board.id} value={board.id}>
-                  <div className="flex items-center gap-2">
-                    {board.name}
-                    {board.isDefault && <Badge variant="secondary">Por defecto</Badge>}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {/* Block Counter */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Grid3X3 className="w-4 h-4" />
-            <span>{currentBoard?.blocks.length || 0}/100 bloques</span>
+      <div className="bg-white border-b border-gray-200 p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">Workspace</h1>
+            
+            {/* Board Selector */}
+            <Select
+              value={currentBoard?.id || ''}
+              onValueChange={(boardId) => {
+                const board = boards.find(b => b.id === boardId);
+                setCurrentBoard(board || null);
+              }}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Seleccionar pizarra" />
+              </SelectTrigger>
+              <SelectContent>
+                {boards.map((board) => (
+                  <SelectItem key={board.id} value={board.id}>
+                    <div className="flex items-center gap-2">
+                      {board.name}
+                      {board.isDefault && <Badge variant="secondary">Por defecto</Badge>}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Controls */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={centerCanvas}
-          >
-            <Maximize2 className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-4">
+            {/* Block Counter */}
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Grid3X3 className="w-4 h-4" />
+              <span>{currentBoard?.blocks.length || 0}/100 bloques</span>
+            </div>
 
-          <Button
-            variant={isEditMode ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setIsEditMode(!isEditMode)}
-          >
-            {isEditMode ? (
-              <><Check className="w-4 h-4 mr-2" />Completar</>
-            ) : (
-              <><Edit3 className="w-4 h-4 mr-2" />Editar</>
-            )}
-          </Button>
-
-          <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-            <DialogTrigger asChild>
-              <Button size="sm" disabled={!currentBoard || (currentBoard.blocks.length >= 100)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Nuevo Bloque
+            {/* Collaborators indicator */}
+            {currentBoard && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCollaborators(true)}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                {(currentBoard.collaborators?.length || 0) + 1}
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Crear Nuevo Bloque</DialogTitle>
-                <DialogDescription>
-                  Selecciona el tipo de bloque que deseas crear
-                </DialogDescription>
-              </DialogHeader>
-              <CreateBlockModal onCreateBlock={handleCreateBlock} />
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+            )}
 
-      {/* Canvas */}
-      <div className="flex-1 relative overflow-hidden">
-        <div
-          ref={canvasRef}
-          className="absolute inset-0 cursor-grab active:cursor-grabbing"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-              linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-            `,
-            backgroundSize: `${GRID_SIZE * zoom}px ${GRID_SIZE * zoom}px`,
-            backgroundPosition: `${canvasOffset.x}px ${canvasOffset.y}px`,
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
-        >
-          {/* Blocks */}
-          {currentBoard?.blocks.map((block) => (
-            <WorkspaceBlock
-              key={block.id}
-              block={block}
-              isEditMode={isEditMode}
-              canvasOffset={canvasOffset}
-              zoom={zoom}
-              onUpdate={(updatedBlock) => {
-                setCurrentBoard(prev => prev ? {
-                  ...prev,
-                  blocks: prev.blocks.map(b => b.id === updatedBlock.id ? updatedBlock : b)
-                } : null);
-              }}
-              onDelete={(blockId) => {
-                setCurrentBoard(prev => prev ? {
-                  ...prev,
-                  blocks: prev.blocks.filter(b => b.id !== blockId)
-                } : null);
-              }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Empty State */}
-      {currentBoard && currentBoard.blocks.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <Card className="p-8 text-center pointer-events-auto">
-            <h2 className="text-xl font-semibold mb-2">Pizarra Vacía</h2>
-            <p className="text-gray-600 mb-4">Crea tu primer bloque para comenzar</p>
-            <Button onClick={() => setShowCreateModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Crear Bloque
+            {/* Controls */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={centerCanvas}
+            >
+              <Maximize2 className="w-4 h-4" />
             </Button>
-          </Card>
+
+            <Button
+              variant={isEditMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setIsEditMode(!isEditMode)}
+            >
+              {isEditMode ? (
+                <><Check className="w-4 h-4 mr-2" />Completar</>
+              ) : (
+                <><Edit3 className="w-4 h-4 mr-2" />Editar</>
+              )}
+            </Button>
+
+            <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+              <DialogTrigger asChild>
+                <Button size="sm" disabled={!currentBoard || (currentBoard.blocks.length >= 100)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuevo Bloque
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Crear Nuevo Bloque</DialogTitle>
+                  <DialogDescription>
+                    Selecciona el tipo de bloque que deseas crear
+                  </DialogDescription>
+                </DialogHeader>
+                <CreateBlockModal onCreateBlock={handleCreateBlock} />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-      )}
+        
+        {/* Navigation Tabs */}
+        <Tabs defaultValue="canvas" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="canvas">Canvas</TabsTrigger>
+            <TabsTrigger value="stats">Estadísticas</TabsTrigger>
+            <TabsTrigger value="settings">Configuración</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="canvas" className="mt-0">
+            {/* Canvas content will be here */}
+          </TabsContent>
+          
+          <TabsContent value="stats" className="mt-4">
+            <WorkspaceStats />
+          </TabsContent>
+          
+          <TabsContent value="settings" className="mt-4">
+            {currentBoard && <WorkspaceSettings board={currentBoard} />}
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Collaborators Dialog */}
+      <Dialog open={showCollaborators} onOpenChange={setShowCollaborators}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Gestionar Colaboradores</DialogTitle>
+            <DialogDescription>
+              Invita y gestiona colaboradores para esta pizarra
+            </DialogDescription>
+          </DialogHeader>
+          {currentBoard && (
+            <CollaboratorManager board={currentBoard} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

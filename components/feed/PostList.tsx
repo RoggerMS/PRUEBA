@@ -5,12 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { 
   HeartIcon, 
   MessageCircleIcon, 
@@ -21,12 +15,9 @@ import {
   DownloadIcon,
   StarIcon,
   LoaderIcon,
-  FlameIcon,
-  EditIcon,
-  TrashIcon,
-  FlagIcon
+  FlameIcon
 } from 'lucide-react';
-import { useFeed, useFireReaction } from '@/hooks/useFeed';
+import { useFeed, useFireReaction, useFollowUser, useReportPost, useBookmarkPost } from '@/hooks/useFeed';
 import { FeedPost } from '@/types/feed';
 import { toast } from 'sonner';
 import CommentModal from './CommentModal';
@@ -45,10 +36,14 @@ const formatTimeAgo = (dateString: string) => {
 
 function PostCard({ post }: { post: FeedPost }) {
   const fireReaction = useFireReaction();
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const followUser = useFollowUser();
+  const reportPost = useReportPost();
+  const bookmarkPost = useBookmarkPost();
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [showMediaViewer, setShowMediaViewer] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
 
   const handleFire = async () => {
     try {
@@ -60,23 +55,40 @@ function PostCard({ post }: { post: FeedPost }) {
 
   const handleBookmark = async () => {
     try {
-      const response = await fetch(`/api/feed/${post.id}/bookmark`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to bookmark post');
-      }
-      
-      setIsBookmarked(!isBookmarked);
-      toast.success(isBookmarked ? 'Post removido de guardados' : 'Post guardado');
+      await bookmarkPost.mutateAsync(post.id);
     } catch (error) {
-      toast.error('Error al guardar el post');
+      // Error handling is done in the hook
     }
   };
+
+  const handleFollow = async () => {
+    try {
+      await followUser.mutateAsync({ 
+        userId: post.author.id, 
+        action: 'follow' 
+      });
+    } catch (error) {
+      // Error handling is done in the hook
+    }
+  };
+
+  const handleReport = async () => {
+     if (!reportReason.trim()) {
+       toast.error('Por favor selecciona una razón para reportar');
+       return;
+     }
+     
+     try {
+       await reportPost.mutateAsync({ 
+         postId: post.id, 
+         reason: reportReason 
+       });
+       setShowReportModal(false);
+       setReportReason('');
+     } catch (error) {
+       // Error handling is done in the hook
+     }
+   };
 
   const getPostIcon = () => {
     switch (post.kind) {
@@ -113,34 +125,9 @@ function PostCard({ post }: { post: FeedPost }) {
             @{post.author.username} • {formatTimeAgo(post.createdAt)}
           </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <MoreHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => toast.info('Función de editar próximamente')}>
-              <EditIcon className="h-4 w-4 mr-2" />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleBookmark}>
-              <BookmarkIcon className="h-4 w-4 mr-2" />
-              {isBookmarked ? 'Quitar de guardados' : 'Guardar'}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast.info('Función de reportar próximamente')}>
-              <FlagIcon className="h-4 w-4 mr-2" />
-              Reportar
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => toast.info('Función de eliminar próximamente')}
-              className="text-red-600 focus:text-red-600"
-            >
-              <TrashIcon className="h-4 w-4 mr-2" />
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button variant="ghost" size="sm">
+          <MoreHorizontalIcon className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Contenido específico por tipo */}
@@ -285,14 +272,36 @@ function PostCard({ post }: { post: FeedPost }) {
           </Button>
         </div>
         
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleBookmark}
-          className={`${isBookmarked ? 'text-blue-600' : 'text-gray-600'}`}
-        >
-          <BookmarkIcon className={`h-4 w-4 ${isBookmarked ? 'fill-blue-600' : ''}`} />
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleBookmark}
+            className={`${post.viewerState.saved ? 'text-blue-600' : 'text-gray-600'}`}
+            disabled={bookmarkPost.isPending}
+          >
+            <BookmarkIcon className={`h-4 w-4 ${post.viewerState.saved ? 'fill-blue-600' : ''}`} />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleFollow}
+            className="text-green-600 hover:text-green-700"
+            disabled={followUser.isPending}
+          >
+            <span className="text-xs">Seguir</span>
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowReportModal(true)}
+            className="text-red-600 hover:text-red-700"
+          >
+            <span className="text-xs">Reportar</span>
+          </Button>
+        </div>
       </div>
       
       <CommentModal 
@@ -307,6 +316,76 @@ function PostCard({ post }: { post: FeedPost }) {
         post={post}
         initialMediaIndex={selectedMediaIndex}
       />
+      
+      {/* Modal de reporte */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Reportar Post</h3>
+            <div className="space-y-3 mb-4">
+              <label className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  name="reportReason" 
+                  value="spam" 
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="text-red-600"
+                />
+                <span className="text-sm">Spam o contenido no deseado</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  name="reportReason" 
+                  value="harassment" 
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="text-red-600"
+                />
+                <span className="text-sm">Acoso o intimidación</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  name="reportReason" 
+                  value="inappropriate" 
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="text-red-600"
+                />
+                <span className="text-sm">Contenido inapropiado</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input 
+                  type="radio" 
+                  name="reportReason" 
+                  value="misinformation" 
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="text-red-600"
+                />
+                <span className="text-sm">Información falsa</span>
+              </label>
+            </div>
+            <div className="flex space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowReportModal(false);
+                  setReportReason('');
+                }}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleReport}
+                disabled={!reportReason || reportPost.isPending}
+                className="flex-1 bg-red-600 hover:bg-red-700"
+              >
+                {reportPost.isPending ? 'Reportando...' : 'Reportar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       </Card>
     );
 }

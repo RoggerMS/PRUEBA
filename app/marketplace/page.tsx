@@ -17,14 +17,16 @@ import {
   BarChart3,
   Filter
 } from 'lucide-react';
-import ProductCard from '@/components/marketplace/ProductCard';
-import ProductDetail from '@/components/marketplace/ProductDetail';
+import { EnhancedProductCard } from '@/components/marketplace/EnhancedProductCard';
+import { EnhancedProductDetail } from '@/components/marketplace/EnhancedProductDetail';
 import SellProductModal from '@/components/marketplace/SellProductModal';
 import CategoryFilter from '@/components/marketplace/CategoryFilter';
 import MarketplaceStats from '@/components/marketplace/MarketplaceStats';
 // Import ShoppingCart as a named export to ensure the component is defined
 // correctly when rendered in the page.
 import { ShoppingCart as ShoppingCartComponent } from '@/components/marketplace/ShoppingCart';
+import { useEnhancedMarketplace } from '@/hooks/useEnhancedMarketplace';
+import { useSession } from 'next-auth/react';
 
 // Mock data para productos del marketplace
 const mockProducts = [
@@ -189,19 +191,34 @@ const mockProducts = [
 ];
 
 export default function MarketplacePage() {
+  const { data: session } = useSession();
+  const {
+    products,
+    cart,
+    loading,
+    error,
+    loadProducts,
+    addToCart,
+    updateCartItem,
+    removeFromCart,
+    clearCart,
+    toggleFavorite,
+    followSeller,
+    addReview,
+    getMarketplaceStats
+  } = useEnhancedMarketplace();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [selectedSubcategory, setSelectedSubcategory] = useState('Todas');
   const [sortBy, setSortBy] = useState('featured');
   const [activeTab, setActiveTab] = useState('products');
-
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [showSellModal, setShowSellModal] = useState(false);
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
-  
-  // Estado del carrito
-  const [cartItems, setCartItems] = useState<Array<{id: string, quantity: number}>>([]);
   const [showCart, setShowCart] = useState(false);
+  
+  // Additional state for UI interactions
 
   const categories = [
     { id: 'all', name: 'Todas', subcategories: [] },
@@ -212,37 +229,29 @@ export default function MarketplacePage() {
     { id: 'recursos', name: 'Recursos', subcategories: ['Diseño Gráfico', 'Multimedia', 'Software'] }
   ];
 
-  // Funciones del carrito
-  const addToCart = (productId: string, quantity: number = 1) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === productId);
-      if (existingItem) {
-        return prev.map(item => 
-          item.id === productId 
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      return [...prev, { id: productId, quantity }];
-    });
+  // Load products on component mount
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  // Handle add to cart
+  const handleAddToCartLocal = async (productId: string) => {
+    await addToCart(productId, 1);
   };
 
-  const removeFromCart = (productId: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== productId));
-  };
-
-  const updateCartQuantity = (productId: string, quantity: number) => {
+  // Handle cart quantity update
+  const handleUpdateCartQuantity = async (productId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
+      await removeFromCart(productId);
+    } else {
+      await updateCartItem(productId, quantity);
     }
-    setCartItems(prev => 
-      prev.map(item => 
-        item.id === productId 
-          ? { ...item, quantity }
-          : item
-      )
-    );
+  };
+
+  // Handle checkout
+  const handleCheckout = () => {
+    // Checkout logic will be implemented
+    console.log('Proceeding to checkout...');
   };
 
   const getCartTotal = () => {
@@ -260,11 +269,16 @@ export default function MarketplacePage() {
   };
 
   const handleProductSelect = (productId: string) => {
-    setSelectedProductId(productId);
+    const product = products.find(p => p.id === productId);
+    setSelectedProduct(product || null);
+  };
+
+  const handleProductDeselect = () => {
+    setSelectedProduct(null);
   };
 
   const handleBackToMarketplace = () => {
-    setSelectedProductId(null);
+    setSelectedProduct(null);
   };
 
   const handleSellProduct = () => {
@@ -296,55 +310,13 @@ export default function MarketplacePage() {
     // Mostrar notificación o feedback visual
   };
 
-  const handleCheckout = () => {
-    console.log('Procesando compra:', cartItems);
-    // Aquí se implementaría la lógica de checkout
-  };
 
-  // Transform simple cart items into detailed items expected by ShoppingCart
-  // component by merging with product information.
-  const cartItemsDetailed = cartItems
-    .map((item) => {
-      const product = mockProducts.find((p) => p.id === item.id);
-      if (!product) return null;
-      return {
-        id: item.id,
-        productId: product.id,
-        productName: product.name,
-        productImage: product.images[0],
-        price: product.price,
-        priceInSoles: product.priceInSoles,
-        quantity: item.quantity,
-        stock: product.stock,
-        seller: product.seller,
-      };
-    })
-    .filter(Boolean) as Array<{
-      id: string;
-      productId: string;
-      productName: string;
-      productImage: string;
-      price: number;
-      priceInSoles: number;
-      quantity: number;
-      stock: number;
-      seller: { id: string; name: string; avatar?: string };
-    }>;
 
-  // Si hay un producto seleccionado, mostrar ProductDetail
-  if (selectedProductId) {
-    const selectedProduct = mockProducts.find(p => p.id === selectedProductId);
-    if (selectedProduct) {
-      return (
-        <ProductDetail 
-          product={selectedProduct} 
-          onBack={handleBackToMarketplace}
-        />
-      );
-    }
-  }
 
-  const filteredProducts = mockProducts.filter(product => {
+
+
+
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         (Array.isArray(product.tags)
@@ -404,10 +376,10 @@ export default function MarketplacePage() {
               className="relative"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Carrito ({cartItems.length})
-              {cartItems.length > 0 && (
+              Carrito ({cart.items.length})
+              {cart.items.length > 0 && (
                 <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5">
-                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                  {cart.items.reduce((sum, item) => sum + item.quantity, 0)}
                 </Badge>
               )}
             </Button>
@@ -522,7 +494,7 @@ export default function MarketplacePage() {
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
                   {filteredProducts.filter(p => p.isFeatured).map(product => (
-                    <ProductCard 
+                    <EnhancedProductCard 
                       key={product.id} 
                       product={product} 
                       onClick={() => handleProductSelect(product.id)}
@@ -540,7 +512,7 @@ export default function MarketplacePage() {
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
                 {filteredProducts.map(product => (
-                  <ProductCard 
+                  <EnhancedProductCard 
                     key={product.id} 
                     product={product} 
                     onClick={() => handleProductSelect(product.id)}
@@ -574,11 +546,26 @@ export default function MarketplacePage() {
       <ShoppingCartComponent
         isOpen={showCart}
         onClose={() => setShowCart(false)}
-        items={cartItemsDetailed}
-        onUpdateQuantity={updateCartQuantity}
+        items={cart.items.map(item => {
+          const product = products.find(p => p.id === item.productId);
+          return {
+            ...item,
+            product: product!
+          };
+        })}
+        onUpdateQuantity={handleUpdateCartQuantity}
         onRemoveItem={removeFromCart}
         onCheckout={handleCheckout}
       />
+
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <EnhancedProductDetail
+          product={selectedProduct}
+          onClose={handleProductDeselect}
+          onAddToCart={handleAddToCart}
+        />
+      )}
 
       {/* Sell Product Modal */}
       <SellProductModal 

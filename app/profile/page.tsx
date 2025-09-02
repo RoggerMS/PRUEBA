@@ -1,19 +1,24 @@
-'use client';
+import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { EnhancedProfile } from '@/components/user/EnhancedProfile';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+export const metadata: Metadata = {
+  title: 'Mi Perfil - CRUNEVO',
+  description: 'Gestiona tu perfil y configuración en CRUNEVO'
+};
 
-export default function ProfileIndexPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace('/perfil');
-  }, [router]);
+export default async function MyProfilePage() {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user) {
+    redirect('/auth/signin');
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+    <div className="min-h-screen bg-gray-50">
+      <EnhancedProfile isOwnProfile={true} />
     </div>
   );
 }
-
