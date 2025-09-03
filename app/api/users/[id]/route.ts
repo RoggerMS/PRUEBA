@@ -65,9 +65,11 @@ export async function GET(
     const transformedUser = {
       ...user,
       email: isOwnProfile ? user.email : undefined, // Only show email to self
-      postsCount: user._count.posts,
-      followersCount: user._count.followers,
-      followingCount: user._count.following,
+      stats: {
+        posts: user._count.posts,
+        followers: user._count.followers,
+        following: user._count.following
+      },
       isFollowing: currentUserId && !isOwnProfile ? user.followers?.length > 0 : undefined,
       isOwnProfile,
       _count: undefined,

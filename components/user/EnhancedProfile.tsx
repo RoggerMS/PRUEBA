@@ -50,7 +50,7 @@ interface UserProfile {
   };
   isFollowing?: boolean;
   profileCompletion?: number;
-  stats: {
+  stats?: {
     followers: number;
     following: number;
     posts: number;
@@ -123,7 +123,7 @@ export function EnhancedProfile({ username, isOwnProfile = false }: EnhancedProf
           ...prev,
           stats: {
             ...prev.stats,
-            followers: isFollowing ? prev.stats.followers - 1 : prev.stats.followers + 1
+            followers: isFollowing ? (prev.stats?.followers || 0) - 1 : (prev.stats?.followers || 0) + 1
           }
         } : null);
         toast.success(data.message);
@@ -312,18 +312,18 @@ export function EnhancedProfile({ username, isOwnProfile = false }: EnhancedProf
               onClick={() => showFollowersModal('following')}
               className="text-center hover:bg-gray-50 p-2 rounded transition-colors"
             >
-              <div className="font-bold text-lg">{profile.stats.following}</div>
+              <div className="font-bold text-lg">{profile.stats?.following || 0}</div>
               <div className="text-gray-600 text-sm">Siguiendo</div>
             </button>
             <button 
               onClick={() => showFollowersModal('followers')}
               className="text-center hover:bg-gray-50 p-2 rounded transition-colors"
             >
-              <div className="font-bold text-lg">{profile.stats.followers}</div>
+              <div className="font-bold text-lg">{profile.stats?.followers || 0}</div>
               <div className="text-gray-600 text-sm">Seguidores</div>
             </button>
             <div className="text-center">
-              <div className="font-bold text-lg">{profile.stats.posts}</div>
+              <div className="font-bold text-lg">{profile.stats?.posts || 0}</div>
               <div className="text-gray-600 text-sm">Publicaciones</div>
             </div>
           </div>

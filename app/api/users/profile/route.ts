@@ -31,9 +31,11 @@ export async function GET() {
 
     return NextResponse.json({
       ...user,
-      postsCount: user._count.posts,
-      followersCount: user._count.followers,
-      followingCount: user._count.following,
+      stats: {
+        posts: user._count.posts,
+        followers: user._count.followers,
+        following: user._count.following
+      },
       isOwnProfile: true
     })
   } catch (error) {
