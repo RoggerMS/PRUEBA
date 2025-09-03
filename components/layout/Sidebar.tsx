@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useCrolars } from '@/hooks/useCrolars';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -80,6 +81,15 @@ const quickActionItems: SidebarItem[] = [
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: session } = useSession();
+  const { data: crolarsData } = useCrolars();
+  const crolars = crolarsData?.user.crolars ?? 0;
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}K`;
+    }
+    return num.toString();
+  };
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -171,7 +181,7 @@ export function Sidebar() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide group-hover:text-gray-800 transition-colors duration-200">Mis Crolars</p>
-                    <p className="text-2xl font-bold text-yellow-600 group-hover:text-yellow-700 transition-colors duration-200">2,450</p>
+                    <p className="text-2xl font-bold text-yellow-600 group-hover:text-yellow-700 transition-colors duration-200">{crolars.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -194,7 +204,7 @@ export function Sidebar() {
                 <div className="p-2 bg-yellow-400 rounded-full shadow-md group-hover:bg-yellow-500 transition-colors duration-200">
                   <Coins className="w-5 h-5 text-white" />
                 </div>
-                <p className="text-xs font-bold text-yellow-600 group-hover:text-yellow-700 transition-colors duration-200">2.4K</p>
+                <p className="text-xs font-bold text-yellow-600 group-hover:text-yellow-700 transition-colors duration-200">{formatNumber(crolars)}</p>
               </div>
             </div>
           </Link>

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useCrolars } from '@/hooks/useCrolars';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Coins,
   TrendingUp,
@@ -13,13 +13,10 @@ import {
   ShoppingBag,
   Wallet,
   ArrowUpRight,
-  ArrowDownLeft,
   Star,
   Gift,
   Info,
   Calendar,
-  Users,
-  BookOpen,
   Award,
   Zap,
   Plus,
@@ -28,15 +25,6 @@ import {
   Download,
   Share2
 } from 'lucide-react';
-
-interface Transaction {
-  id: string;
-  type: 'earned' | 'spent';
-  amount: number;
-  description: string;
-  date: string;
-  category: string;
-}
 
 interface MarketplaceItem {
   id: string;
@@ -47,49 +35,6 @@ interface MarketplaceItem {
   seller: string;
   image?: string;
 }
-
-const mockTransactions: Transaction[] = [
-  {
-    id: '1',
-    type: 'earned',
-    amount: 50,
-    description: 'Respuesta marcada como mejor respuesta',
-    date: '2024-01-15',
-    category: 'Foro'
-  },
-  {
-    id: '2',
-    type: 'spent',
-    amount: 25,
-    description: 'Compra de apuntes de Matemáticas',
-    date: '2024-01-14',
-    category: 'Apuntes'
-  },
-  {
-    id: '3',
-    type: 'earned',
-    amount: 30,
-    description: 'Completar misión semanal',
-    date: '2024-01-13',
-    category: 'Misiones'
-  },
-  {
-    id: '4',
-    type: 'earned',
-    amount: 75,
-    description: 'Subir apunte valorado positivamente',
-    date: '2024-01-12',
-    category: 'Apuntes'
-  },
-  {
-    id: '5',
-    type: 'spent',
-    amount: 40,
-    description: 'Inscripción a evento premium',
-    date: '2024-01-11',
-    category: 'Eventos'
-  }
-];
 
 const mockMarketplaceItems: MarketplaceItem[] = [
   {
@@ -120,10 +65,20 @@ const mockMarketplaceItems: MarketplaceItem[] = [
 
 export default function CrolarsPage() {
   const [showCrolarsInfo, setShowCrolarsInfo] = useState(false);
-  const [currentBalance] = useState(2450);
-  const [weeklyGoal] = useState(200);
-  const [weeklyEarned] = useState(145);
-  const [weeklyProgress] = useState((145 / 200) * 100);
+  const { data } = useCrolars();
+
+  const currentBalance = data?.user.crolars ?? 0;
+  const transactions = data?.transactions ?? [];
+
+  const weeklyGoal = 200;
+  const lastWeek = new Date();
+  lastWeek.setDate(lastWeek.getDate() - 7);
+
+  const weeklyEarned = transactions
+    .filter(t => ['EARNED', 'BONUS'].includes(t.type) && new Date(t.createdAt) >= lastWeek)
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const weeklyProgress = weeklyGoal > 0 ? (weeklyEarned / weeklyGoal) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50">
@@ -269,33 +224,43 @@ export default function CrolarsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockTransactions.map((transaction) => (
+                {transactions.map((transaction) => (
                   <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${
-                        transaction.type === 'earned' 
-                          ? 'bg-green-100 text-green-600' 
-                          : 'bg-red-100 text-red-600'
-                      }`}>
-                        {transaction.type === 'earned' ? 
-                          <Plus className="w-4 h-4" /> : 
+                      <div
+                        className={`p-2 rounded-full ${
+                          ['EARNED', 'BONUS'].includes(transaction.type)
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-red-100 text-red-600'
+                        }`}
+                      >
+                        {['EARNED', 'BONUS'].includes(transaction.type) ? (
+                          <Plus className="w-4 h-4" />
+                        ) : (
                           <Minus className="w-4 h-4" />
-                        }
+                        )}
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{transaction.description}</p>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Badge variant="secondary" className="text-xs">
-                            {transaction.category}
-                          </Badge>
-                          <span>{new Date(transaction.date).toLocaleDateString()}</span>
+                          {transaction.relatedType && (
+                            <Badge variant="secondary" className="text-xs">
+                              {transaction.relatedType}
+                            </Badge>
+                          )}
+                          <span>{new Date(transaction.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </div>
-                    <div className={`text-lg font-bold ${
-                      transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.type === 'earned' ? '+' : '-'}{transaction.amount}
+                    <div
+                      className={`text-lg font-bold ${
+                        ['EARNED', 'BONUS'].includes(transaction.type)
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }`}
+                    >
+                      {['EARNED', 'BONUS'].includes(transaction.type) ? '+' : '-'}
+                      {transaction.amount}
                     </div>
                   </div>
                 ))}
