@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Corrige errores de lint en rutas de comentarios y seguimiento y evita llamadas condicionales de hooks en la página de búsqueda.
 - Allow creating workspace blocks in development and enable canvas panning by fixing block creation handler, updating block rendering with zoom, and ignoring pointer events on the grid.
 - Normalize usernames to lowercase on write, allow case-insensitive lookups, and redirect to the canonical username.
 - Normalize emails to lowercase during registration and login to ensure account recognition after signing out.

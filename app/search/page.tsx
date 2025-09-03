@@ -19,24 +19,19 @@ const SearchPage: React.FC = () => {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Skip database operations during build
-  const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost');
-  
-  if (isBuildTime) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-2xl font-bold mb-6">Search</h1>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const isBuildTime =
+    typeof window === 'undefined' &&
+    process.env.NODE_ENV === 'production' &&
+    !process.env.DATABASE_URL?.includes('localhost');
 
   // Get initial search parameters from URL
   const initialQuery = searchParams.get('q') || '';
-  const initialType = (searchParams.get('type') as 'all' | 'users' | 'posts' | 'conversations') || 'all';
+  const initialType =
+    (searchParams.get('type') as 'all' | 'users' | 'posts' | 'conversations') ||
+    'all';
 
   useEffect(() => {
+    if (isBuildTime) return;
     // Load trending searches (mock data for now)
     setTrendingSearches([
       'inteligencia artificial',
@@ -58,7 +53,18 @@ const SearchPage: React.FC = () => {
         console.error('Error loading recent searches:', error);
       }
     }
-  }, []);
+  }, [isBuildTime]);
+
+  if (isBuildTime) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <h1 className="text-2xl font-bold mb-6">Search</h1>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleResultSelect = (result: any) => {
     setSelectedResult(result);
