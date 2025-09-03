@@ -50,20 +50,37 @@ function PostCard({ post }: { post: FeedPost }) {
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const [isFired, setIsFired] = useState(post.viewerState.fired);
+  const [fireCount, setFireCount] = useState(post.stats.fires);
+  const [fireAnimating, setFireAnimating] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.stats.comments);
+  const [isSaved, setIsSaved] = useState(post.viewerState.saved);
 
   const handleFire = async () => {
+    const newFired = !isFired;
+    setIsFired(newFired);
+    setFireCount((c) => c + (newFired ? 1 : -1));
+    if (newFired) {
+      setFireAnimating(true);
+      setTimeout(() => setFireAnimating(false), 300);
+    }
+
     try {
       await fireReaction.mutateAsync(post.id);
     } catch (error) {
+      setIsFired(!newFired);
+      setFireCount((c) => c + (newFired ? -1 : 1));
       toast.error('Error al reaccionar al post');
     }
   };
 
   const handleBookmark = async () => {
+    const newSaved = !isSaved;
+    setIsSaved(newSaved);
     try {
       await bookmarkPost.mutateAsync(post.id);
     } catch (error) {
-      // Error handling is done in the hook
+      setIsSaved(!newSaved);
     }
   };
 
@@ -89,6 +106,16 @@ function PostCard({ post }: { post: FeedPost }) {
       }
     } catch (error) {
       toast.error('Error al compartir el post');
+    }
+  };
+
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}/post/${post.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Enlace copiado al portapapeles');
+    } catch (error) {
+      toast.error('Error al copiar el enlace');
     }
   };
 
@@ -165,6 +192,15 @@ function PostCard({ post }: { post: FeedPost }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={handleShare}>
+              Compartir
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleCopyLink}>
+              Copiar enlace
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleBookmark}>
+              {isSaved ? 'Quitar de guardados' : 'Guardar'}
+            </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setShowReportModal(true)}>
               Reportar
             </DropdownMenuItem>
@@ -286,16 +322,16 @@ function PostCard({ post }: { post: FeedPost }) {
 
       {/* Acciones del post */}
       <div className="flex items-center justify-between pt-3 border-t">
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleFire}
-            className={`flex items-center space-x-1 ${post.viewerState.fired ? 'text-orange-600' : 'text-gray-600'}`}
+            className={`flex items-center space-x-1 ${isFired ? 'text-orange-600' : 'text-gray-600'}`}
             disabled={fireReaction.isPending}
           >
-            <FlameIcon className={`h-4 w-4 ${post.viewerState.fired ? 'fill-orange-600' : ''}`} />
-            <span className="text-xs">{post.stats.fires}</span>
+            <FlameIcon className={`h-4 w-4 transition-transform ${isFired ? 'fill-orange-600' : ''} ${fireAnimating ? 'animate-bounce' : ''}`} />
+            <span className="text-xs">{fireCount}</span>
           </Button>
 
           <Button
@@ -305,7 +341,7 @@ function PostCard({ post }: { post: FeedPost }) {
             className="flex items-center space-x-1 text-gray-600"
           >
             <MessageCircleIcon className="h-4 w-4" />
-            <span className="text-xs">{post.stats.comments}</span>
+            <span className="text-xs">{commentCount}</span>
           </Button>
 
           <Button
@@ -324,18 +360,19 @@ function PostCard({ post }: { post: FeedPost }) {
             variant="ghost"
             size="sm"
             onClick={handleBookmark}
-            className={`${post.viewerState.saved ? 'text-blue-600' : 'text-gray-600'}`}
+            className={`${isSaved ? 'text-blue-600' : 'text-gray-600'}`}
             disabled={bookmarkPost.isPending}
           >
-            <BookmarkIcon className={`h-4 w-4 ${post.viewerState.saved ? 'fill-blue-600' : ''}`} />
+            <BookmarkIcon className={`h-4 w-4 ${isSaved ? 'fill-blue-600' : ''}`} />
           </Button>
         </div>
       </div>
-      
-      <CommentModal 
+
+      <CommentModal
         isOpen={showCommentModal}
         onClose={() => setShowCommentModal(false)}
         post={post}
+        onCommentAdded={() => setCommentCount((c) => c + 1)}
       />
       
       <MediaViewer
