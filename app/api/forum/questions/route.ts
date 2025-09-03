@@ -107,16 +107,14 @@ export async function GET(request: NextRequest) {
           _count: {
             select: {
               answers: true,
-              votes: true
+              votes_rel: true
             }
           },
           // Include user's vote if logged in
-          ...(userId && {
-            votes: {
-              where: { userId },
-              select: { type: true }
-            }
-          })
+          votes_rel: userId ? {
+            where: { userId },
+            select: { type: true }
+          } : false
         }
       }),
       prisma.question.count({ where })
@@ -124,8 +122,8 @@ export async function GET(request: NextRequest) {
 
     // Transform questions to include computed fields
     const transformedQuestions = questions.map(question => {
-      const upvotes = question._count.votes // This would need to be calculated properly
-      const userVote = userId && question.votes?.length > 0 ? question.votes[0].type : null
+      const upvotes = question._count.votes_rel // Count of votes from relation
+      const userVote = userId && question.votes_rel?.length > 0 ? question.votes_rel[0].type : null
       
       return {
         ...question,
@@ -133,7 +131,7 @@ export async function GET(request: NextRequest) {
         upvotes,
         userVote,
         hasAcceptedAnswer: !!question.bestAnswer,
-        votes: undefined,
+        votes_rel: undefined,
         _count: undefined
       }
     })
@@ -225,7 +223,7 @@ export async function POST(request: NextRequest) {
         _count: {
           select: {
             answers: true,
-            votes: true
+            votes_rel: true
           }
         }
       }
@@ -245,7 +243,7 @@ export async function POST(request: NextRequest) {
     const transformedQuestion = {
       ...question,
       answersCount: question._count.answers,
-      upvotes: question._count.votes,
+      upvotes: question._count.votes_rel,
       userVote: null,
       hasAcceptedAnswer: false,
       _count: undefined

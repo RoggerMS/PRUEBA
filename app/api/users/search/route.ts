@@ -47,7 +47,6 @@ export async function GET(request: NextRequest) {
       take: limit,
       orderBy: [
         { verified: 'desc' }, // Verified users first
-        { _relevance: { fields: ['username', 'name'], search: q, sort: 'desc' } },
         { createdAt: 'desc' }
       ],
       select: {

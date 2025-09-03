@@ -551,7 +551,7 @@ CREATE TABLE "kanban_cards" (
 CREATE TABLE "frases_items" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "content" TEXT NOT NULL,
-    "tags" JSONB NOT NULL DEFAULT [],
+    "tags" JSONB NOT NULL DEFAULT '[]'::jsonb,
     "blockId" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,

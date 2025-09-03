@@ -1,0 +1,2 @@
+INSERT INTO events (id, title, description, "startDate", category, "createdAt", "updatedAt") 
+VALUES ('evt1', 'Evento de Prueba', 'Descripción del evento de prueba', '2024-12-31 10:00:00', 'Tecnología', NOW(), NOW());

@@ -20,8 +20,8 @@ const createEventSchema = z.object({
 });
 
 const querySchema = z.object({
-  page: z.string().transform(val => parseInt(val) || 1),
-  limit: z.string().transform(val => Math.min(parseInt(val) || 10, 50)),
+  page: z.string().optional().transform(val => parseInt(val || '1') || 1),
+  limit: z.string().optional().transform(val => Math.min(parseInt(val || '10') || 10, 50)),
   category: z.string().optional(),
   type: z.string().optional(),
   search: z.string().optional(),
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
-              imageUrl: true,
+              avatar: true,
             },
           },
           attendances: {

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     const notifications = await prisma.notification.findMany({
       where: {
-        userId: session.user.id,
+        recipientId: session.user.id,
       },
       orderBy: {
         createdAt: 'desc',
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       skip,
       take: limit,
       include: {
-        user: {
+        sender: {
           select: {
             id: true,
             name: true,
@@ -39,14 +39,14 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.notification.count({
       where: {
-        userId: session.user.id,
+        recipientId: session.user.id,
       },
     });
 
     const unreadCount = await prisma.notification.count({
       where: {
-        userId: session.user.id,
-        read: false,
+        recipientId: session.user.id,
+        isRead: false,
       },
     });
 
@@ -78,19 +78,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, title, message, data, targetUserId } = body;
+    const { type, title, message, metadata, targetUserId } = body;
 
     const notification = await prisma.notification.create({
       data: {
         type,
         title,
         message,
-        data: data || {},
-        userId: targetUserId || session.user.id,
-        read: false,
+        metadata: metadata || null,
+        recipientId: targetUserId || session.user.id,
+        isRead: false,
       },
       include: {
-        user: {
+        sender: {
           select: {
             id: true,
             name: true,
@@ -120,7 +120,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { notificationIds, read } = body;
+    const { notificationIds, isRead } = body;
 
     if (!Array.isArray(notificationIds)) {
       return NextResponse.json(
@@ -134,10 +134,11 @@ export async function PATCH(request: NextRequest) {
         id: {
           in: notificationIds,
         },
-        userId: session.user.id,
+        recipientId: session.user.id,
       },
       data: {
-        read: read !== undefined ? read : true,
+        isRead: isRead !== undefined ? isRead : true,
+        readAt: isRead !== false ? new Date() : null,
       },
     });
 

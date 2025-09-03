@@ -247,8 +247,6 @@ CREATE TABLE "Activity" (
 );
 
 -- RedefineTables
-PRAGMA defer_foreign_keys=ON;
-PRAGMA foreign_keys=OFF;
 CREATE TABLE "new_comments" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "content" TEXT NOT NULL,
@@ -388,8 +386,7 @@ CREATE TABLE "new_workspace_blocks" (
 INSERT INTO "new_workspace_blocks" ("boardId", "createdAt", "h", "id", "locked", "title", "type", "updatedAt", "w", "x", "y", "zIndex") SELECT "boardId", "createdAt", "h", "id", "locked", "title", "type", "updatedAt", "w", "x", "y", "zIndex" FROM "workspace_blocks";
 DROP TABLE "workspace_blocks";
 ALTER TABLE "new_workspace_blocks" RENAME TO "workspace_blocks";
-PRAGMA foreign_keys=ON;
-PRAGMA defer_foreign_keys=OFF;
+
 
 -- CreateIndex
 CREATE UNIQUE INDEX "password_reset_tokens_token_key" ON "password_reset_tokens"("token");
