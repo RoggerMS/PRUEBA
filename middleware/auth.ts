@@ -55,6 +55,7 @@ const PUBLIC_ROUTES = [
   '/terms',
   '/cookies',
   '/help',
+  '/dashboard/dashboard_stats',
   '/api/auth',
   '/api/public'
 ];
