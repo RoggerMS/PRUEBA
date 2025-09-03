@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ImageIcon, FileTextIcon, LinkIcon, SmileIcon } from 'lucide-react';
+import { ImageIcon, FileTextIcon, LinkIcon } from 'lucide-react';
 import { useCreatePost } from '@/hooks/useFeed';
 import { toast } from 'sonner';
 
@@ -68,26 +68,26 @@ export function Composer() {
               ¿Qué quieres compartir, {session.user?.name?.split(' ')[0]}?
             </p>
             <div className="flex space-x-2 mt-1">
-              <Badge 
+              <Badge
                 variant={postType === 'text' ? 'default' : 'outline'}
                 className="cursor-pointer text-xs"
                 onClick={() => setPostType('text')}
               >
-                💬 Post
+                Post
               </Badge>
-              <Badge 
+              <Badge
                 variant={postType === 'note' ? 'default' : 'outline'}
                 className="cursor-pointer text-xs"
                 onClick={() => setPostType('note')}
               >
-                📚 Apunte
+                Apunte
               </Badge>
-              <Badge 
+              <Badge
                 variant={postType === 'question' ? 'default' : 'outline'}
                 className="cursor-pointer text-xs"
                 onClick={() => setPostType('question')}
               >
-                ❓ Pregunta
+                Pregunta
               </Badge>
             </div>
           </div>
@@ -127,10 +127,6 @@ export function Composer() {
             <Button type="button" variant="ghost" size="sm">
               <LinkIcon className="h-4 w-4 mr-1" />
               Enlace
-            </Button>
-            <Button type="button" variant="ghost" size="sm">
-              <SmileIcon className="h-4 w-4 mr-1" />
-              Emoji
             </Button>
           </div>
           
