@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Ensure notifications API works on PostgreSQL by aligning Prisma schema and adding migration for `notifications` table.
+- Prevent intermittent 401 responses from pgAdmin by allowing dashboard stats requests without authentication.
 - Add workspace stats API and align stats hook to avoid HTML error when loading pizarra statistics.
 - Gracefully fall back to zeroed workspace stats when the stats endpoint fails so the workspace page doesn't stay loading.
 - Add Dockerfile and documentation for running PostgreSQL locally with Docker.
