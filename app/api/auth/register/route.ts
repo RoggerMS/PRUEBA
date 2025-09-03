@@ -3,11 +3,19 @@ import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { rateLimitRegister } from '@/lib/rate-limit';
+import { USERNAME_REGEX } from '@/lib/validation';
 
 const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  username: z.string().min(3, 'El username debe tener al menos 3 caracteres').max(20, 'El username no puede tener más de 20 caracteres'),
+  username: z
+    .string()
+    .min(3, 'El username debe tener al menos 3 caracteres')
+    .max(20, 'El username no puede tener más de 20 caracteres')
+    .regex(
+      USERNAME_REGEX,
+      'El username solo puede contener letras, números, puntos, guiones y guiones bajos'
+    ),
   name: z.string().min(1, 'El nombre es requerido').max(50, 'El nombre no puede tener más de 50 caracteres'),
 });
 

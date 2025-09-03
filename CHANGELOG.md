@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Normalize usernames to lowercase on write, allow case-insensitive lookups, and redirect to the canonical username.
+- Add `/api/users/profile` to fetch the authenticated user profile with stats.
+- Enforce case-insensitive username uniqueness at the database level with a `lower(username)` unique index and backfill.
 - Make username lookups case-insensitive and normalize registration to lowercase to prevent profile access failures.
 - Fix feed interactions: animate and persist fire reactions, expose full post menu actions, and handle comment errors gracefully.
 

@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { EnhancedProfile } from '@/components/user/EnhancedProfile';
 import { prisma } from '@/lib/prisma';
+import { USERNAME_REGEX } from '@/lib/validation';
 
 interface ProfilePageProps {
   params: {
@@ -22,6 +23,13 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   }
 
   try {
+    if (!USERNAME_REGEX.test(params.username)) {
+      return {
+        title: 'Usuario no encontrado - CRUNEVO',
+        description: 'El perfil que buscas no existe.'
+      };
+    }
+
     const user = await prisma.user.findFirst({
       where: {
         username: {
@@ -58,6 +66,9 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
         title: `${user.name} (@${user.username})`,
         description: user.bio || `Perfil de ${user.name} en CRUNEVO`,
         images: user.image ? [user.image] : []
+      },
+      alternates: {
+        canonical: `/u/${user.username}`
       }
     };
   } catch (error) {
@@ -80,6 +91,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         />
       </div>
     );
+  }
+
+  if (!USERNAME_REGEX.test(params.username)) {
+    notFound();
   }
 
   try {
@@ -116,12 +131,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         />
       </div>
     );
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.digest === 'NEXT_REDIRECT' || error?.digest === 'NEXT_NOT_FOUND') {
+      throw error;
+    }
     // Fallback if database is not available
     return (
       <div className="min-h-screen bg-gray-50">
-        <EnhancedProfile 
-          username={params.username} 
+        <EnhancedProfile
+          username={params.username}
           isOwnProfile={false}
         />
       </div>

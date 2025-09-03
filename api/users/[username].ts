@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '@/lib/prisma';
+import { USERNAME_REGEX } from '@/lib/validation';
 
 export default async function handler(
   req: NextApiRequest,
@@ -9,8 +10,8 @@ export default async function handler(
 ) {
   const { username } = req.query;
 
-  if (!username || typeof username !== 'string') {
-    return res.status(400).json({ error: 'Username requerido' });
+  if (!username || typeof username !== 'string' || !USERNAME_REGEX.test(username)) {
+    return res.status(400).json({ error: 'Username inválido' });
   }
 
   switch (req.method) {
