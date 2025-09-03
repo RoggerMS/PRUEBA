@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,11 +29,11 @@ export function FrasesView({ blockId }: FrasesViewProps) {
   const [editContent, setEditContent] = useState('');
 
   // Fetch items
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
       const response = await fetch(`/api/workspace/frases/items?blockId=${blockId}`);
       if (!response.ok) throw new Error('Failed to fetch items');
-      
+
       const data = await response.json();
       setItems(data.items);
     } catch (error) {
@@ -41,7 +41,7 @@ export function FrasesView({ blockId }: FrasesViewProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [blockId]);
 
   // Create item
   const createItem = async () => {
@@ -132,7 +132,7 @@ export function FrasesView({ blockId }: FrasesViewProps) {
 
   useEffect(() => {
     fetchItems();
-  }, [blockId]);
+  }, [fetchItems]);
 
   if (isLoading) {
     return (

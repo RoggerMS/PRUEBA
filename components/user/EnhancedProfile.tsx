@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -75,15 +75,11 @@ export function EnhancedProfile({ username, isOwnProfile = false }: EnhancedProf
   const [followersType, setFollowersType] = useState<'followers' | 'following'>('followers');
   const [activeTab, setActiveTab] = useState('posts');
 
-  useEffect(() => {
-    fetchProfile();
-  }, [username, session]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
-      const endpoint = isOwnProfile || !username 
-        ? '/api/users/profile' 
+      const endpoint = isOwnProfile || !username
+        ? '/api/users/profile'
         : `/api/users/${username}`;
       
       const response = await fetch(endpoint);
@@ -101,7 +97,11 @@ export function EnhancedProfile({ username, isOwnProfile = false }: EnhancedProf
     } finally {
       setLoading(false);
     }
-  };
+  }, [isOwnProfile, username]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile, session]);
 
   const handleFollow = async () => {
     if (!profile) return;
