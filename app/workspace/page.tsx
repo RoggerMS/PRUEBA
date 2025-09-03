@@ -97,21 +97,26 @@ export default function WorkspacePage() {
   };
 
   // Handle block creation
-  const handleCreateBlock = async (blockData: any) => {
+  const handleCreateBlock = async (
+    type: 'DOCS' | 'KANBAN' | 'FRASES',
+    title: string
+  ) => {
     if (!currentBoard) return;
-    
+
     try {
       // Generate random position
       const position = {
         x: Math.random() * 400 + 100,
         y: Math.random() * 300 + 100
       };
-      
+
       await createBlock(currentBoard.id, {
-        ...blockData,
-        position,
+        type,
+        title,
+        x: position.x,
+        y: position.y,
       });
-      
+
       setShowCreateModal(false);
     } catch (error) {
       // Error handled by hook
@@ -285,7 +290,7 @@ export default function WorkspacePage() {
               >
                 {/* Grid Background */}
                 <div
-                  className="absolute inset-0"
+                  className="absolute inset-0 pointer-events-none"
                   style={{
                     width: CANVAS_SIZE,
                     height: CANVAS_SIZE,
@@ -305,8 +310,20 @@ export default function WorkspacePage() {
                     key={block.id}
                     block={block}
                     isEditMode={isEditMode}
+                    zoom={zoom}
                     onUpdate={(updatedBlock) => {
-                      // Block updates are handled by WorkspaceBlock component
+                      setCurrentBoard(prev => prev ? {
+                        ...prev,
+                        blocks: prev.blocks.map(b =>
+                          b.id === updatedBlock.id ? updatedBlock : b
+                        )
+                      } : prev);
+                    }}
+                    onDelete={(blockId) => {
+                      setCurrentBoard(prev => prev ? {
+                        ...prev,
+                        blocks: prev.blocks.filter(b => b.id !== blockId)
+                      } : prev);
                     }}
                   />
                 ))}
