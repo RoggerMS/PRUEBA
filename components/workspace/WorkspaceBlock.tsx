@@ -15,8 +15,8 @@ interface WorkspaceBlockData {
   title: string;
   x: number;
   y: number;
-  width: number;
-  height: number;
+  w: number;
+  h: number;
   zIndex: number;
   completed: boolean;
   createdAt: string;
@@ -55,7 +55,7 @@ export function WorkspaceBlock({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 0, h: 0 });
   const blockRef = useRef<HTMLDivElement>(null);
 
   const Icon = BLOCK_ICONS[block.type];
@@ -83,8 +83,8 @@ export function WorkspaceBlock({
     setResizeStart({
       x: e.clientX,
       y: e.clientY,
-      width: block.width,
-      height: block.height,
+      w: block.w,
+      h: block.h,
     });
   };
 
@@ -97,20 +97,20 @@ export function WorkspaceBlock({
         
         onUpdate({
           ...block,
-          x: Math.max(0, Math.min(5000 - block.width, newX)),
-          y: Math.max(0, Math.min(5000 - block.height, newY)),
+          x: Math.max(0, Math.min(5000 - block.w, newX)),
+          y: Math.max(0, Math.min(5000 - block.h, newY)),
         });
       } else if (isResizing) {
         const deltaX = e.clientX - resizeStart.x;
         const deltaY = e.clientY - resizeStart.y;
         
-        const newWidth = Math.max(300, Math.min(800, resizeStart.width + deltaX / zoom));
-        const newHeight = Math.max(200, Math.min(600, resizeStart.height + deltaY / zoom));
+        const newWidth = Math.max(300, Math.min(800, resizeStart.w + deltaX / zoom));
+        const newHeight = Math.max(200, Math.min(600, resizeStart.h + deltaY / zoom));
         
         onUpdate({
           ...block,
-          width: newWidth,
-          height: newHeight,
+          w: newWidth,
+          h: newHeight,
         });
       }
     };
@@ -140,13 +140,13 @@ export function WorkspaceBlock({
   const updateBlockOnServer = async () => {
     try {
       await fetch(`/api/workspace/blocks/${block.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           x: block.x,
           y: block.y,
-          w: block.width,
-          h: block.height,
+          w: block.w,
+          h: block.h,
         }),
       });
     } catch (error) {
@@ -173,7 +173,7 @@ export function WorkspaceBlock({
   const toggleCompletion = async () => {
     try {
       const response = await fetch(`/api/workspace/blocks/${block.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ completed: !block.completed }),
       });
@@ -195,8 +195,8 @@ export function WorkspaceBlock({
       style={{
         left: canvasOffset.x + block.x * zoom,
         top: canvasOffset.y + block.y * zoom,
-        width: block.width * zoom,
-        height: block.height * zoom,
+        width: block.w * zoom,
+        height: block.h * zoom,
         zIndex: block.zIndex,
         transform: `scale(${zoom})`,
         transformOrigin: 'top left',

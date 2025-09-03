@@ -175,7 +175,7 @@ export class BlocksService {
 
   private async initializeBlockContent(blockId: string, type: string) {
     switch (type) {
-      case 'docs':
+      case 'DOCS':
         await prisma.docsPage.create({
           data: {
             blockId,
@@ -184,7 +184,7 @@ export class BlocksService {
           },
         });
         break;
-      case 'kanban':
+      case 'KANBAN':
         // Create default columns
         await prisma.kanbanColumn.createMany({
           data: [
@@ -194,7 +194,7 @@ export class BlocksService {
           ],
         });
         break;
-      case 'frases':
+      case 'FRASES':
         // Create a default frases item
         await prisma.frasesItem.create({
           data: {

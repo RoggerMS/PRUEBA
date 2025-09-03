@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-const BLOCK_TYPES = ['docs', 'kanban', 'frases'] as const;
+const BLOCK_TYPES = ['DOCS', 'KANBAN', 'FRASES'] as const;
 
 export class CreateBlockDto {
   @ApiProperty({
@@ -24,7 +24,7 @@ export class CreateBlockDto {
   @ApiProperty({
     description: 'Type of the block',
     enum: BLOCK_TYPES,
-    example: 'docs',
+    example: 'DOCS',
   })
   @IsString()
   @IsIn(BLOCK_TYPES)
@@ -164,6 +164,14 @@ export class UpdateBlockDto {
   @IsOptional()
   @IsBoolean()
   locked?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Whether the block is completed',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  completed?: boolean;
 }
 
 export class UpdateBlockPositionDto {
