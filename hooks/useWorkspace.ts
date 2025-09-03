@@ -56,13 +56,13 @@ export interface WorkspaceCollaborator {
 }
 
 export interface WorkspaceStats {
-  boards: number;
-  blocks: number;
-  docs: number;
-  kanban: number;
-  frases: number;
-  collaborators: number;
-  sharedBoards: number;
+  boardsCount: number;
+  blocksCount: number;
+  docsCount: number;
+  kanbanCount: number;
+  frasesCount: number;
+  collaboratorsCount?: number;
+  sharedBoardsCount?: number;
 }
 
 export interface UseWorkspaceReturn {

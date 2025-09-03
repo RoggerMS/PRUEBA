@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add workspace stats API and align stats hook to avoid HTML error when loading pizarra statistics.
 - Add Dockerfile and documentation for running PostgreSQL locally with Docker.
 - Fix workspace board rendering and block creation by aligning block types and dimensions between API and frontend.
 - Pass canvas offset and zoom to workspace blocks so pizarra interactions update and display correctly.
