@@ -310,8 +310,21 @@ export default function WorkspacePage() {
                     key={block.id}
                     block={block}
                     isEditMode={isEditMode}
+                    canvasOffset={canvasOffset}
+                    zoom={zoom}
                     onUpdate={(updatedBlock) => {
-                      // Block updates are handled by WorkspaceBlock component
+                      setCurrentBoard(prev => prev ? {
+                        ...prev,
+                        blocks: prev.blocks.map(b =>
+                          b.id === updatedBlock.id ? updatedBlock : b
+                        )
+                      } : null);
+                    }}
+                    onDelete={(blockId) => {
+                      setCurrentBoard(prev => prev ? {
+                        ...prev,
+                        blocks: prev.blocks.filter(b => b.id !== blockId)
+                      } : null);
                     }}
                   />
                 ))}
