@@ -83,6 +83,12 @@ export default function NotesPage() {
   const [selectedCareer, setSelectedCareer] = useState('');
   const [sortBy, setSortBy] = useState('recent');
 
+  // Manejar el éxito del formulario de carga de apuntes
+  const handleUploadSuccess = (noteData: any) => {
+    // En un escenario real se debería actualizar la lista de apuntes
+    console.log('Apunte subido', noteData);
+  };
+
   const handleNoteSelect = (noteId: string) => {
     setSelectedNote(noteId);
   };
@@ -155,12 +161,13 @@ export default function NotesPage() {
         )}
 
         {/* Notes Grid */}
-        <NotesGrid 
+        <NotesGrid
           searchQuery={searchQuery}
           selectedCategory={selectedCategory}
           selectedCareer={selectedCareer}
           sortBy={sortBy}
           onNoteSelect={handleNoteSelect}
+          onUpload={() => setShowUpload(true)}
         />
 
         {/* Notes Viewer Modal */}
@@ -172,9 +179,11 @@ export default function NotesPage() {
         )}
 
         {/* Notes Upload Modal */}
-          {showUpload && (
-            <NotesUpload onClose={() => setShowUpload(false)} />
-          )}
+        <NotesUpload
+          open={showUpload}
+          onClose={() => setShowUpload(false)}
+          onSuccess={handleUploadSuccess}
+        />
         </div>
       </div>
     );

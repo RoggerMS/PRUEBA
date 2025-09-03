@@ -15,7 +15,8 @@ import {
   User,
   Heart,
   Share2,
-  LoaderIcon
+  LoaderIcon,
+  Upload
 } from 'lucide-react';
 import { useNotes, useLikeNote, useDownloadNote } from '@/hooks/useNotes';
 import { toast } from 'sonner';
@@ -52,9 +53,11 @@ interface NotesGridProps {
   selectedCareer: string;
   sortBy: string;
   onNoteSelect: (noteId: string) => void;
+  /** Callback to open the upload modal */
+  onUpload?: () => void;
 }
 
-export function NotesGrid({ searchQuery, selectedCategory, selectedCareer, sortBy, onNoteSelect }: NotesGridProps) {
+export function NotesGrid({ searchQuery, selectedCategory, selectedCareer, sortBy, onNoteSelect, onUpload }: NotesGridProps) {
   const [likedNotes, setLikedNotes] = useState<Set<string>>(new Set());
   
   const { data: notes = [], isLoading, error, refetch } = useNotes({
@@ -163,16 +166,28 @@ export function NotesGrid({ searchQuery, selectedCategory, selectedCareer, sortB
     );
   }
 
+  // Mostrar un mensaje con opción de subir cuando no hay apuntes
   if (notes.length === 0) {
     return (
       <div className="text-center py-12">
         <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-gray-600 mb-2">
-          No se encontraron apuntes
+          No hay apuntes disponibles
         </h3>
-        <p className="text-gray-500">
-          {searchQuery ? 'Intenta con otros términos de búsqueda' : 'Sé el primero en subir apuntes'}
+        <p className="text-gray-500 mb-4">
+          {searchQuery
+            ? 'Intenta con otros términos de búsqueda'
+            : 'Comparte el primero con la comunidad'}
         </p>
+        {!searchQuery && onUpload && (
+          <Button
+            onClick={onUpload}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Subir Apunte
+          </Button>
+        )}
       </div>
     );
   }
