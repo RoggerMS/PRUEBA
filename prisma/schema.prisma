@@ -109,7 +109,8 @@ model User {
   purchases     Purchase[]
   orders        Order[]
   cartItems     CartItem[]
-  notifications Notification[]
+  notifications     Notification[] @relation("UserNotifications")
+  sentNotifications Notification[] @relation("SenderNotifications")
   followers     Follow[] @relation("UserFollowers")
   following     Follow[] @relation("UserFollowing")
   
@@ -1230,19 +1231,28 @@ model FrasesItem {
 // ============================================================================
 
 model Notification {
-  id        String           @id @default(cuid())
-  type      NotificationType
-  title     String
-  message   String
-  data      Json?            // Additional data
-  
-  read      Boolean          @default(false)
-  
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime         @default(now())
-  
+  id          String                    @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String
+  actionUrl   String?
+  metadata    String?
+  isRead      Boolean                   @default(false)
+  readAt      DateTime?
+
+  recipientId String
+  recipient   User                      @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  senderId    String?
+  sender      User?                     @relation("SenderNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+
+  relatedId   String?
+  relatedType NotificationRelatedType?
+
+  createdAt   DateTime                  @default(now())
+
+  @@index([recipientId, isRead, createdAt], name: "notifications_recipientId_read_createdAt_idx")
+  @@index([recipientId, createdAt], name: "notifications_recipientId_createdAt_idx")
   @@map("notifications")
 }
 
@@ -1735,6 +1745,8 @@ enum NotificationType {
   COMMENT
   FOLLOW
   MENTION
+  MESSAGE
+  ACHIEVEMENT
   NOTE_APPROVED
   NOTE_PURCHASED
   QUESTION_ANSWERED
@@ -1744,6 +1756,13 @@ enum NotificationType {
   EVENT_REMINDER
   CLUB_INVITATION
   SYSTEM
+}
+
+enum NotificationRelatedType {
+  POST
+  COMMENT
+  USER
+  MESSAGE
 }
 
 enum ReportStatus {
