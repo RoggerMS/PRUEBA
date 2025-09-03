@@ -47,7 +47,6 @@ export async function POST(
     })
 
     let isLiked: boolean
-    let likesCount: number
 
     if (existingLike) {
       // Unlike the comment
@@ -83,7 +82,7 @@ export async function POST(
       }
     })
 
-    likesCount = updatedComment?._count.likes || 0
+    const likesCount = updatedComment?._count.likes || 0
 
     return NextResponse.json({
       isLiked,

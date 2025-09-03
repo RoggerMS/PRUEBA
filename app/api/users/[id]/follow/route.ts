@@ -52,8 +52,6 @@ export async function POST(
     })
 
     let isFollowing: boolean
-    let followersCount: number
-    let followingCount: number
 
     if (existingFollow) {
       // Unfollow
@@ -78,7 +76,7 @@ export async function POST(
     }
 
     // Get updated counts
-    const [followersCountResult, followingCountResult] = await Promise.all([
+    const [followersCount, followingCount] = await Promise.all([
       prisma.follow.count({
         where: { followingId: targetUserId }
       }),
@@ -86,9 +84,6 @@ export async function POST(
         where: { followerId: currentUserId }
       })
     ])
-
-    followersCount = followersCountResult
-    followingCount = followingCountResult
 
     return NextResponse.json({
       isFollowing,
