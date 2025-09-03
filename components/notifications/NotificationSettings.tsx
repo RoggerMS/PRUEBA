@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,13 +60,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
     weekendQuietMode: false
   });
 
-  useEffect(() => {
-    if (session?.user) {
-      fetchPreferences();
-    }
-  }, [session]);
-
-  const fetchPreferences = async () => {
+  const fetchPreferences = useCallback(async () => {
     try {
       const response = await fetch('/api/notifications/preferences');
       const data = await response.json();
@@ -87,7 +81,13 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchPreferences();
+    }
+  }, [session, fetchPreferences]);
 
   const getDefaultPreferences = (): NotificationPreference[] => [
     {

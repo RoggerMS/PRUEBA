@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -48,26 +48,7 @@ export function FollowersModal({ userId, type, isOpen, onClose }: FollowersModal
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchUsers();
-    }
-  }, [isOpen, userId, type]);
-
-  useEffect(() => {
-    // Filter users based on search query
-    if (searchQuery.trim()) {
-      const filtered = users.filter(user => 
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.username.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredUsers(filtered);
-    } else {
-      setFilteredUsers(users);
-    }
-  }, [searchQuery, users]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/users/follow?userId=${userId}&type=${type}`);
@@ -76,7 +57,7 @@ export function FollowersModal({ userId, type, isOpen, onClose }: FollowersModal
       if (response.ok) {
         setUsers(data.users || []);
         setFilteredUsers(data.users || []);
-        
+
         // Track which users are being followed
         const following = new Set(
           data.users
@@ -93,7 +74,26 @@ export function FollowersModal({ userId, type, isOpen, onClose }: FollowersModal
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, type]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsers();
+    }
+  }, [isOpen, fetchUsers]);
+
+  useEffect(() => {
+    // Filter users based on search query
+    if (searchQuery.trim()) {
+      const filtered = users.filter(user => 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.username.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [searchQuery, users]);
 
   const handleFollow = async (targetUserId: string, isCurrentlyFollowing: boolean) => {
     setActionLoading(prev => new Set(prev).add(targetUserId));

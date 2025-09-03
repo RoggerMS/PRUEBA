@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,24 +33,22 @@ export function DocsView({ blockId }: DocsViewProps) {
   const [newPageTitle, setNewPageTitle] = useState('');
 
   // Fetch pages
-  const fetchPages = async () => {
+  const fetchPages = useCallback(async () => {
     try {
       const response = await fetch(`/api/workspace/docs/pages?blockId=${blockId}`);
       if (!response.ok) throw new Error('Failed to fetch pages');
-      
+
       const data = await response.json();
       setPages(data.pages);
-      
+
       // Set current page to first page if none selected
-      if (!currentPage && data.pages.length > 0) {
-        setCurrentPage(data.pages[0]);
-      }
+      setCurrentPage(prev => prev ?? data.pages[0] ?? null);
     } catch (error) {
       console.error('Error fetching pages:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [blockId]);
 
   // Create new page
   const createPage = async () => {
@@ -149,7 +147,7 @@ export function DocsView({ blockId }: DocsViewProps) {
 
   useEffect(() => {
     fetchPages();
-  }, [blockId]);
+  }, [fetchPages]);
 
   if (isLoading) {
     return (

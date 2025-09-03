@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import {
@@ -64,24 +64,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   const [hasMore, setHasMore] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (session?.user) {
-      fetchNotifications(1, true);
-      
-      // Poll for new notifications every 30 seconds
-      intervalRef.current = setInterval(() => {
-        fetchUnreadCount();
-      }, 30000);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [session]);
-
-  const fetchNotifications = async (pageNum: number = 1, reset: boolean = false) => {
+  const fetchNotifications = useCallback(async (pageNum: number = 1, reset: boolean = false) => {
     if (!session?.user || loading) return;
 
     setLoading(true);
@@ -107,9 +90,9 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session?.user, loading]);
 
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = useCallback(async () => {
     if (!session?.user) return;
 
     try {
@@ -122,7 +105,24 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     } catch (error) {
       console.error('Error fetching unread count:', error);
     }
-  };
+  }, [session?.user]);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchNotifications(1, true);
+
+      // Poll for new notifications every 30 seconds
+      intervalRef.current = setInterval(() => {
+        fetchUnreadCount();
+      }, 30000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [session, fetchNotifications, fetchUnreadCount]);
 
   const markAsRead = async (notificationIds?: string[]) => {
     if (!session?.user) return;
