@@ -14,6 +14,9 @@
 - Fix workspace board rendering and block creation by aligning block types and dimensions between API and frontend.
 - Pass canvas offset and zoom to workspace blocks so pizarra interactions update and display correctly.
 - Restore workspace grid background by removing conflicting CSS positioning.
+- Initialize default content and unique z-index when creating workspace blocks so new blocks render reliably.
+- Provide board management API routes to update, delete and duplicate boards, enabling workspace configuration.
+- Remove placeholder random values from workspace statistics and expose collaborator and shared board counts.
 
 - Align feed client with API pagination and add single post endpoint for local development.
 - Improve feed post actions: link user names to profiles, move follow button beside author info, restore flame reaction, and add share handling.
