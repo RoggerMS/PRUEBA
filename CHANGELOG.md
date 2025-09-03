@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Allow feed posts without text by relaxing server validation while ensuring content or media is provided.
+- Use logged-in user info for optimistic feed updates and assign a default avatar during registration for consistent profiles.
 - Ensure notifications API works on PostgreSQL by aligning Prisma schema and adding migration for `notifications` table.
 - Prevent intermittent 401 responses from pgAdmin by allowing dashboard stats requests without authentication.
 - Add workspace stats API and align stats hook to avoid HTML error when loading pizarra statistics.
