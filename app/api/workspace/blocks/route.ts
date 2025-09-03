@@ -50,6 +50,12 @@ export async function POST(req: Request) {
     if (!board) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const maxZ = await prisma.workspaceBlock.findFirst({
+      where: { boardId: body.boardId },
+      orderBy: { zIndex: 'desc' },
+      select: { zIndex: true },
+    });
+
     const block = await prisma.workspaceBlock.create({
       data: {
         boardId: body.boardId,
@@ -59,10 +65,41 @@ export async function POST(req: Request) {
         y: body.y ?? 0,
         w: body.w ?? 300,
         h: body.h ?? 200,
-        zIndex: body.zIndex ?? 1
-      }
+        zIndex: maxZ ? maxZ.zIndex + 1 : 1,
+      },
     });
-    return Response.json({ block }, { status: 201 });
+
+    switch (block.type) {
+      case 'DOCS':
+        await prisma.docsPage.create({
+          data: { blockId: block.id, title: 'Untitled Document', content: '' },
+        });
+        break;
+      case 'KANBAN':
+        await prisma.kanbanColumn.createMany({
+          data: [
+            { blockId: block.id, title: 'To Do', orderIndex: 0 },
+            { blockId: block.id, title: 'In Progress', orderIndex: 1 },
+            { blockId: block.id, title: 'Done', orderIndex: 2 },
+          ],
+        });
+        break;
+      case 'FRASES':
+        await prisma.frasesItem.create({
+          data: { blockId: block.id, content: 'Welcome to your new frases block!' },
+        });
+        break;
+    }
+
+    const fullBlock = await prisma.workspaceBlock.findUnique({
+      where: { id: block.id },
+      include: {
+        docsPages: true,
+        kanbanColumns: { include: { cards: true } },
+        frasesItems: true,
+      },
+    });
+    return Response.json({ block: fullBlock }, { status: 201 });
   } catch (e) {
     console.error('[POST /api/workspace/blocks]', e);
     return Response.json({ error: 'Internal error' }, { status: 500 });

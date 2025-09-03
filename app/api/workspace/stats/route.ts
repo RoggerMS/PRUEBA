@@ -22,9 +22,16 @@ export async function GET(req: Request) {
       prisma.kanbanColumn.count({ where: { block: { board: { userId } } } }),
       prisma.frasesItem.count({ where: { block: { board: { userId } } } }),
     ]);
-    return Response.json({
-      stats: { boardsCount, blocksCount, docsCount, kanbanCount, frasesCount },
-    });
+    const stats = {
+      boardsCount,
+      blocksCount,
+      docsCount,
+      kanbanCount,
+      frasesCount,
+      collaboratorsCount: 0,
+      sharedBoardsCount: 0,
+    };
+    return Response.json({ stats });
   } catch (e) {
     console.error('[GET /api/workspace/stats]', e);
     return Response.json({ error: 'Internal error' }, { status: 500 });

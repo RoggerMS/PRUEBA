@@ -128,16 +128,16 @@ export function WorkspaceStats({ className }: WorkspaceStatsProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Bloques creados hoy</span>
-                <Badge variant="secondary">+{Math.floor(Math.random() * 5)}</Badge>
+                <span className="text-sm">Bloques totales</span>
+                <Badge variant="secondary">{stats.blocksCount}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Docs editados</span>
-                <Badge variant="secondary">+{Math.floor(Math.random() * 3)}</Badge>
+                <span className="text-sm">Docs totales</span>
+                <Badge variant="secondary">{stats.docsCount}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Tareas completadas</span>
-                <Badge variant="secondary">+{Math.floor(Math.random() * 8)}</Badge>
+                <span className="text-sm">Kanban totales</span>
+                <Badge variant="secondary">{stats.kanbanCount}</Badge>
               </div>
             </div>
           </CardContent>
@@ -155,15 +155,11 @@ export function WorkspaceStats({ className }: WorkspaceStatsProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Colaboradores activos</span>
-                <Badge variant="outline">{Math.floor(Math.random() * 5) + 1}</Badge>
+                <Badge variant="outline">{stats.collaboratorsCount ?? 0}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Pizarras compartidas</span>
-                <Badge variant="outline">{Math.floor(stats.boardsCount * 0.3)}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Invitaciones enviadas</span>
-                <Badge variant="outline">{Math.floor(Math.random() * 3)}</Badge>
+                <Badge variant="outline">{stats.sharedBoardsCount ?? 0}</Badge>
               </div>
             </div>
           </CardContent>
@@ -180,18 +176,16 @@ export function WorkspaceStats({ className }: WorkspaceStatsProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Tiempo activo hoy</span>
-                <Badge variant="outline">{Math.floor(Math.random() * 8) + 1}h</Badge>
+                <span className="text-sm">Pizarras totales</span>
+                <Badge variant="outline">{stats.boardsCount}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Sesiones esta semana</span>
-                <Badge variant="outline">{Math.floor(Math.random() * 15) + 5}</Badge>
+                <span className="text-sm">Bloques totales</span>
+                <Badge variant="outline">{stats.blocksCount}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Productividad</span>
-                <Badge variant="outline" className="text-green-600">
-                  +{Math.floor(Math.random() * 20) + 10}%
-                </Badge>
+                <span className="text-sm">Frases totales</span>
+                <Badge variant="outline">{stats.frasesCount}</Badge>
               </div>
             </div>
           </CardContent>
