@@ -5,6 +5,7 @@
 - Add Dockerfile and documentation for running PostgreSQL locally with Docker.
 - Fix workspace board rendering and block creation by aligning block types and dimensions between API and frontend.
 - Pass canvas offset and zoom to workspace blocks so pizarra interactions update and display correctly.
+- Restore workspace grid background by removing conflicting CSS positioning.
 
 - Align feed client with API pagination and add single post endpoint for local development.
 - Improve feed post actions: link user names to profiles, move follow button beside author info, restore flame reaction, and add share handling.

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Plus, Edit3, Check, Grid3X3, Maximize2, Users, Settings } from 'lucide-react';
+import { Plus, Edit3, Check, Grid3X3, Maximize2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
 import { WorkspaceBlock } from '../../components/workspace/WorkspaceBlock';
 import { CreateBlockModal } from '../../components/workspace/CreateBlockModal';
 import { CollaboratorManager } from '@/components/workspace/CollaboratorManager';
@@ -34,11 +33,9 @@ import { useWorkspace } from '@/hooks/useWorkspace';
 
 const CANVAS_SIZE = 5000; // 5000x5000 infinite canvas
 const GRID_SIZE = 20;
-const MIN_BLOCK_SIZE = { width: 300, height: 200 };
-const MAX_BLOCK_SIZE = { width: 800, height: 600 };
 
 export default function WorkspacePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const {
     boards,
     currentBoard,
@@ -58,7 +55,6 @@ export default function WorkspacePage() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
 
-  const GRID_SIZE = 20;
   const MIN_ZOOM = 0.5;
   const MAX_ZOOM = 2;
 
@@ -290,16 +286,14 @@ export default function WorkspacePage() {
               >
                 {/* Grid Background */}
                 <div
-                  className="absolute inset-0"
+                  className="absolute"
                   style={{
                     width: CANVAS_SIZE,
                     height: CANVAS_SIZE,
                     left: -CANVAS_SIZE / 2,
                     top: -CANVAS_SIZE / 2,
-                    backgroundImage: `
-                      linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-                      linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-                    `,
+                    backgroundImage:
+                      'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)',
                     backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
                   }}
                 />
