@@ -26,7 +26,6 @@ interface WorkspaceBlockData {
 interface WorkspaceBlockProps {
   block: WorkspaceBlockData;
   isEditMode: boolean;
-  canvasOffset: { x: number; y: number };
   zoom: number;
   onUpdate: (block: WorkspaceBlockData) => void;
   onDelete: (blockId: string) => void;
@@ -47,7 +46,6 @@ const BLOCK_COLORS = {
 export function WorkspaceBlock({
   block,
   isEditMode,
-  canvasOffset,
   zoom,
   onUpdate,
   onDelete,
@@ -193,13 +191,11 @@ export function WorkspaceBlock({
         isDragging ? 'cursor-grabbing' : isEditMode ? 'cursor-grab' : 'cursor-pointer'
       }`}
       style={{
-        left: canvasOffset.x + block.x * zoom,
-        top: canvasOffset.y + block.y * zoom,
-        width: block.w * zoom,
-        height: block.h * zoom,
+        left: block.x,
+        top: block.y,
+        width: block.w,
+        height: block.h,
         zIndex: block.zIndex,
-        transform: `scale(${zoom})`,
-        transformOrigin: 'top left',
       }}
     >
       <Card className={`h-full flex flex-col ${BLOCK_COLORS[block.type]} ${block.completed ? 'opacity-75' : ''}`}>
