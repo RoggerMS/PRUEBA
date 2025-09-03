@@ -5,15 +5,12 @@ import { useSession } from 'next-auth/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
-  ImageIcon,
-  FileTextIcon,
-  SmileIcon,
   Camera,
   BookOpen,
   HelpCircle,
@@ -231,7 +228,7 @@ export function FacebookStyleComposer() {
             onClick={() => openModal('note')}
           >
             <BookOpen className="h-4 w-4 mr-2" />
-            Apunte 📘
+            Apunte
           </Button>
           <Button
             variant="ghost"
@@ -239,7 +236,7 @@ export function FacebookStyleComposer() {
             onClick={() => openModal('question')}
           >
             <HelpCircle className="h-4 w-4 mr-2" />
-            Pregunta ❓
+            Pregunta
           </Button>
           <Button
             variant="ghost"
@@ -250,7 +247,7 @@ export function FacebookStyleComposer() {
             }}
           >
             <Camera className="h-4 w-4 mr-2" />
-            Foto/Video 🖼️
+            Foto/Video
           </Button>
         </div>
       </Card>
@@ -273,7 +270,7 @@ export function FacebookStyleComposer() {
           else closeModal();
         }}
       >
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-[600px] md:max-w-[700px] max-h-[80vh] overflow-y-auto">
           <DialogHeader className="flex items-center">
             <DialogTitle className="text-xl font-semibold">Crear publicación</DialogTitle>
           </DialogHeader>
@@ -299,7 +296,7 @@ export function FacebookStyleComposer() {
                       onClick={() => setComposerTab('post')}
                       className="text-xs"
                     >
-                      💬 Post
+                      Post
                     </Button>
                     <Button
                       type="button"
@@ -308,7 +305,7 @@ export function FacebookStyleComposer() {
                       onClick={() => setComposerTab('note')}
                       className="text-xs"
                     >
-                      📚 Apunte
+                      Apunte
                     </Button>
                     <Button
                       type="button"
@@ -317,7 +314,7 @@ export function FacebookStyleComposer() {
                       onClick={() => setComposerTab('question')}
                       className="text-xs"
                     >
-                      ❓ Pregunta
+                      Pregunta
                     </Button>
                   </div>
                   
@@ -388,7 +385,7 @@ export function FacebookStyleComposer() {
                 ref={textareaRef}
                 placeholder={`¿Qué quieres ${composer.activeTab === 'note' ? 'enseñar' : composer.activeTab === 'question' ? 'preguntar' : 'compartir'}?`}
                 value={composer.text}
-                onChange={(e) => handleTextChange(e)}
+                onChange={(e) => handleTextChange(e.target.value)}
                 className="min-h-[120px] resize-none border-0 focus-visible:ring-0 text-base"
                 maxLength={2000}
               />
@@ -458,40 +455,19 @@ export function FacebookStyleComposer() {
                 Agregar a tu publicación
               </h3>
               <div className="flex space-x-2">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm"
-                  className="flex-1 hover:bg-gray-100"
-                  onClick={() => {
-                    const textarea = textareaRef.current;
-                    if (textarea) {
-                      const cursorPos = textarea.selectionStart;
-                      const newText = composer.text.slice(0, cursorPos) + '😊' + composer.text.slice(cursorPos);
-                      setComposerText(newText);
-                      setTimeout(() => {
-                        textarea.focus();
-                        textarea.setSelectionRange(cursorPos + 2, cursorPos + 2);
-                      }, 0);
-                    }
-                  }}
-                >
-                  <SmileIcon className="h-4 w-4 mr-2" />
-                  Emoji 🙂
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
+                <Button
+                  type="button"
+                  variant="ghost"
                   size="sm"
                   className="flex-1 hover:bg-gray-100"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Camera className="h-4 w-4 mr-2" />
-                  Fotos/Videos 📷
+                  Fotos/Videos
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
+                <Button
+                  type="button"
+                  variant="ghost"
                   size="sm"
                   className="flex-1 hover:bg-gray-100"
                   onClick={() => {
@@ -500,11 +476,11 @@ export function FacebookStyleComposer() {
                   }}
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Apuntes 📘
+                  Apuntes
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
+                <Button
+                  type="button"
+                  variant="ghost"
                   size="sm"
                   className="flex-1 hover:bg-gray-100"
                   onClick={() => {
@@ -513,7 +489,7 @@ export function FacebookStyleComposer() {
                   }}
                 >
                   <HelpCircle className="h-4 w-4 mr-2" />
-                  Preguntas ❓
+                  Preguntas
                 </Button>
               </div>
             </div>

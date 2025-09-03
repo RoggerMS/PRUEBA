@@ -22,6 +22,7 @@
 - Handle marketplace product tags provided as arrays or comma-separated strings to prevent runtime errors in product detail and search.
 - Fix undefined composer and redundant close button in feed; simplify quick action labels.
 - Pass textarea value to composer text handler to prevent `match` and `trim` runtime errors.
+- Remove unnecessary emojis from feed composer buttons and make the composer modal responsive on mobile and desktop.
 - Fix duplicate default export in `CategoryFilter` component that caused Next.js build failures.
 - Hide main sidebar on mobile screens so it only appears on desktop.
 - Simplify feed layout by removing the left column, widening the timeline, adding a closable weekly challenge banner, and moving the user level card to the global sidebar.
