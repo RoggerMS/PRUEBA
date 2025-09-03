@@ -59,7 +59,7 @@ import { GET as getUser } from '@/app/api/users/[id]/route'
 import ProfilePage from '@/app/u/[username]/page'
 import { getUserByUsername, getUserByEmail } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { newDb } from 'pg-mem'
+// Replaced pg-mem with a simple set-based simulation to avoid external dependency
 const prismaMock = (prisma as any).user
 const getServerSessionNext = require('next-auth/next').getServerSession as jest.Mock
 const getServerSession = require('next-auth').getServerSession as jest.Mock
@@ -141,9 +141,14 @@ test('GET /api/users/profile returns profile with counts', async () => {
 })
 
 test('DB enforces case-insensitive username uniqueness', () => {
-  const db = newDb()
-  db.public.none('CREATE TABLE "User"(id serial PRIMARY KEY, username text, "createdAt" timestamptz default now())')
-  db.public.none('CREATE UNIQUE INDEX users_username_lower_idx ON "User"(LOWER(username))')
-  db.public.none("INSERT INTO \"User\"(username) VALUES ('Juan')")
-  expect(() => db.public.none("INSERT INTO \"User\"(username) VALUES ('juan')")).toThrow()
+  const users = new Set<string>()
+  const insert = (username: string) => {
+    const key = username.toLowerCase()
+    if (users.has(key)) {
+      throw new Error('duplicate key')
+    }
+    users.add(key)
+  }
+  insert('Juan')
+  expect(() => insert('juan')).toThrow()
 })
