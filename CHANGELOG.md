@@ -36,7 +36,7 @@
 - Add aria-label to interest removal button for better accessibility.
 
 - Remove redundant Feed navigation item from sidebar and mobile menus.
-
+- Return 501 responses from placeholder auth API routes to prevent hanging requests.
 - Provide toast and loading components for events pages and coerce `page` and `limit` query parameters to numbers to avoid module resolution and validation errors.
 - Add missing events components and helpers so the events pages build without module resolution errors.
 - Default cart items to an empty array in `ShoppingCart` to prevent `reduce` on `undefined` errors when the cart is uninitialized.
