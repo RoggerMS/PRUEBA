@@ -6,6 +6,8 @@
 - Add `/api/users/profile` to fetch the authenticated user profile with stats.
 - Enforce case-insensitive username uniqueness at the database level with a `lower(username)` unique index and backfill.
 - Make username lookups case-insensitive and normalize registration to lowercase to prevent profile access failures.
+
+- Display real Crolars balance and recent transactions in sidebar and `/crolars` page using API data.
 - Fix feed interactions: animate and persist fire reactions, expose full post menu actions, and handle comment errors gracefully.
 
 - Allow feed posts without text by relaxing server validation while ensuring content or media is provided.
