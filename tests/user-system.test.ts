@@ -57,7 +57,7 @@ import { POST as register } from '@/app/api/auth/register/route'
 import { GET as getOwnProfile } from '@/app/api/users/profile/route'
 import { GET as getUser } from '@/app/api/users/[id]/route'
 import ProfilePage from '@/app/u/[username]/page'
-import { getUserByUsername } from '@/lib/auth'
+import { getUserByUsername, getUserByEmail } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { newDb } from 'pg-mem'
 const prismaMock = (prisma as any).user
@@ -68,14 +68,21 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
-test('register normalizes username to lowercase', async () => {
+test('register normalizes username and email to lowercase', async () => {
   prismaMock.findUnique.mockResolvedValue(null)
   prismaMock.findFirst.mockResolvedValue(null)
   prismaMock.create.mockResolvedValue({ id: '1', email: 'a@example.com', username: 'rogger', name: 'Rogger', createdAt: new Date() })
 
-  const req = { json: async () => ({ email: 'a@example.com', password: 'secret', username: 'Rogger', name: 'Rogger' }) } as any
+  const req = { json: async () => ({ email: 'A@Example.com', password: 'secret', username: 'Rogger', name: 'Rogger' }) } as any
   await register(req)
-  expect(prismaMock.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ username: 'rogger' }) }))
+  expect(prismaMock.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ username: 'rogger', email: 'a@example.com' }) }))
+})
+
+test('getUserByEmail matches case-insensitively', async () => {
+  prismaMock.findUnique.mockResolvedValue({ id: '1', email: 'a@example.com', username: 'rogger', name: 'Rogger', password: 'hash', emailVerified: null, verified: false, role: 'STUDENT', university: null, career: null, image: null })
+  const user = await getUserByEmail('A@EXAMPLE.com')
+  expect(prismaMock.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { email: 'a@example.com' } }))
+  expect(user?.email).toBe('a@example.com')
 })
 
 test('getUserByUsername matches case-insensitively', async () => {
@@ -130,7 +137,7 @@ test('GET /api/users/profile returns profile with counts', async () => {
   const res = await getOwnProfile()
   const json = await res.json()
   expect(json.isOwnProfile).toBe(true)
-  expect(json.postsCount).toBe(5)
+  expect(json.stats.posts).toBe(5)
 })
 
 test('DB enforces case-insensitive username uniqueness', () => {

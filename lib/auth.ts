@@ -209,8 +209,9 @@ export async function getUserByEmail(email: string): Promise<{
   career: string | null;
 } | null> {
   try {
+    const normalizedEmail = email.toLowerCase();
     return await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
       select: {
         id: true,
         email: true,
@@ -259,12 +260,12 @@ export async function createUser(userData: {
 }): Promise<User | null> {
   try {
     const hashedPassword = await hashPassword(userData.password);
-    
+    const normalizedEmail = userData.email.toLowerCase();
     const normalizedUsername = userData.username.toLowerCase();
 
     return await prisma.user.create({
       data: {
-        email: userData.email,
+        email: normalizedEmail,
         password: hashedPassword,
         name: userData.name,
         username: normalizedUsername,
