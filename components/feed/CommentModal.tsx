@@ -183,9 +183,10 @@ interface CommentModalProps {
   isOpen: boolean;
   onClose: () => void;
   post: FeedPost;
+  onCommentAdded?: () => void;
 }
 
-export default function CommentModal({ isOpen, onClose, post }: CommentModalProps) {
+export default function CommentModal({ isOpen, onClose, post, onCommentAdded }: CommentModalProps) {
   const { data: session } = useSession();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -224,8 +225,15 @@ export default function CommentModal({ isOpen, onClose, post }: CommentModalProp
   };
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !session?.user) return;
-    
+    if (!newComment.trim()) {
+      toast.error('El comentario está vacío');
+      return;
+    }
+    if (!session?.user) {
+      toast.error('Debes iniciar sesión para comentar');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch(`/api/feed/${post.id}/comments`, {
@@ -251,6 +259,7 @@ export default function CommentModal({ isOpen, onClose, post }: CommentModalProp
         setNewComment('');
         setReplyingTo(null);
         toast.success('Comentario publicado');
+        onCommentAdded?.();
       } else {
         throw new Error('Failed to post comment');
       }
@@ -297,7 +306,7 @@ export default function CommentModal({ isOpen, onClose, post }: CommentModalProp
           <DialogTitle className="flex items-center space-x-2">
             <MessageCircleIcon className="h-5 w-5" />
             <span>Comentarios</span>
-            <Badge variant="outline">{post.stats.comments}</Badge>
+            <Badge variant="outline">{comments.length}</Badge>
           </DialogTitle>
         </DialogHeader>
         
