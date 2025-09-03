@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Display real Crolars balance and recent transactions in sidebar and `/crolars` page using API data.
 - Fix feed interactions: animate and persist fire reactions, expose full post menu actions, and handle comment errors gracefully.
 
 - Allow feed posts without text by relaxing server validation while ensuring content or media is provided.
