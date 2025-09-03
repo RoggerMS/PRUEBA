@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { USERNAME_REGEX } from '@/lib/validation'
 
 // GET /api/users/[id] - Get user profile with stats (supports both ID and username)
 export async function GET(
@@ -15,10 +16,18 @@ export async function GET(
 
     // Determine if identifier is a UUID (ID) or username
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)
-    const whereClause = isUUID ? { id: identifier } : { username: identifier }
+    if (!isUUID && !USERNAME_REGEX.test(identifier)) {
+      return NextResponse.json(
+        { error: 'Invalid username' },
+        { status: 400 }
+      )
+    }
+    const whereClause = isUUID
+      ? { id: identifier }
+      : { username: { equals: identifier, mode: 'insensitive' } }
 
     // Get user with stats
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: whereClause,
       select: {
         id: true,

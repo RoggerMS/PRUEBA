@@ -3,11 +3,19 @@ import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { rateLimitRegister } from '@/lib/rate-limit';
+import { USERNAME_REGEX } from '@/lib/validation';
 
 const registerSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  username: z.string().min(3, 'El username debe tener al menos 3 caracteres').max(20, 'El username no puede tener más de 20 caracteres'),
+  username: z
+    .string()
+    .min(3, 'El username debe tener al menos 3 caracteres')
+    .max(20, 'El username no puede tener más de 20 caracteres')
+    .regex(
+      USERNAME_REGEX,
+      'El username solo puede contener letras, números, puntos, guiones y guiones bajos'
+    ),
   name: z.string().min(1, 'El nombre es requerido').max(50, 'El nombre no puede tener más de 50 caracteres'),
 });
 
@@ -24,6 +32,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { email, password, username, name } = registerSchema.parse(body);
+    const normalizedUsername = username.toLowerCase();
 
     // Verificar si el email ya existe
     const existingUserByEmail = await prisma.user.findUnique({
@@ -37,9 +46,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar si el username ya existe
-    const existingUserByUsername = await prisma.user.findUnique({
-      where: { username }
+    // Verificar si el username ya existe (sin distinguir mayúsculas)
+    const existingUserByUsername = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: normalizedUsername,
+          mode: 'insensitive'
+        }
+      }
     });
 
     if (existingUserByUsername) {
@@ -57,7 +71,7 @@ export async function POST(request: NextRequest) {
       data: {
         email,
         password: hashedPassword,
-        username,
+        username: normalizedUsername,
         name,
         image: '/default-avatar.png',
         emailVerified: null, // Se puede implementar verificación por email después

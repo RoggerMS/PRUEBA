@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { EnhancedProfile } from '@/components/user/EnhancedProfile';
 import { prisma } from '@/lib/prisma';
+import { USERNAME_REGEX } from '@/lib/validation';
 
 interface ProfilePageProps {
   params: {
@@ -22,8 +23,20 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { username: params.username },
+    if (!USERNAME_REGEX.test(params.username)) {
+      return {
+        title: 'Usuario no encontrado - CRUNEVO',
+        description: 'El perfil que buscas no existe.'
+      };
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: params.username,
+          mode: 'insensitive'
+        }
+      },
       select: {
         name: true,
         username: true,
@@ -53,6 +66,9 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
         title: `${user.name} (@${user.username})`,
         description: user.bio || `Perfil de ${user.name} en CRUNEVO`,
         images: user.image ? [user.image] : []
+      },
+      alternates: {
+        canonical: `/u/${user.username}`
       }
     };
   } catch (error) {
@@ -77,12 +93,21 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     );
   }
 
+  if (!USERNAME_REGEX.test(params.username)) {
+    notFound();
+  }
+
   try {
     const session = await getServerSession(authOptions);
-    
-    // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { username: params.username },
+
+    // Check if user exists (case-insensitive)
+    const user = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: params.username,
+          mode: 'insensitive'
+        }
+      },
       select: { id: true, username: true }
     });
 
@@ -90,23 +115,31 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       notFound();
     }
 
+    // Redirect to canonical username if casing differs
+    if (user.username !== params.username) {
+      redirect(`/u/${user.username}`);
+    }
+
     // Check if this is the user's own profile
     const isOwnProfile = session?.user?.id === user.id;
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <EnhancedProfile 
-          username={params.username} 
+        <EnhancedProfile
+          username={user.username}
           isOwnProfile={isOwnProfile}
         />
       </div>
     );
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.digest === 'NEXT_REDIRECT' || error?.digest === 'NEXT_NOT_FOUND') {
+      throw error;
+    }
     // Fallback if database is not available
     return (
       <div className="min-h-screen bg-gray-50">
-        <EnhancedProfile 
-          username={params.username} 
+        <EnhancedProfile
+          username={params.username}
           isOwnProfile={false}
         />
       </div>

@@ -234,8 +234,13 @@ export async function getUserByEmail(email: string): Promise<{
 // Helper function to get user by username
 export async function getUserByUsername(username: string): Promise<User | null> {
   try {
-    return await prisma.user.findUnique({
-      where: { username }
+    return await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: username,
+          mode: 'insensitive'
+        }
+      }
     });
   } catch (error) {
     console.error('Error getting user by username:', error);
@@ -255,12 +260,14 @@ export async function createUser(userData: {
   try {
     const hashedPassword = await hashPassword(userData.password);
     
+    const normalizedUsername = userData.username.toLowerCase();
+
     return await prisma.user.create({
       data: {
         email: userData.email,
         password: hashedPassword,
         name: userData.name,
-        username: userData.username,
+        username: normalizedUsername,
         image: '/default-avatar.png',
         birthDate: userData.dateOfBirth,
         gender: userData.gender,
