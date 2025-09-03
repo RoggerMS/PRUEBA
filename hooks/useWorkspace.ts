@@ -27,8 +27,8 @@ export interface WorkspaceBlockData {
   title: string;
   x: number;
   y: number;
-  width: number;
-  height: number;
+  w: number;
+  h: number;
   zIndex: number;
   completed: boolean;
   isPublic: boolean;
@@ -234,8 +234,8 @@ export function useWorkspace(): UseWorkspaceReturn {
           boardId,
           x: data.x ?? Math.random() * 500,
           y: data.y ?? Math.random() * 500,
-          width: 300,
-          height: 200,
+          w: 300,
+          h: 200,
         }),
       });
       

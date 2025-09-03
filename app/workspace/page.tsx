@@ -97,21 +97,26 @@ export default function WorkspacePage() {
   };
 
   // Handle block creation
-  const handleCreateBlock = async (blockData: any) => {
+  const handleCreateBlock = async (
+    type: 'DOCS' | 'KANBAN' | 'FRASES',
+    title: string,
+  ) => {
     if (!currentBoard) return;
-    
+
     try {
-      // Generate random position
+      // Generate random position for the new block
       const position = {
         x: Math.random() * 400 + 100,
-        y: Math.random() * 300 + 100
+        y: Math.random() * 300 + 100,
       };
-      
+
       await createBlock(currentBoard.id, {
-        ...blockData,
-        position,
+        type,
+        title,
+        x: position.x,
+        y: position.y,
       });
-      
+
       setShowCreateModal(false);
     } catch (error) {
       // Error handled by hook
