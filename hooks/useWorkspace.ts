@@ -399,12 +399,21 @@ export function useWorkspace(): UseWorkspaceReturn {
 
   const loadStats = useCallback(async () => {
     if (!session?.user?.id) return;
-    
+
     try {
       const response = await fetcher('/api/workspace/stats');
       setStats(response.stats);
     } catch (err: any) {
       console.error('Error loading workspace stats:', err);
+      // Provide a safe fallback so the workspace doesn't remain in a
+      // perpetual loading state when the stats endpoint fails.
+      setStats({
+        boardsCount: 0,
+        blocksCount: 0,
+        docsCount: 0,
+        kanbanCount: 0,
+        frasesCount: 0,
+      });
     }
   }, [session?.user?.id]);
 
