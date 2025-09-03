@@ -5,17 +5,27 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 // Schema for creating a new post
-const createPostSchema = z.object({
-  content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),
-  type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'POLL', 'QUESTION', 'NOTE']).default('TEXT'),
-  imageUrl: z.string().url().optional(),
-  videoUrl: z.string().url().optional(),
-  tags: z.string().optional(),
-  visibility: z.enum(['PUBLIC', 'FOLLOWERS', 'PRIVATE']).default('PUBLIC'),
-  hashtags: z.array(z.string()).optional(),
-  mentions: z.array(z.string()).optional(),
-  mediaIds: z.array(z.string()).optional()
-})
+const createPostSchema = z
+  .object({
+    content: z.string().max(2000, 'Content too long').optional(),
+    type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'POLL', 'QUESTION', 'NOTE']).default('TEXT'),
+    imageUrl: z.string().url().optional(),
+    videoUrl: z.string().url().optional(),
+    tags: z.string().optional(),
+    visibility: z.enum(['PUBLIC', 'FOLLOWERS', 'PRIVATE']).default('PUBLIC'),
+    hashtags: z.array(z.string()).optional(),
+    mentions: z.array(z.string()).optional(),
+    mediaIds: z.array(z.string()).optional()
+  })
+  .refine(
+    (data) =>
+      (data.content && data.content.trim().length > 0) ||
+      (data.mediaIds && data.mediaIds.length > 0),
+    {
+      message: 'Content or media is required',
+      path: ['content']
+    }
+  )
 
 // Schema for feed query parameters
 const feedQuerySchema = z.object({

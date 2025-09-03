@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Allow feed posts without text by relaxing server validation while ensuring content or media is provided.
+- Use logged-in user info for optimistic feed updates and assign a default avatar during registration for consistent profiles.
 - Add workspace stats API and align stats hook to avoid HTML error when loading pizarra statistics.
 - Gracefully fall back to zeroed workspace stats when the stats endpoint fails so the workspace page doesn't stay loading.
 - Add Dockerfile and documentation for running PostgreSQL locally with Docker.

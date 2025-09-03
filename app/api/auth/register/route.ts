@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         username,
         name,
+        image: '/default-avatar.png',
         emailVerified: null, // Se puede implementar verificación por email después
         crolars: 1000, // Welcome bonus
         level: 1,

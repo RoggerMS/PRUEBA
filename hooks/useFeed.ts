@@ -1,6 +1,7 @@
 'use client';
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import {
   FeedPost,
   FeedKind,
@@ -81,6 +82,7 @@ export function useFeed(params: FeedParams = {}) {
 // Hook for creating posts
 export function useCreatePost() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
 
   return useMutation({
     mutationFn: async (data: CreatePostData) => {
@@ -130,11 +132,11 @@ export function useCreatePost() {
         id: `temp-${Date.now()}`,
         kind: newPost.kind,
         author: {
-          id: 'current-user',
-          name: 'Tú',
-          username: 'you',
-          avatar: '/default-avatar.png',
-          verified: false
+          id: session?.user?.id || 'current-user',
+          name: session?.user?.name || 'Tú',
+          username: session?.user?.username || 'you',
+          avatar: session?.user?.image || '/default-avatar.png',
+          verified: session?.user?.verified ?? false
         },
         text: newPost.text,
         media: [],

@@ -261,6 +261,7 @@ export async function createUser(userData: {
         password: hashedPassword,
         name: userData.name,
         username: userData.username,
+        image: '/default-avatar.png',
         birthDate: userData.dateOfBirth,
         gender: userData.gender,
         crolars: 1000, // Welcome bonus
