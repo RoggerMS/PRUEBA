@@ -267,8 +267,74 @@ export default function WorkspacePage() {
             <TabsTrigger value="settings">Configuración</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="canvas" className="mt-0">
-            {/* Canvas content will be here */}
+          <TabsContent value="canvas" className="mt-0 h-full">
+            <div className="relative h-[calc(100vh-200px)] overflow-hidden bg-gray-100">
+              {/* Canvas Container */}
+              <div
+                ref={canvasRef}
+                className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+                style={{
+                  transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
+                  transformOrigin: 'center',
+                }}
+              >
+                {/* Grid Background */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    width: CANVAS_SIZE,
+                    height: CANVAS_SIZE,
+                    left: -CANVAS_SIZE / 2,
+                    top: -CANVAS_SIZE / 2,
+                    backgroundImage: `
+                      linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+                      linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
+                    `,
+                    backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+                  }}
+                />
+                
+                {/* Render Blocks */}
+                {currentBoard?.blocks.map((block) => (
+                  <WorkspaceBlock
+                    key={block.id}
+                    block={block}
+                    isEditMode={isEditMode}
+                    onUpdate={(updatedBlock) => {
+                      // Block updates are handled by WorkspaceBlock component
+                    }}
+                  />
+                ))}
+              </div>
+              
+              {/* Canvas Controls */}
+              <div className="absolute top-4 right-4 flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setZoom(prev => Math.min(MAX_ZOOM, prev * 1.2))}
+                  disabled={zoom >= MAX_ZOOM}
+                >
+                  +
+                </Button>
+                <div className="text-xs text-center px-2 py-1 bg-white rounded border">
+                  {Math.round(zoom * 100)}%
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setZoom(prev => Math.max(MIN_ZOOM, prev * 0.8))}
+                  disabled={zoom <= MIN_ZOOM}
+                >
+                  -
+                </Button>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="stats" className="mt-4">

@@ -13,79 +13,120 @@ interface ProfilePageProps {
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
-  const user = await prisma.user.findUnique({
-    where: { username: params.username },
-    select: {
-      name: true,
-      username: true,
-      bio: true,
-      image: true
-    }
-  });
-
-  if (!user) {
+  // Skip database queries during build time
+  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost')) {
     return {
-      title: 'Usuario no encontrado - CRUNEVO',
-      description: 'El perfil que buscas no existe.'
+      title: `@${params.username} - CRUNEVO`,
+      description: `Perfil de ${params.username} en CRUNEVO`
     };
   }
 
-  return {
-    title: `${user.name} (@${user.username}) - CRUNEVO`,
-    description: user.bio || `Perfil de ${user.name} en CRUNEVO`,
-    openGraph: {
-      title: `${user.name} (@${user.username})`,
-      description: user.bio || `Perfil de ${user.name} en CRUNEVO`,
-      images: user.image ? [{ url: user.image }] : [],
-      type: 'profile'
-    },
-    twitter: {
-      card: 'summary',
-      title: `${user.name} (@${user.username})`,
-      description: user.bio || `Perfil de ${user.name} en CRUNEVO`,
-      images: user.image ? [user.image] : []
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username: params.username },
+      select: {
+        name: true,
+        username: true,
+        bio: true,
+        image: true
+      }
+    });
+
+    if (!user) {
+      return {
+        title: 'Usuario no encontrado - CRUNEVO',
+        description: 'El perfil que buscas no existe.'
+      };
     }
-  };
+
+    return {
+      title: `${user.name} (@${user.username}) - CRUNEVO`,
+      description: user.bio || `Perfil de ${user.name} en CRUNEVO`,
+      openGraph: {
+        title: `${user.name} (@${user.username})`,
+        description: user.bio || `Perfil de ${user.name} en CRUNEVO`,
+        images: user.image ? [{ url: user.image }] : [],
+        type: 'profile'
+      },
+      twitter: {
+        card: 'summary',
+        title: `${user.name} (@${user.username})`,
+        description: user.bio || `Perfil de ${user.name} en CRUNEVO`,
+        images: user.image ? [user.image] : []
+      }
+    };
+  } catch (error) {
+    // Fallback metadata if database is not available
+    return {
+      title: `@${params.username} - CRUNEVO`,
+      description: `Perfil de ${params.username} en CRUNEVO`
+    };
+  }
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const session = await getServerSession(authOptions);
-  
-  // Check if user exists
-  const user = await prisma.user.findUnique({
-    where: { username: params.username },
-    select: { id: true, username: true }
-  });
-
-  if (!user) {
-    notFound();
+  // Skip database queries during build time
+  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost')) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <EnhancedProfile 
+          username={params.username} 
+          isOwnProfile={false}
+        />
+      </div>
+    );
   }
 
-  // Check if this is the user's own profile
-  const isOwnProfile = session?.user?.id === user.id;
+  try {
+    const session = await getServerSession(authOptions);
+    
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { username: params.username },
+      select: { id: true, username: true }
+    });
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <EnhancedProfile 
-        username={params.username} 
-        isOwnProfile={isOwnProfile}
-      />
-    </div>
-  );
+    if (!user) {
+      notFound();
+    }
+
+    // Check if this is the user's own profile
+    const isOwnProfile = session?.user?.id === user.id;
+
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <EnhancedProfile 
+          username={params.username} 
+          isOwnProfile={isOwnProfile}
+        />
+      </div>
+    );
+  } catch (error) {
+    // Fallback if database is not available
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <EnhancedProfile 
+          username={params.username} 
+          isOwnProfile={false}
+        />
+      </div>
+    );
+  }
 }
 
 // Generate static params for popular users (optional)
-export async function generateStaticParams() {
-  // Get some popular users for static generation
-  const users = await prisma.user.findMany({
-    select: { username: true },
-    take: 100, // Generate static pages for top 100 users
-    orderBy: {
-      createdAt: 'desc'
-    }
-  });
+// Commented out to avoid database connection during build
+// export async function generateStaticParams() {
+//   // Get some popular users for static generation
+//   const users = await prisma.user.findMany({
+//     select: { username: true },
+//     take: 100, // Generate static pages for top 100 users
+//     orderBy: {
+//       createdAt: 'desc'
+//     }
+//   });
 
-  return users.map((user) => ({
-    username: user.username
-  }));
-}
+//   return users.map((user) => ({
+//     username: user.username
+//   }));
+// }

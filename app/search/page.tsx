@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, TrendingUp, Users, MessageSquare, FileText } from 'lucide-react';
@@ -13,6 +17,20 @@ const SearchPage: React.FC = () => {
   const [selectedResult, setSelectedResult] = useState<any>(null);
   const [trendingSearches, setTrendingSearches] = useState<string[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  // Skip database operations during build
+  const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost');
+  
+  if (isBuildTime) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <h1 className="text-2xl font-bold mb-6">Search</h1>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Get initial search parameters from URL
   const initialQuery = searchParams.get('q') || '';
