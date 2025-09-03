@@ -19,8 +19,13 @@ export default async function handler(
         const session = await getServerSession(req, res, authOptions);
         const currentUserId = session?.user?.id;
 
-        const user = await prisma.user.findUnique({
-          where: { username },
+        const user = await prisma.user.findFirst({
+          where: {
+            username: {
+              equals: username as string,
+              mode: 'insensitive'
+            }
+          },
           include: {
             userVerification: true,
             userAnalytics: true,

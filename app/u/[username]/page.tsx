@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { EnhancedProfile } from '@/components/user/EnhancedProfile';
@@ -22,8 +22,13 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { username: params.username },
+    const user = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: params.username,
+          mode: 'insensitive'
+        }
+      },
       select: {
         name: true,
         username: true,
@@ -79,10 +84,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   try {
     const session = await getServerSession(authOptions);
-    
-    // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { username: params.username },
+
+    // Check if user exists (case-insensitive)
+    const user = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: params.username,
+          mode: 'insensitive'
+        }
+      },
       select: { id: true, username: true }
     });
 
@@ -90,13 +100,18 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       notFound();
     }
 
+    // Redirect to canonical username if casing differs
+    if (user.username !== params.username) {
+      redirect(`/u/${user.username}`);
+    }
+
     // Check if this is the user's own profile
     const isOwnProfile = session?.user?.id === user.id;
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <EnhancedProfile 
-          username={params.username} 
+        <EnhancedProfile
+          username={user.username}
           isOwnProfile={isOwnProfile}
         />
       </div>

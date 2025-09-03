@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { email, password, username, name } = registerSchema.parse(body);
+    const normalizedUsername = username.toLowerCase();
 
     // Verificar si el email ya existe
     const existingUserByEmail = await prisma.user.findUnique({
@@ -37,9 +38,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar si el username ya existe
-    const existingUserByUsername = await prisma.user.findUnique({
-      where: { username }
+    // Verificar si el username ya existe (sin distinguir mayúsculas)
+    const existingUserByUsername = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: normalizedUsername,
+          mode: 'insensitive'
+        }
+      }
     });
 
     if (existingUserByUsername) {
@@ -57,7 +63,7 @@ export async function POST(request: NextRequest) {
       data: {
         email,
         password: hashedPassword,
-        username,
+        username: normalizedUsername,
         name,
         image: '/default-avatar.png',
         emailVerified: null, // Se puede implementar verificación por email después

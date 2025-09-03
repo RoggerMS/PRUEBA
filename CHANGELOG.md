@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Make username lookups case-insensitive and normalize registration to lowercase to prevent profile access failures.
 - Fix feed interactions: animate and persist fire reactions, expose full post menu actions, and handle comment errors gracefully.
 
 - Allow feed posts without text by relaxing server validation while ensuring content or media is provided.
