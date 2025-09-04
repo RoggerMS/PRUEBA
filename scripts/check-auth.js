@@ -6,7 +6,7 @@
  * Verifica:
  * - GET /api/auth/session (200)
  * - /feed sin sesión → redirección a /auth/login
- * - /u/admin (200) y lista posts públicos
+ * - /demo (200) y lista posts públicos
  * - Protección de rutas que requieren autenticación
  */
 
@@ -151,10 +151,10 @@ class AuthChecker {
     this.log('Checking public profile access...');
     
     try {
-      const response = await this.makeRequest('/u/admin');
+      const response = await this.makeRequest('/demo');
       
       if (response.statusCode === 200) {
-        this.log('Public profile /u/admin accessible (200)', 'success');
+        this.log('Public profile /demo accessible (200)', 'success');
         
         // Check if response contains user info and public posts
         const body = response.body.toLowerCase();
@@ -164,7 +164,7 @@ class AuthChecker {
           this.log('Profile page might not be rendering correctly', 'warning');
         }
       } else if (response.statusCode === 404) {
-        this.log('Profile /u/admin not found (404) - user might not exist', 'warning');
+        this.log('Profile /demo not found (404) - user might not exist', 'warning');
       } else {
         this.log(`Public profile returned ${response.statusCode}`, 'error');
         this.errors.push(`Public profile error: ${response.statusCode}`);

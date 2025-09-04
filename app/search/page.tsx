@@ -66,7 +66,7 @@ const SearchPage: React.FC = () => {
     // Navigate based on result type
     if (result.username) {
       // User result
-      router.push(`/u/${result.username}`);
+      router.push(`/${result.username}`);
     } else if (result.content) {
       // Post result
       router.push(`/post/${result.id}`);

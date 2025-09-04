@@ -160,20 +160,34 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
                 </div>
 
                 {mode === 'view' && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      if (onEdit) {
-                        onEdit()
-                      } else {
-                        router.push('/settings')
-                      }
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    Editar perfil
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (onViewPublic) {
+                          onViewPublic()
+                        } else {
+                          router.push(`/${user.username}`)
+                        }
+                      }}
+                    >
+                      Ver público
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (onEdit) {
+                          onEdit()
+                        } else {
+                          router.push('/settings')
+                        }
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                      Editar perfil
+                    </Button>
+                  </div>
                 )}
               </div>
 

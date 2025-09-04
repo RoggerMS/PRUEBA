@@ -8,7 +8,7 @@ export function UserMiniCard({
   const pct = Math.min(100, Math.round((user.xp / user.xpToNext) * 100));
   return (
     <Link
-      href={`/u/${user.username}`}
+      href={`/${user.username}`}
       className="block rounded-lg border bg-card text-card-foreground shadow-sm p-4"
     >
       <div className="text-sm font-semibold">{user.name}</div>

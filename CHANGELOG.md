@@ -109,7 +109,7 @@
 - Restore inline profile editing on `/perfil` without redirecting to settings.
 - Replace example profile page with API-driven version and align editor with `/settings`.
 - Remove quick configuration card from profile page and centralize settings under `/settings`.
-- Reintroduce achievements tab and dedicated pages at `/perfil/logros` and `/u/[username]/logros`.
+- Reintroduce achievements tab and dedicated pages at `/perfil/logros` and `/[username]/logros`.
 - Correct camera icon alignment on profile avatar and banner.
 - Replace missing Fire icon with FlameIcon and use proper NotificationToast import to resolve development runtime errors.
 - Correct cantuta data import path to resolve build failures.

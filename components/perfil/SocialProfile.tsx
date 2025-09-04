@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ProfileHeader } from './ProfileHeader';
 
@@ -34,6 +35,7 @@ interface SocialProfileProps {
 
 export function SocialProfile({ user, isOwnProfile = false }: SocialProfileProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [showEditor, setShowEditor] = useState(false);
   const [profileData, setProfileData] = useState(user);
   const [bannerImage, setBannerImage] = useState(user.banner || '');
@@ -125,6 +127,7 @@ export function SocialProfile({ user, isOwnProfile = false }: SocialProfileProps
         }}
         mode={isOwnProfile ? 'view' : 'public'}
         onEdit={() => setShowEditor(true)}
+        onViewPublic={() => router.push(`/${profileData.username}`)}
         onBannerChange={(newBanner) => setBannerImage(newBanner)}
         onAvatarChange={(newAvatar) => setProfileImage(newAvatar)}
       />

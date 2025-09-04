@@ -45,7 +45,6 @@ const PUBLIC_ROUTES = [
   '/auth/register',
   '/auth/signup',
   '/auth/forgot-password',
-  '/u/',
   '/post/',
   '/notes/',
   '/feed/public',

@@ -6,7 +6,7 @@ Este proyecto utiliza **NextAuth** y middleware para proteger rutas. Las rutas p
 
 - `/`
 - `/auth/*`
-- `/u/[username]`
+- `/[username]`
 - `/post/[id]`
 - `/notes/[id]`
 - `/feed/public`

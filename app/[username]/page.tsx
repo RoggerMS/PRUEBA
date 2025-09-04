@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
         images: user.image ? [user.image] : []
       },
       alternates: {
-        canonical: `/u/${user.username}`
+        canonical: `/${user.username}`
       }
     };
   } catch (error) {
@@ -117,7 +117,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
     // Redirect to canonical username if casing differs
     if (user.username !== params.username) {
-      redirect(`/u/${user.username}`);
+      redirect(`/${user.username}`);
     }
 
     // Check if this is the user's own profile
