@@ -204,7 +204,7 @@ export function FollowersModal({ userId, type, isOpen, onClose }: FollowersModal
               
               return (
                 <div key={user.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                  <Avatar className="w-12 h-12 cursor-pointer" onClick={() => window.location.href = `/u/${user.username}`}>
+                  <Avatar className="w-12 h-12 cursor-pointer" onClick={() => window.location.href = `/${user.username}`}> 
                     <AvatarImage src={user.image} alt={user.name} />
                     <AvatarFallback>
                       {user.name?.charAt(0)?.toUpperCase()}
@@ -215,7 +215,7 @@ export function FollowersModal({ userId, type, isOpen, onClose }: FollowersModal
                     <div className="flex items-center gap-2">
                       <h3 
                         className="font-medium text-gray-900 truncate cursor-pointer hover:underline"
-                        onClick={() => window.location.href = `/u/${user.username}`}
+                        onClick={() => window.location.href = `/${user.username}`}
                       >
                         {user.name}
                       </h3>
