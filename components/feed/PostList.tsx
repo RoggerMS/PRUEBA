@@ -28,6 +28,7 @@ import { FeedPost } from '@/types/feed';
 import { toast } from 'sonner';
 import CommentModal from './CommentModal';
 import { MediaViewer } from './MediaViewer';
+import { useSession } from 'next-auth/react';
 
 // Helper function to format time ago
 const formatTimeAgo = (dateString: string) => {
@@ -45,6 +46,7 @@ function PostCard({ post }: { post: FeedPost }) {
   const followUser = useFollowUser();
   const reportPost = useReportPost();
   const bookmarkPost = useBookmarkPost();
+  const { data: session } = useSession();
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [showMediaViewer, setShowMediaViewer] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
@@ -176,15 +178,17 @@ function PostCard({ post }: { post: FeedPost }) {
             @{post.author.username} • {formatTimeAgo(post.createdAt)}
           </p>
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleFollow}
-          className="mr-2"
-          disabled={followUser.isPending}
-        >
-          Seguir
-        </Button>
+        {session?.user?.id !== post.author.id && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleFollow}
+            className="mr-2"
+            disabled={followUser.isPending}
+          >
+            Seguir
+          </Button>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm">

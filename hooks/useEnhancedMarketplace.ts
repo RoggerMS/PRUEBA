@@ -364,6 +364,11 @@ export function useEnhancedMarketplace() {
       return false;
     }
 
+    if (sellerId === session.user.id) {
+      toast.error('No puedes seguirte a ti mismo');
+      return false;
+    }
+
     try {
       const response = await fetch(`/api/marketplace/sellers/${sellerId}/follow`, {
         method: 'POST',
