@@ -8,6 +8,7 @@
 - Use const declarations for like and follow counts in API routes and ensure `useEffect` runs consistently on the search page.
 - Show empty state with upload call-to-action on notes page and fix upload modal handling.
 - Allow creating workspace blocks in development and enable canvas panning by fixing block creation handler, updating block rendering with zoom, and ignoring pointer events on the grid.
+- Enable direct profile editing from `/<username>` with a "Vista pública" toggle and option to exit public view.
 - Normalize usernames to lowercase on write, allow case-insensitive lookups, and redirect to the canonical username.
 - Normalize emails to lowercase during registration and login to ensure account recognition after signing out.
 - Add `/api/users/profile` to fetch the authenticated user profile with stats.

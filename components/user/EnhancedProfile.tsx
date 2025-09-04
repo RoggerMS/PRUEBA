@@ -74,6 +74,11 @@ export function EnhancedProfile({ username, isOwnProfile = false, mode = 'public
   const [showFollowers, setShowFollowers] = useState(false);
   const [followersType, setFollowersType] = useState<'followers' | 'following'>('followers');
   const [activeTab, setActiveTab] = useState('posts');
+  const [viewMode, setViewMode] = useState<'public' | 'edit'>(mode);
+
+  useEffect(() => {
+    setViewMode(mode);
+  }, [mode]);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -278,19 +283,28 @@ export function EnhancedProfile({ username, isOwnProfile = false, mode = 'public
             {/* Action Buttons */}
             <div className="flex gap-2">
               {isOwnProfile ? (
-                mode === 'public' ? (
-                  <Button onClick={() => (window.location.href = `/${profile.username}/edit`)} aria-label="Editar perfil">
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Editar perfil
-                  </Button>
+                viewMode === 'edit' ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setViewMode('public')}
+                      aria-label="Vista pública"
+                    >
+                      Vista pública
+                    </Button>
+                    <Button onClick={() => setShowEditor(true)} aria-label="Editar perfil">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Editar perfil
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Button
                       variant="outline"
-                      onClick={() => (window.location.href = `/${profile.username}`)}
-                      aria-label="Ver público"
+                      onClick={() => setViewMode('edit')}
+                      aria-label="Salir de vista pública"
                     >
-                      Ver público
+                      Salir de vista pública
                     </Button>
                     <Button onClick={() => setShowEditor(true)} aria-label="Editar perfil">
                       <Edit3 className="w-4 h-4 mr-2" />
