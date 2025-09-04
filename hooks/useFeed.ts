@@ -305,17 +305,22 @@ export function useFireReaction() {
 export function useFollowUser() {
   const queryClient = useQueryClient();
   const { createNotification } = useNotifications();
+  const { data: session } = useSession();
 
   return useMutation({
     mutationFn: async ({ userId, action }: { userId: string; action: 'follow' | 'unfollow' }) => {
+      if (userId === session?.user?.id) {
+        throw new Error('No puedes seguirte a ti mismo');
+      }
+
       const response = await fetch(`/api/users/${userId}/follow`, {
         method: action === 'follow' ? 'POST' : 'DELETE',
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to ${action} user`);
       }
-      
+
       return response.json();
     },
     onSuccess: (data, { userId, action }) => {
@@ -336,7 +341,10 @@ export function useFollowUser() {
       }
     },
     onError: (error, { action }) => {
-      toast.error(`Error al ${action === 'follow' ? 'seguir' : 'dejar de seguir'} usuario`);
+      const message = error instanceof Error
+        ? error.message
+        : `Error al ${action === 'follow' ? 'seguir' : 'dejar de seguir'} usuario`;
+      toast.error(message);
     }
   });
 }

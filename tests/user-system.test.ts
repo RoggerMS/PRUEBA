@@ -20,6 +20,12 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       create: jest.fn()
+    },
+    follow: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn()
     }
   }
 }))
@@ -56,6 +62,7 @@ jest.mock('@/lib/auth', () => ({
 import { POST as register } from '@/app/api/auth/register/route'
 import { GET as getOwnProfile } from '@/app/api/users/profile/route'
 import { GET as getUser } from '@/app/api/users/[id]/route'
+import { POST as followUser } from '@/app/api/users/[id]/follow/route'
 import ProfilePage from '@/app/u/[username]/page'
 import { getUserByUsername, getUserByEmail } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -151,4 +158,13 @@ test('DB enforces case-insensitive username uniqueness', () => {
   }
   insert('Juan')
   expect(() => insert('juan')).toThrow()
+})
+
+test('POST /api/users/[id]/follow prevents following yourself', async () => {
+  const userId = 'self';
+  getServerSessionNext.mockResolvedValueOnce({ user: { id: userId } });
+  const res = await followUser({} as any, { params: { id: userId } });
+  const json = await res.json();
+  expect(res.status).toBe(400);
+  expect(json.error).toBe('Cannot follow yourself');
 })
