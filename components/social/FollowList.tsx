@@ -85,7 +85,7 @@ export function FollowList({
   const currentList = activeTab === 'followers' ? followers : following;
 
   const filteredAndSortedUsers = useMemo(() => {
-    let filtered = currentList.filter(user => {
+    const filtered = currentList.filter(user => {
       // Search filter
       const matchesSearch = 
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
