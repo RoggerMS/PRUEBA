@@ -60,9 +60,9 @@ interface UserProfile {
   website?: string;
   joinDate: string;
   isVerified?: boolean;
-  followers: number;
-  following: number;
-  posts: number;
+  followers?: number;
+  following?: number;
+  posts?: number;
   isFollowing?: boolean;
   socialLinks?: {
     twitter?: string;
@@ -286,19 +286,19 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
                   className="text-center hover:text-blue-500 transition-colors"
                 >
                   <div className="font-bold text-gray-900 dark:text-gray-100">
-                    {userProfile.followers.toLocaleString()}
+                    {(userProfile.followers ?? 0).toLocaleString()}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Seguidores</div>
                 </button>
                 <button className="text-center hover:text-blue-500 transition-colors">
                   <div className="font-bold text-gray-900 dark:text-gray-100">
-                    {userProfile.following.toLocaleString()}
+                    {(userProfile.following ?? 0).toLocaleString()}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Siguiendo</div>
                 </button>
                 <div className="text-center">
                   <div className="font-bold text-gray-900 dark:text-gray-100">
-                    {userProfile.posts.toLocaleString()}
+                    {(userProfile.posts ?? 0).toLocaleString()}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">Posts</div>
                 </div>

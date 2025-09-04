@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Evita errores de `toLocaleString` en `ProfileView` cuando los contadores de seguidores, seguidos o publicaciones no están definidos.
 - Prevent users from following themselves in feed and marketplace interfaces.
 - Resolve multiple React Hook dependency warnings in profile, follower, workspace, notification, and toast components to ensure consistent state updates.
 - Replace pg-mem dependency in tests with an in-memory Set to simulate case-insensitive username uniqueness.
