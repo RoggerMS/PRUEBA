@@ -2,9 +2,9 @@ import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { EnhancedProfile } from '@/components/user/EnhancedProfile';
-import { prisma } from '@/lib/prisma';
+import { ProfileView } from '@/components/profile/ProfileView';
 import { USERNAME_REGEX } from '@/lib/validation';
+import { getUserByUsername, isReservedUsername } from '@/lib/users';
 
 interface ProfilePageProps {
   params: {
@@ -23,27 +23,14 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   }
 
   try {
-    if (!USERNAME_REGEX.test(params.username)) {
+    if (!USERNAME_REGEX.test(params.username) || isReservedUsername(params.username)) {
       return {
         title: 'Usuario no encontrado - CRUNEVO',
         description: 'El perfil que buscas no existe.'
       };
     }
 
-    const user = await prisma.user.findFirst({
-      where: {
-        username: {
-          equals: params.username,
-          mode: 'insensitive'
-        }
-      },
-      select: {
-        name: true,
-        username: true,
-        bio: true,
-        image: true
-      }
-    });
+    const user = await getUserByUsername(params.username);
 
     if (!user) {
       return {
@@ -72,7 +59,6 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
       }
     };
   } catch (error) {
-    // Fallback metadata if database is not available
     return {
       title: `@${params.username} - CRUNEVO`,
       description: `Perfil de ${params.username} en CRUNEVO`
@@ -81,70 +67,32 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  // Skip database queries during build time
-  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost')) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <EnhancedProfile 
-          username={params.username} 
-          isOwnProfile={false}
-        />
-      </div>
-    );
-  }
-
-  if (!USERNAME_REGEX.test(params.username)) {
+  if (isReservedUsername(params.username) || !USERNAME_REGEX.test(params.username)) {
     notFound();
   }
 
-  try {
-    const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions);
+  const user = await getUserByUsername(params.username);
 
-    // Check if user exists (case-insensitive)
-    const user = await prisma.user.findFirst({
-      where: {
-        username: {
-          equals: params.username,
-          mode: 'insensitive'
-        }
-      },
-      select: { id: true, username: true }
-    });
-
-    if (!user) {
-      notFound();
-    }
-
-    // Redirect to canonical username if casing differs
-    if (user.username !== params.username) {
-      redirect(`/${user.username}`);
-    }
-
-    // Check if this is the user's own profile
-    const isOwnProfile = session?.user?.id === user.id;
-
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <EnhancedProfile
-          username={user.username}
-          isOwnProfile={isOwnProfile}
-        />
-      </div>
-    );
-  } catch (error: any) {
-    if (error?.digest === 'NEXT_REDIRECT' || error?.digest === 'NEXT_NOT_FOUND') {
-      throw error;
-    }
-    // Fallback if database is not available
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <EnhancedProfile
-          username={params.username}
-          isOwnProfile={false}
-        />
-      </div>
-    );
+  if (!user) {
+    notFound();
   }
+
+  if (user.username !== params.username) {
+    redirect(`/${user.username}`);
+  }
+
+  const isOwnProfile = session?.user?.id === user.id;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <ProfileView
+        username={user.username}
+        isOwnProfile={isOwnProfile}
+        mode="public"
+      />
+    </div>
+  );
 }
 
 // Generate static params for popular users (optional)

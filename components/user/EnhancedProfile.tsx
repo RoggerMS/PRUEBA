@@ -19,7 +19,6 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  Settings,
   UserPlus,
   UserMinus,
   Mail,
@@ -63,9 +62,10 @@ interface UserProfile {
 interface EnhancedProfileProps {
   username?: string;
   isOwnProfile?: boolean;
+  mode?: 'public' | 'edit';
 }
 
-export function EnhancedProfile({ username, isOwnProfile = false }: EnhancedProfileProps) {
+export function EnhancedProfile({ username, isOwnProfile = false, mode = 'public' }: EnhancedProfileProps) {
   const { data: session } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -278,23 +278,37 @@ export function EnhancedProfile({ username, isOwnProfile = false }: EnhancedProf
             {/* Action Buttons */}
             <div className="flex gap-2">
               {isOwnProfile ? (
-                <>
-                  <Button onClick={() => setShowEditor(true)}>
+                mode === 'public' ? (
+                  <Button onClick={() => (window.location.href = `/${profile.username}/edit`)} aria-label="Editar perfil">
                     <Edit3 className="w-4 h-4 mr-2" />
                     Editar perfil
                   </Button>
-                  <Button variant="outline" onClick={() => window.location.href = '/settings'}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Configuración
-                  </Button>
-                </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => (window.location.href = `/${profile.username}`)}
+                      aria-label="Ver público"
+                    >
+                      Ver público
+                    </Button>
+                    <Button onClick={() => setShowEditor(true)} aria-label="Editar perfil">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Editar perfil
+                    </Button>
+                  </>
+                )
               ) : (
                 <>
-                  <Button onClick={handleFollow} variant={isFollowing ? "outline" : "default"}>
+                  <Button onClick={handleFollow} variant={isFollowing ? 'outline' : 'default'}>
                     {isFollowing ? (
-                      <><UserMinus className="w-4 h-4 mr-2" />Dejar de seguir</>
+                      <>
+                        <UserMinus className="w-4 h-4 mr-2" />Dejar de seguir
+                      </>
                     ) : (
-                      <><UserPlus className="w-4 h-4 mr-2" />Seguir</>
+                      <>
+                        <UserPlus className="w-4 h-4 mr-2" />Seguir
+                      </>
                     )}
                   </Button>
                   <Button variant="outline" onClick={handleMessage}>
