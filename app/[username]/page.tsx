@@ -89,7 +89,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       <ProfileView
         username={user.username}
         isOwnProfile={isOwnProfile}
-        mode={isOwnProfile ? 'edit' : 'public'}
+        mode="public"
       />
     </div>
   );

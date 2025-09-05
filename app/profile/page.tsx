@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { EnhancedProfile } from '@/components/user/EnhancedProfile';
 
 export const metadata: Metadata = {
   title: 'Mi Perfil - CRUNEVO',
@@ -11,14 +10,10 @@ export const metadata: Metadata = {
 
 export default async function MyProfilePage() {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user) {
     redirect('/auth/signin');
   }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <EnhancedProfile isOwnProfile={true} />
-    </div>
-  );
+  // Redirect to the user's public profile instead of rendering the edit view
+  redirect(`/${session.user.username}`);
 }

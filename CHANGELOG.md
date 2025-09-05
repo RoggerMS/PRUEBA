@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Remove legacy `/perfil` route and update navigation to use `/{username}` paths.
+- Redirect `/profile` to `/{username}` and open profiles in public view instead of edit mode.
 - Evita errores de `toLocaleString` en `ProfileView` cuando los contadores de seguidores, seguidos o publicaciones no están definidos.
 - Prevent users from following themselves in feed and marketplace interfaces.
 - Resolve multiple React Hook dependency warnings in profile, follower, workspace, notification, and toast components to ensure consistent state updates.
