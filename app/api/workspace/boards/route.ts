@@ -18,6 +18,9 @@ export async function GET(req: Request) {
       where: { userId: session.user.id },
       orderBy: { createdAt: 'asc' },
       include: {
+        user: {
+          select: { id: true, name: true, email: true, image: true }
+        },
         blocks: {
           include: {
             docsPages: true,
@@ -32,6 +35,9 @@ export async function GET(req: Request) {
       const created = await prisma.workspaceBoard.create({
         data: { userId: session.user.id, name: 'Pizarra 1', isDefault: true },
         include: {
+          user: {
+            select: { id: true, name: true, email: true, image: true }
+          },
           blocks: {
             include: {
               docsPages: true,
@@ -41,9 +47,12 @@ export async function GET(req: Request) {
           }
         }
       });
-      return Response.json({ boards: [created], defaultBoard: created.id });
+      const createdBoard = { ...created, owner: created.user } as any;
+      delete createdBoard.user;
+      return Response.json({ boards: [createdBoard], defaultBoard: created.id });
     }
-    return Response.json({ boards, defaultBoard });
+    const formatted = boards.map(({ user, ...rest }) => ({ ...rest, owner: user }));
+    return Response.json({ boards: formatted, defaultBoard });
   } catch (e) {
     console.error('[GET /api/workspace/boards]', e);
     return Response.json({ error: 'Internal error' }, { status: 500 });
@@ -60,9 +69,12 @@ export async function POST(req: Request) {
     }
     const { name } = await req.json();
     const board = await prisma.workspaceBoard.create({
-      data: { userId: session.user.id, name: name || 'Pizarra 1', isDefault: false }
+      data: { userId: session.user.id, name: name || 'Pizarra 1', isDefault: false },
+      include: {
+        user: { select: { id: true, name: true, email: true, image: true } }
+      }
     });
-    return Response.json({ board }, { status: 201 });
+    return Response.json({ board: { ...board, owner: board.user } }, { status: 201 });
   } catch (e) {
     console.error('[POST /api/workspace/boards]', e);
     return Response.json({ error: 'Internal error' }, { status: 500 });

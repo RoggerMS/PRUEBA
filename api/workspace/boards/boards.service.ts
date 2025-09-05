@@ -7,9 +7,12 @@ const prisma = new PrismaClient();
 @Injectable()
 export class BoardsService {
   async getBoards(userId: string) {
-    return prisma.workspaceBoard.findMany({
+    const boards = await prisma.workspaceBoard.findMany({
       where: { userId },
       include: {
+        user: {
+          select: { id: true, name: true, email: true, image: true },
+        },
         blocks: {
           select: {
             id: true,
@@ -33,12 +36,16 @@ export class BoardsService {
         createdAt: 'desc',
       },
     });
+    return boards.map(({ user, ...rest }) => ({ ...rest, owner: user }));
   }
 
   async getBoardById(id: string, userId: string) {
     const board = await prisma.workspaceBoard.findFirst({
       where: { id, userId },
       include: {
+        user: {
+          select: { id: true, name: true, email: true, image: true },
+        },
         blocks: {
           include: {
             docsPages: true,
@@ -67,7 +74,8 @@ export class BoardsService {
       throw new NotFoundException('Board not found');
     }
 
-    return board;
+    const { user, ...rest } = board as any;
+    return { ...rest, owner: user };
   }
 
   async createBoard(createBoardDto: CreateBoardDto, userId: string) {
@@ -86,16 +94,19 @@ export class BoardsService {
       });
     }
 
-    return prisma.workspaceBoard.create({
+    const board = await prisma.workspaceBoard.create({
       data: {
         name: createBoardDto.name,
         isDefault,
         userId,
       },
       include: {
+        user: { select: { id: true, name: true, email: true, image: true } },
         blocks: true,
       },
     });
+    const { user, ...rest } = board as any;
+    return { ...rest, owner: user };
   }
 
   async updateBoard(id: string, updateBoardDto: UpdateBoardDto, userId: string) {
@@ -115,13 +126,16 @@ export class BoardsService {
       });
     }
 
-    return prisma.workspaceBoard.update({
+    const boardUpdated = await prisma.workspaceBoard.update({
       where: { id },
       data: updateBoardDto,
       include: {
+        user: { select: { id: true, name: true, email: true, image: true } },
         blocks: true,
       },
     });
+    const { user, ...rest } = boardUpdated as any;
+    return { ...rest, owner: user };
   }
 
   async deleteBoard(id: string, userId: string) {
