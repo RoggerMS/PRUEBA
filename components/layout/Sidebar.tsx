@@ -47,24 +47,6 @@ interface SidebarItem {
   color?: string;
 }
 
-const mainNavItems: SidebarItem[] = [
-  { name: 'Inicio', href: '/', icon: Home },
-  { name: 'Perfil', href: '/perfil', icon: User },
-  { name: 'Workspace', href: '/workspace', icon: Grid3X3, color: 'text-crunevo-600' },
-  { name: 'Apuntes', href: '/notes', icon: FileText },
-  { name: 'Foro', href: '/forum', icon: MessageSquare },
-  { name: 'Clubes', href: '/clubs', icon: Users },
-  { name: 'Eventos', href: '/events', icon: Calendar },
-  { name: 'Cursos', href: '/courses', icon: GraduationCap },
-  { name: 'Tienda', href: '/marketplace', icon: ShoppingBag },
-];
-
-const gamificationItems: SidebarItem[] = [
-  { name: 'Gamificación', href: '/perfil/gamification', icon: Zap, color: 'text-crunevo-600' },
-  { name: 'Misiones', href: '/challenges', icon: Target, badge: '3' },
-  { name: 'Ranking', href: '/ranking', icon: Trophy },
-  { name: 'Liga Académica', href: '/league', icon: Award },
-];
 
 const utilityItems: SidebarItem[] = [
   { name: 'CruneBot', href: '/crunebot', icon: Bot, color: 'text-crunevo-600' },
@@ -83,6 +65,36 @@ export function Sidebar() {
   const { data: session } = useSession();
   const { data: crolarsData } = useCrolars();
   const crolars = crolarsData?.user.crolars ?? 0;
+
+  const mainNavItems: SidebarItem[] = [
+    { name: 'Inicio', href: '/', icon: Home },
+    {
+      name: 'Perfil',
+      href: session?.user ? `/${(session.user as any).username}` : '/auth/login',
+      icon: User,
+    },
+    { name: 'Workspace', href: '/workspace', icon: Grid3X3, color: 'text-crunevo-600' },
+    { name: 'Apuntes', href: '/notes', icon: FileText },
+    { name: 'Foro', href: '/forum', icon: MessageSquare },
+    { name: 'Clubes', href: '/clubs', icon: Users },
+    { name: 'Eventos', href: '/events', icon: Calendar },
+    { name: 'Cursos', href: '/courses', icon: GraduationCap },
+    { name: 'Tienda', href: '/marketplace', icon: ShoppingBag },
+  ];
+
+  const gamificationItems: SidebarItem[] = [
+    {
+      name: 'Gamificación',
+      href: session?.user
+        ? `/${(session.user as any).username}/gamification`
+        : '/auth/login',
+      icon: Zap,
+      color: 'text-crunevo-600',
+    },
+    { name: 'Misiones', href: '/challenges', icon: Target, badge: '3' },
+    { name: 'Ranking', href: '/ranking', icon: Trophy },
+    { name: 'Liga Académica', href: '/league', icon: Award },
+  ];
 
   const formatNumber = (num: number) => {
     if (num >= 1000) {
@@ -114,12 +126,12 @@ export function Sidebar() {
           isCollapsed && 'justify-center px-2'
         )}
       >
-        <Icon 
+        <Icon
           className={cn(
             'w-5 h-5 flex-shrink-0',
             item.color || (active ? 'text-crunevo-600' : ''),
             'group-hover:scale-110 transition-transform duration-200'
-          )} 
+          )}
         />
         {!isCollapsed && (
           <>

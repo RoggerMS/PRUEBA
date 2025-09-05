@@ -15,7 +15,7 @@ Este proyecto utiliza **NextAuth** y middleware para proteger rutas. Las rutas p
 ## Rutas protegidas
 
 - `/feed`
-- `/perfil` - perfil del usuario con edición inline coherente con `/settings`
+- `/[username]` - perfil del usuario con edición inline coherente con `/settings`
 - `/workspace`
 - `/settings`
 - Otras secciones con acciones de usuario (`/notifications`, `/bookmarks`, `clubs/*`, etc.)

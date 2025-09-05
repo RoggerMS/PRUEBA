@@ -114,7 +114,7 @@ class AuthChecker {
   async checkProtectedRouteRedirection() {
     this.log('Checking protected route redirection...');
     
-    const protectedRoutes = ['/feed', '/workspace', '/settings', '/perfil'];
+    const protectedRoutes = ['/feed', '/workspace', '/settings'];
     
     for (const route of protectedRoutes) {
       try {

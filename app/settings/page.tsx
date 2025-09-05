@@ -209,7 +209,12 @@ export default function SettingsPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">Error loading settings</p>
-          <Button onClick={() => router.push('/perfil')} className="mt-4">
+          <Button
+            onClick={() =>
+              router.push(`/${(session?.user as any)?.username || ''}`)
+            }
+            className="mt-4"
+          >
             Go to Profile
           </Button>
         </div>
@@ -225,7 +230,9 @@ export default function SettingsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push('/perfil')}
+            onClick={() =>
+              router.push(`/${(session?.user as any)?.username || ''}`)
+            }
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
