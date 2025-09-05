@@ -38,7 +38,7 @@ const MENU_ITEMS: MenuItem[] = [
   { key: 'tienda', label: 'Tienda', href: '/tienda', icon: ShoppingBag },
   
   // Gamificación
-  { key: 'gamificacion', label: 'Gamificación', href: '/gamificacion', icon: Zap },
+  { key: 'gamificacion', label: 'Gamificación', href: '/gamification', icon: Zap },
   { key: 'misiones', label: 'Misiones', href: '/misiones', icon: Target, badge: 3 },
   { key: 'ranking', label: 'Ranking', href: '/ranking', icon: Trophy },
   { key: 'liga', label: 'Liga Académica', href: '/liga', icon: Award },
@@ -64,16 +64,25 @@ export function MobileNavbar({ isOpen, onClose }: MobileNavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const menuItems = MENU_ITEMS.map((item) =>
-    item.key === 'perfil'
-      ? {
-          ...item,
-          href: session?.user
-            ? `/${(session.user as any).username}`
-            : '/auth/login',
-        }
-      : item
-  );
+  const menuItems = MENU_ITEMS.map((item) => {
+    if (item.key === 'perfil') {
+      return {
+        ...item,
+        href: session?.user
+          ? `/${(session.user as any).username}`
+          : '/auth/login',
+      };
+    }
+    if (item.key === 'gamificacion') {
+      return {
+        ...item,
+        href: session?.user
+          ? `/${(session.user as any).username}/gamification`
+          : '/auth/login',
+      };
+    }
+    return item;
+  });
 
   // Load dark mode preference
   useEffect(() => {
