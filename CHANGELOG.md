@@ -36,6 +36,7 @@
 - Initialize default content and unique z-index when creating workspace blocks so new blocks render reliably.
 - Provide board management API routes to update, delete and duplicate boards, enabling workspace configuration.
 - Remove placeholder random values from workspace statistics and expose collaborator and shared board counts.
+- Include board creator details in workspace board API responses so the owner appears in the collaborator manager.
 
 - Align feed client with API pagination and add single post endpoint for local development.
 - Improve feed post actions: link user names to profiles, move follow button beside author info, restore flame reaction, and add share handling.
