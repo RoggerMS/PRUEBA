@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Search, Filter, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,11 +83,11 @@ export default function NotesPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCareer, setSelectedCareer] = useState('');
   const [sortBy, setSortBy] = useState('recent');
+  const queryClient = useQueryClient();
 
   // Manejar el éxito del formulario de carga de apuntes
-  const handleUploadSuccess = (noteData: any) => {
-    // En un escenario real se debería actualizar la lista de apuntes
-    console.log('Apunte subido', noteData);
+  const handleUploadSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['notes'] });
   };
 
   const handleNoteSelect = (noteId: string) => {
