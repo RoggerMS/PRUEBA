@@ -75,7 +75,7 @@ export function Navigation({ session, onMenuClick }: NavigationProps) {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/perfil">
+                    <Link href={`/${(session?.user as any)?.username || ''}`}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Perfil</span>
                     </Link>

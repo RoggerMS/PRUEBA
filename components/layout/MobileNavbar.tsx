@@ -28,7 +28,7 @@ interface MenuItem {
 const MENU_ITEMS: MenuItem[] = [
   // Principal
   { key: 'inicio', label: 'Inicio', href: '/', icon: Home },
-  { key: 'perfil', label: 'Perfil', href: '/perfil', icon: User },
+  { key: 'perfil', label: 'Perfil', href: '/', icon: User },
   { key: 'workspace', label: 'Workspace', href: '/workspace', icon: Grid3X3 },
   { key: 'apunte', label: 'Apunte', href: '/apunte', icon: FileText },
   { key: 'foro', label: 'Foro', href: '/foro', icon: MessageSquare },
@@ -63,6 +63,17 @@ export function MobileNavbar({ isOpen, onClose }: MobileNavbarProps) {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  const menuItems = MENU_ITEMS.map((item) =>
+    item.key === 'perfil'
+      ? {
+          ...item,
+          href: session?.user
+            ? `/${(session.user as any).username}`
+            : '/auth/login',
+        }
+      : item
+  );
 
   // Load dark mode preference
   useEffect(() => {
@@ -204,7 +215,7 @@ export function MobileNavbar({ isOpen, onClose }: MobileNavbarProps) {
               <div className="flex-1">
                 <p className="font-semibold text-gray-900 dark:text-white">{session.user?.name}</p>
                 <Link
-                  href="/perfil"
+                  href={session?.user ? `/${(session.user as any).username}` : '/auth/login'}
                   onClick={closeDrawer}
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 >
@@ -219,7 +230,7 @@ export function MobileNavbar({ isOpen, onClose }: MobileNavbarProps) {
         {/* Menu Grid */}
         <div className="px-3 py-4">
           <div className="grid grid-cols-2 gap-3 pb-24">
-            {MENU_ITEMS.map((item) => {
+            {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
               

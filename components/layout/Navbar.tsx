@@ -109,7 +109,10 @@ export function Navbar() {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/perfil" className="flex items-center">
+                      <Link
+                        href={session?.user ? `/${(session.user as any).username}` : '/auth/login'}
+                        className="flex items-center"
+                      >
                         <User className="mr-2 h-4 w-4" />
                         <span>Perfil</span>
                       </Link>

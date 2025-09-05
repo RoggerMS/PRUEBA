@@ -8,14 +8,14 @@ import { GamificationProfile } from '@/components/gamification/GamificationProfi
 
 interface PageProps {
   params: Promise<{
-    userId: string;
+    username: string;
   }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { userId } = await params;
+  const { username } = await params;
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { username },
     select: { name: true, username: true }
   });
 
@@ -32,12 +32,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function GamificationPage({ params }: PageProps) {
-  const { userId } = await params;
+  const { username } = await params;
   const session = await getServerSession(authOptions);
-  
-  // Verificar que el usuario existe
+
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { username },
     select: {
       id: true,
       name: true,
@@ -55,7 +54,7 @@ export default async function GamificationPage({ params }: PageProps) {
     notFound();
   }
 
-  const isOwnProfile = session?.user?.id === userId;
+  const isOwnProfile = session?.user?.id === user.id;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -81,17 +80,19 @@ export default async function GamificationPage({ params }: PageProps) {
               <span>•</span>
               <span>{user.xp.toLocaleString()} XP</span>
               <span>•</span>
-              <span>Miembro desde {new Date(user.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}</span>
+              <span>
+                Miembro desde {new Date(user.createdAt).toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                })}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Componente de gamificación */}
-      <GamificationProfile 
-        userId={userId}
-        isOwnProfile={isOwnProfile}
-      />
+      <GamificationProfile userId={user.id} isOwnProfile={isOwnProfile} />
     </div>
   );
 }
