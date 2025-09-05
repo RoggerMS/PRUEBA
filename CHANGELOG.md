@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Evita errores de `toString` en `ProfileFeed` al manejar valores indefinidos en `formatNumber`.
 - Normalize profile feed response to a posts array to prevent `filteredItems.map` runtime errors in `ProfileFeed`.
 - Keep profile data in sync in the edit dialog by updating local state and resetting form values on open.
 - Remove legacy `/perfil` route and update navigation to use `/{username}` paths.
