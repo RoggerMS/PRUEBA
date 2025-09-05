@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -131,36 +131,53 @@ export function ProfileHeader({
   onShare,
   onEditProfile
 }: ProfileHeaderProps) {
+  // Maintain a local copy of the profile so edits are reflected immediately
+  const [profile, setProfile] = useState<UserProfile>(user);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: user.name,
-    bio: user.bio || '',
-    location: user.location || '',
-    website: user.website || '',
-    phone: user.phone || ''
+    name: profile.name,
+    bio: profile.bio || '',
+    location: profile.location || '',
+    website: profile.website || '',
+    phone: profile.phone || ''
   });
+
+  // Reset form values whenever the dialog is opened or profile changes
+  useEffect(() => {
+    if (isEditDialogOpen) {
+      setEditForm({
+        name: profile.name,
+        bio: profile.bio || '',
+        location: profile.location || '',
+        website: profile.website || '',
+        phone: profile.phone || ''
+      });
+    }
+  }, [isEditDialogOpen, profile]);
 
   const handleFollow = () => {
     if (onFollow) {
-      onFollow(user.id);
+      onFollow(profile.id);
     }
   };
 
   const handleMessage = () => {
     if (onMessage) {
-      onMessage(user.id);
+      onMessage(profile.id);
     }
   };
 
   const handleShare = () => {
     if (onShare) {
-      onShare(user.id);
+      onShare(profile.id);
     }
   };
 
   const handleEditSubmit = () => {
+    const updatedProfile = { ...profile, ...editForm };
+    setProfile(updatedProfile);
     if (onEditProfile) {
-      onEditProfile(editForm);
+      onEditProfile(updatedProfile);
     }
     setIsEditDialogOpen(false);
   };
@@ -169,9 +186,9 @@ export function ProfileHeader({
     <div className="space-y-6">
       {/* Cover Image */}
       <div className="relative h-48 md:h-64 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg overflow-hidden">
-        {user.coverImage && (
+        {profile.coverImage && (
           <img 
-            src={user.coverImage} 
+            src={profile.coverImage} 
             alt="Cover" 
             className="w-full h-full object-cover"
           />
@@ -189,7 +206,7 @@ export function ProfileHeader({
             <Share2 className="w-4 h-4" />
           </Button>
           
-          {user.isOwnProfile ? (
+          {profile.isOwnProfile ? (
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -285,13 +302,13 @@ export function ProfileHeader({
               </Button>
               
               <Button
-                variant={user.isFollowing ? "outline" : "default"}
+                variant={profile.isFollowing ? "outline" : "default"}
                 size="sm"
                 onClick={handleFollow}
-                className={user.isFollowing ? "bg-white/90 hover:bg-white" : ""}
+                className={profile.isFollowing ? "bg-white/90 hover:bg-white" : ""}
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                {user.isFollowing ? 'Siguiendo' : 'Seguir'}
+                {profile.isFollowing ? 'Siguiendo' : 'Seguir'}
               </Button>
             </div>
           )}
@@ -306,13 +323,13 @@ export function ProfileHeader({
             <div className="flex flex-col items-center md:items-start">
               <div className="relative">
                 <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={profile.avatar} alt={profile.name} />
                   <AvatarFallback className="text-2xl">
-                    {user.name.split(' ').map(n => n[0]).join('')}
+                    {profile.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 
-                {user.isOwnProfile && (
+                {profile.isOwnProfile && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -324,15 +341,15 @@ export function ProfileHeader({
               </div>
               
               <div className="text-center md:text-left mt-4">
-                <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
-                <p className="text-gray-600">@{user.username}</p>
+                <h1 className="text-2xl font-bold text-gray-900">{profile.name}</h1>
+                <p className="text-gray-600">@{profile.username}</p>
                 
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    Nivel {user.stats.level}
+                    Nivel {profile.stats.level}
                   </Badge>
                   <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                    {user.stats.reputation} pts
+                    {profile.stats.reputation} pts
                   </Badge>
                 </div>
               </div>
@@ -341,8 +358,8 @@ export function ProfileHeader({
             {/* Profile Details */}
             <div className="flex-1 space-y-4">
               {/* Bio */}
-              {user.bio && (
-                <p className="text-gray-700 leading-relaxed">{user.bio}</p>
+              {profile.bio && (
+                <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
               )}
               
               {/* Academic Info */}
@@ -350,41 +367,41 @@ export function ProfileHeader({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <BookOpen className="w-4 h-4" />
-                    <span>{user.career}</span>
+                    <span>{profile.career}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Users className="w-4 h-4" />
-                    <span>{user.university}</span>
+                    <span>{profile.university}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Star className="w-4 h-4" />
-                    <span>Semestre {user.semester}</span>
+                    <span>Semestre {profile.semester}</span>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  {user.location && (
+                  {profile.location && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <MapPin className="w-4 h-4" />
-                      <span>{user.location}</span>
+                      <span>{profile.location}</span>
                     </div>
                   )}
                   
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Calendar className="w-4 h-4" />
-                    <span>Se unió en {formatDate(user.joinDate)}</span>
+                    <span>Se unió en {formatDate(profile.joinDate)}</span>
                   </div>
                   
-                  {user.website && (
+                  {profile.website && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Globe className="w-4 h-4" />
                       <a 
-                        href={user.website} 
+                        href={profile.website} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
                       >
-                        {user.website.replace('https://', '').replace('http://', '')}
+                        {profile.website.replace('https://', '').replace('http://', '')}
                       </a>
                     </div>
                   )}
@@ -392,11 +409,11 @@ export function ProfileHeader({
               </div>
               
               {/* Social Links */}
-              {user.socialLinks && (
+              {profile.socialLinks && (
                 <div className="flex gap-3">
-                  {user.socialLinks.github && (
+                  {profile.socialLinks.github && (
                     <a 
-                      href={user.socialLinks.github} 
+                      href={profile.socialLinks.github} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -405,9 +422,9 @@ export function ProfileHeader({
                     </a>
                   )}
                   
-                  {user.socialLinks.linkedin && (
+                  {profile.socialLinks.linkedin && (
                     <a 
-                      href={user.socialLinks.linkedin} 
+                      href={profile.socialLinks.linkedin} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-gray-600 hover:text-blue-600 transition-colors"
@@ -416,9 +433,9 @@ export function ProfileHeader({
                     </a>
                   )}
                   
-                  {user.socialLinks.twitter && (
+                  {profile.socialLinks.twitter && (
                     <a 
-                      href={user.socialLinks.twitter} 
+                      href={profile.socialLinks.twitter} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-gray-600 hover:text-blue-400 transition-colors"
@@ -438,17 +455,17 @@ export function ProfileHeader({
         <CardContent className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.followers)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats.followers)}</p>
               <p className="text-sm text-gray-600">Seguidores</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.following)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats.following)}</p>
               <p className="text-sm text-gray-600">Siguiendo</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.posts)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats.posts)}</p>
               <p className="text-sm text-gray-600">Publicaciones</p>
             </div>
             
@@ -463,12 +480,12 @@ export function ProfileHeader({
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(user.stats.reputation)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats.reputation)}</p>
               <p className="text-sm text-gray-600">Experiencia</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">Nivel {user.stats.level}</p>
+              <p className="text-2xl font-bold text-gray-900">Nivel {profile.stats.level}</p>
               <p className="text-sm text-gray-600">Actual</p>
             </div>
             
