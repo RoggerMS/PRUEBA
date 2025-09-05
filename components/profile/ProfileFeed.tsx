@@ -83,16 +83,20 @@ interface ProfileFeedProps {
 }
 
 // Hook for fetching profile feed data
+// Fetches profile feed posts, ensuring the response is normalized
 const useProfileFeed = (userId?: string) => {
-  return useQuery({
+  return useQuery<FeedItem[]>({
     queryKey: ['profile-feed', userId],
     queryFn: async () => {
       const response = await fetch(`/api/feed?userId=${userId || 'me'}`);
       if (!response.ok) {
         throw new Error('Failed to fetch profile feed');
       }
-      return response.json();
+      const data = await response.json();
+      // API returns an object with a `posts` array
+      return data.posts ?? [];
     },
+    // Allow fetching when userId is provided or for own profile
     enabled: !!userId || userId === undefined
   });
 };
