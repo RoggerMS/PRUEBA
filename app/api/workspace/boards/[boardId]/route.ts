@@ -18,6 +18,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ boardId:
     const board = await prisma.workspaceBoard.findFirst({
       where: { id: boardId, userId: session.user.id },
       include: {
+        user: {
+          select: { id: true, name: true, email: true, image: true }
+        },
         blocks: {
           include: {
             docsPages: true,
@@ -30,7 +33,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ boardId:
     if (!board) {
       return Response.json({ error: 'Not found' }, { status: 404 });
     }
-    return Response.json({ board });
+    return Response.json({ board: { ...board, owner: board.user } });
   } catch (e) {
     console.error('[GET /api/workspace/boards/:id]', e);
     return Response.json({ error: 'Internal error' }, { status: 500 });

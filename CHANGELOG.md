@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Include board creator in workspace board responses so "Gestionar Colaboradores" shows the owner.
 - Remove legacy `/perfil` route and update navigation to use `/{username}` paths.
 - Redirect `/profile` to `/{username}` and open profiles in public view instead of edit mode.
 - Evita errores de `toLocaleString` en `ProfileView` cuando los contadores de seguidores, seguidos o publicaciones no están definidos.
