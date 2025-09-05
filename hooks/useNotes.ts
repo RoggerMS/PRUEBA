@@ -71,7 +71,8 @@ export function useNotes(filters: NotesFilters = {}) {
       if (!response.ok) {
         throw new Error('Failed to fetch notes');
       }
-      return response.json();
+      const data = await response.json();
+      return data.notes;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

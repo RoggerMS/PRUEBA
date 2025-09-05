@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, X, FileText, Image, Video, File, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface NotesUploadProps {
   open: boolean;
@@ -78,28 +79,47 @@ export function NotesUpload({ open, onClose, onSuccess }: NotesUploadProps) {
   });
   const [currentTag, setCurrentTag] = useState('');
   const [dragActive, setDragActive] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const noteData = {
-      ...formData,
-      id: Date.now().toString(),
-      author: {
-        id: 'current-user',
-        name: 'Usuario Actual',
-        avatar: 'https://trae-api-us.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20student%20avatar%20portrait&image_size=square'
-      },
-      rating: 0,
-      downloads: 0,
-      views: 0,
-      createdAt: new Date().toISOString(),
-      liked: false
-    };
-    
-    onSuccess(noteData);
-    onClose();
-    resetForm();
+    setIsSubmitting(true);
+
+    try {
+      const body = new FormData();
+      body.append('title', formData.title);
+      body.append('description', formData.description);
+      body.append('subject', formData.category);
+      body.append('career', formData.career);
+      body.append('tags', formData.tags.join(','));
+      if (!formData.isFree && formData.price) {
+        body.append('price', formData.price);
+      }
+      body.append('visibility', formData.isPublic ? 'PUBLIC' : 'PRIVATE');
+      if (formData.files[0]) {
+        body.append('file', formData.files[0]);
+      }
+
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        body,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload note');
+      }
+
+      const noteData = await response.json();
+      onSuccess(noteData);
+      toast.success('Apunte subido correctamente');
+      onClose();
+      resetForm();
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al subir el apunte');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -390,9 +410,16 @@ export function NotesUpload({ open, onClose, onSuccess }: NotesUploadProps) {
             <Button
               type="submit"
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-              disabled={!formData.title || !formData.description || !formData.category || !formData.career || formData.files.length === 0}
+              disabled={
+                isSubmitting ||
+                !formData.title ||
+                !formData.description ||
+                !formData.category ||
+                !formData.career ||
+                formData.files.length === 0
+              }
             >
-              Subir Apuntes
+              {isSubmitting ? 'Subiendo...' : 'Subir Apuntes'}
             </Button>
           </div>
         </form>

@@ -40,6 +40,7 @@ export default tseslint.config({
 - Various TypeScript errors were resolved and notification components were corrected for consistent behavior.
 - Gamification notifications are now categorized as `GAMIFICATION`, fixing local build errors.
 - El perfil se puede editar directamente desde `/<usuario>` con un botón "Vista pública" para alternar entre vista pública y edición.
+- `/notes` ahora carga apuntes desde la API y el modal de "Subir Apunte" crea apuntes reales mediante `/api/notes`.
 
 ### Patrón de notificaciones
 
