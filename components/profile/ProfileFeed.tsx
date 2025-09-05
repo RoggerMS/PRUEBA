@@ -139,7 +139,14 @@ const getTypeLabel = (type: FeedItem['type']) => {
 
 
 
-const formatNumber = (num: number): string => {
+/**
+ * Formats a numeric value for display.
+ * Safely handles undefined or non-numeric inputs by returning "0".
+ */
+const formatNumber = (num?: number): string => {
+  if (typeof num !== 'number' || isNaN(num)) {
+    return '0';
+  }
   if (num >= 1000) {
     return (num / 1000).toFixed(1) + 'K';
   }
