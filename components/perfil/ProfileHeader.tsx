@@ -183,7 +183,7 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
                         if (onViewPublic) {
                           onViewPublic()
                         } else {
-                          router.push(`/${user.username}`)
+                          router.push(`/@${user.username}`)
                         }
                       }}
                     >

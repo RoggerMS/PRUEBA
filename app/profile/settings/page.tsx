@@ -211,7 +211,7 @@ export default function ProfileSettingsPage() {
                 )}
                 
                 <Button variant="outline" asChild>
-                  <Link href={`/${session?.user?.username ?? ''}`}>
+                  <Link href={`/@${session?.user?.username ?? ''}`}>
                     <User className="h-4 w-4 mr-2" />
                     Ver Perfil Público
                   </Link>

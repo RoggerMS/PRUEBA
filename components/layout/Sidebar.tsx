@@ -70,7 +70,7 @@ export function Sidebar() {
     { name: 'Inicio', href: '/', icon: Home },
     {
       name: 'Perfil',
-      href: session?.user ? `/${(session.user as any).username}` : '/auth/login',
+      href: session?.user ? `/@${(session.user as any).username}` : '/auth/login',
       icon: User,
     },
     { name: 'Workspace', href: '/workspace', icon: Grid3X3, color: 'text-crunevo-600' },
@@ -86,7 +86,7 @@ export function Sidebar() {
     {
       name: 'Gamificación',
       href: session?.user
-        ? `/${(session.user as any).username}/gamification`
+        ? `/@${(session.user as any).username}/gamification`
         : '/auth/login',
       icon: Zap,
       color: 'text-crunevo-600',

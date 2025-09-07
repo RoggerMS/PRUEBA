@@ -69,7 +69,7 @@ export function MobileNavbar({ isOpen, onClose }: MobileNavbarProps) {
       return {
         ...item,
         href: session?.user
-          ? `/${(session.user as any).username}`
+          ? `/@${(session.user as any).username}`
           : '/auth/login',
       };
     }
@@ -77,7 +77,7 @@ export function MobileNavbar({ isOpen, onClose }: MobileNavbarProps) {
       return {
         ...item,
         href: session?.user
-          ? `/${(session.user as any).username}/gamification`
+          ? `/@${(session.user as any).username}/gamification`
           : '/auth/login',
       };
     }
@@ -224,7 +224,7 @@ export function MobileNavbar({ isOpen, onClose }: MobileNavbarProps) {
               <div className="flex-1">
                 <p className="font-semibold text-gray-900 dark:text-white">{session.user?.name}</p>
                 <Link
-                  href={session?.user ? `/${(session.user as any).username}` : '/auth/login'}
+                  href={session?.user ? `/@${(session.user as any).username}` : '/auth/login'}
                   onClick={closeDrawer}
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 >

@@ -58,7 +58,7 @@ export function SocialActions({
   const [messageText, setMessageText] = useState('');
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
 
-  const profileUrl = `${window.location.origin}/${username}`;
+  const profileUrl = `${window.location.origin}/@${username}`;
 
   const handleFollow = async () => {
     if (isFollowLoading) return;

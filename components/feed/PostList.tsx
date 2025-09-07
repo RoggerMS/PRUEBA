@@ -153,7 +153,7 @@ function PostCard({ post }: { post: FeedPost }) {
     <Card className="p-6 hover:shadow-md transition-shadow">
       {/* Header del post */}
       <div className="flex items-start space-x-3 mb-4">
-        <Link href={`/${post.author.username}`} className="h-10 w-10">
+        <Link href={`/@${post.author.username}`} className="h-10 w-10">
           <Avatar className="h-10 w-10">
             <img
               src={post.author.avatar || '/default-avatar.png'}
@@ -164,7 +164,7 @@ function PostCard({ post }: { post: FeedPost }) {
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2">
-            <Link href={`/${post.author.username}`} className="hover:underline">
+            <Link href={`/@${post.author.username}`} className="hover:underline">
               <h3 className="font-semibold text-sm truncate">{post.author.name}</h3>
             </Link>
             <span className="text-xs">{getPostIcon()}</span>

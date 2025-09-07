@@ -211,7 +211,7 @@ export default function SettingsPage() {
           <p className="text-gray-600">Error loading settings</p>
           <Button
             onClick={() =>
-              router.push(`/${(session?.user as any)?.username || ''}`)
+              router.push(`/@${(session?.user as any)?.username || ''}`)
             }
             className="mt-4"
           >
@@ -231,7 +231,7 @@ export default function SettingsPage() {
             variant="ghost"
             size="sm"
             onClick={() =>
-              router.push(`/${(session?.user as any)?.username || ''}`)
+              router.push(`/@${(session?.user as any)?.username || ''}`)
             }
             className="flex items-center gap-2"
           >

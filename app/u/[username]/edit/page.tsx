@@ -5,5 +5,5 @@ interface EditProfilePageProps {
 }
 
 export default function EditProfilePage({ params }: EditProfilePageProps) {
-  redirect(`/${params.username}`);
+  redirect(`/@${params.username}`);
 }
