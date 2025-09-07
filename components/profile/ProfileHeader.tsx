@@ -117,11 +117,15 @@ const formatNumber = (num: number): string => {
 };
 
 const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long'
-  });
+  const date = dateString ? new Date(dateString) : null;
+  if (!date || isNaN(date.valueOf())) {
+    return 'recientemente';
+  }
+  return new Intl.DateTimeFormat('es-PE', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(date);
 };
 
 export function ProfileHeader({
@@ -323,17 +327,25 @@ export function ProfileHeader({
             <div className="flex flex-col items-center md:items-start">
               <div className="relative">
                 <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-                  <AvatarImage src={profile.avatar} alt={profile.name} />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarImage
+                    src={profile.avatar ?? ''}
+                    alt={profile.name}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <AvatarFallback delayMs={300} className="text-2xl">
                     {profile.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 {profile.isOwnProfile && (
                   <Button
                     size="sm"
                     variant="outline"
                     className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0"
+                    aria-label="Cambiar foto"
+                    title="Cambiar foto"
                   >
                     <Camera className="w-4 h-4" />
                   </Button>

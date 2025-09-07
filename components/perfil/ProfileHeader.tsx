@@ -80,6 +80,12 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
     input.click();
   };
 
+  const joinedAt = user?.joinDate ? new Date(user.joinDate) : null;
+  const isValidJoin = joinedAt && !isNaN(joinedAt.valueOf());
+  const joinedLabel = isValidJoin
+    ? new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }).format(joinedAt)
+    : 'recientemente';
+
   const showEditControls = mode === 'edit'
   const showEditButton = mode === 'view'
   const isPublicMode = mode === 'public'
@@ -101,6 +107,8 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
             size="sm"
             className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white border-0 flex items-center justify-center"
             onClick={handleBannerEdit}
+            aria-label="Cambiar banner"
+            title="Cambiar banner"
           >
             <Camera className="h-4 w-4" />
           </Button>
@@ -114,8 +122,14 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
             {/* Profile Picture */}
             <div className="relative">
               <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="text-2xl">
+                <AvatarImage
+                  src={user.avatar ?? ''}
+                  alt={user.name}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <AvatarFallback delayMs={300} className="text-2xl">
                   {user.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
@@ -125,6 +139,8 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
                   size="sm"
                   className="absolute bottom-2 right-2 h-8 w-8 rounded-full p-0 bg-white shadow-md hover:bg-gray-50 flex items-center justify-center"
                   onClick={handleAvatarEdit}
+                  aria-label="Cambiar foto"
+                  title="Cambiar foto"
                 >
                   <Camera className="h-4 w-4" />
                 </Button>
@@ -154,7 +170,7 @@ export function ProfileHeader({ user, mode, onEdit, onViewPublic, onBannerChange
                     )}
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      Se unió en {user.joinDate}
+                      Se unió en {joinedLabel}
                     </div>
                   </div>
                 </div>

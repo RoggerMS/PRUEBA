@@ -63,7 +63,7 @@ import { POST as register } from '@/app/api/auth/register/route'
 import { GET as getOwnProfile } from '@/app/api/users/profile/route'
 import { GET as getUser } from '@/app/api/users/[id]/route'
 import { POST as followUser } from '@/app/api/users/[id]/follow/route'
-import ProfilePage from '@/app/[username]/page'
+import ProfilePage from '@/app/u/[username]/page'
 import { getUserByUsername, getUserByEmail } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 // Replaced pg-mem with a simple set-based simulation to avoid external dependency
@@ -100,7 +100,7 @@ test('getUserByUsername matches case-insensitively', async () => {
 
 test('GET /ROGGER redirects to canonical lowercase', async () => {
   prismaMock.findFirst.mockResolvedValue({ id: '1', username: 'rogger' })
-  await expect(ProfilePage({ params: { username: 'ROGGER' } })).rejects.toThrow('REDIRECT:/rogger')
+  await expect(ProfilePage({ params: { username: 'ROGGER' } })).rejects.toThrow('REDIRECT:/u/rogger')
 })
 
 test('GET /api/users/[id] returns profile for uppercase username', async () => {

@@ -430,13 +430,12 @@ export function EnhancedProfile({ username, isOwnProfile = false, mode = 'public
       </Tabs>
 
       {/* Modals */}
-      {showEditor && (
-        <ProfileEditor
-          user={profile}
-          onSave={handleProfileUpdate}
-          onClose={() => setShowEditor(false)}
-        />
-      )}
+      <ProfileEditor
+        user={profile}
+        open={showEditor}
+        onOpenChange={setShowEditor}
+        onSave={handleProfileUpdate}
+      />
 
       {showFollowers && (
         <FollowersModal

@@ -10,32 +10,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  User, 
-  MapPin, 
-  Calendar, 
-  GraduationCap, 
-  Globe, 
-  MessageCircle, 
-  UserPlus, 
-  Share2, 
-  Settings,
+import {
+  User,
+  MapPin,
+  Calendar,
+  GraduationCap,
+  Globe,
+  MessageCircle,
+  UserPlus,
+  Share2,
   Trophy,
-  Star,
-  Zap,
-  Target,
-  Award,
-  Crown,
   TrendingUp,
-  Users,
-  Heart,
   BookOpen,
   Camera,
   Edit3
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { GamificationStats } from '@/components/gamification/GamificationStats';
-import { BadgeGrid } from '@/components/gamification/BadgeGrid';
 import { AchievementsGallery } from '@/components/profile/AchievementsGallery';
 import { ProfileFeed } from '@/components/profile/ProfileFeed';
 import { ProfileEditor } from '@/components/user/ProfileEditor';
@@ -132,6 +122,12 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
     enabled: !!userProfile,
   });
 
+  const joinedAt = userProfile?.joinDate ? new Date(userProfile.joinDate) : null;
+  const isValidJoin = joinedAt && !isNaN(joinedAt.valueOf());
+  const joinedLabel = isValidJoin
+    ? new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }).format(joinedAt)
+    : 'recientemente';
+
   const handleFollow = async () => {
     if (!session || !userProfile) return;
     
@@ -196,6 +192,15 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <ProfileEditor
+        user={userProfile}
+        open={isEditing}
+        onOpenChange={setIsEditing}
+        onSave={() => {
+          setIsEditing(false);
+          toast.success('Perfil actualizado correctamente');
+        }}
+      />
       {/* Profile Header with Gradient Background */}
       <Card className="overflow-hidden">
         <div className="h-32 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 relative">
@@ -207,8 +212,17 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
             {/* Avatar */}
             <div className="relative">
               <Avatar className="w-32 h-32 border-4 border-white dark:border-gray-800 shadow-lg">
-                <AvatarImage src={userProfile.image} alt={userProfile.name} />
-                <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-500 text-white">
+                <AvatarImage
+                  src={userProfile.image ?? ''}
+                  alt={userProfile.name}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <AvatarFallback
+                  delayMs={300}
+                  className="text-2xl bg-gradient-to-br from-blue-500 to-purple-500 text-white"
+                >
                   {userProfile.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -217,6 +231,8 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
                   size="sm"
                   variant="outline"
                   className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0 bg-white dark:bg-gray-800"
+                  aria-label="Cambiar foto"
+                  title="Cambiar foto"
                 >
                   <Camera className="w-4 h-4" />
                 </Button>
@@ -272,10 +288,7 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
                 )}
                 <div className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  Se unió en {new Date(userProfile.joinDate).toLocaleDateString('es-ES', { 
-                    year: 'numeric', 
-                    month: 'long' 
-                  })}
+                  Se unió en {joinedLabel}
                 </div>
               </div>
 
@@ -308,13 +321,13 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
             {/* Action Buttons */}
             <div className="flex items-center gap-3">
               {isOwnProfile ? (
-                <Button 
-                  onClick={() => setIsEditing(!isEditing)}
+                <Button
+                  onClick={() => setIsEditing(true)}
                   variant="outline"
                   className="flex items-center gap-2"
                 >
                   <Edit3 className="w-4 h-4" />
-                  {isEditing ? 'Ver perfil' : 'Editar perfil'}
+                  Editar perfil
                 </Button>
               ) : (
                 <>
@@ -328,7 +341,13 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
                   </Button>
                 </>
               )}
-              <Button onClick={handleShare} variant="outline" size="icon">
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                size="icon"
+                aria-label="Compartir perfil"
+                title="Compartir"
+              >
                 <Share2 className="w-4 h-4" />
               </Button>
             </div>
@@ -352,18 +371,7 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
       )}
 
       {/* Profile Content Tabs */}
-      {isEditing ? (
-        <ProfileEditor 
-          user={userProfile} 
-          onSave={(updatedProfile) => {
-            // Handle profile update
-            setIsEditing(false);
-            toast.success('Perfil actualizado correctamente');
-          }}
-          onCancel={() => setIsEditing(false)}
-        />
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="posts" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
@@ -384,7 +392,7 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
           </TabsList>
 
           <TabsContent value="posts" className="space-y-6">
-            <ProfileFeed username={username} isOwnProfile={isOwnProfile} />
+            <ProfileFeed userId={userProfile.id} isOwnProfile={isOwnProfile} />
           </TabsContent>
 
           <TabsContent value="achievements" className="space-y-6">
@@ -451,13 +459,7 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
                     <Calendar className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="font-medium">Miembro desde</p>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {new Date(userProfile.joinDate).toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
+                      <p className="text-gray-600 dark:text-gray-400">{joinedLabel}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -523,8 +525,7 @@ export function ProfileView({ username, isOwnProfile, mode }: ProfileViewProps) 
               )}
             </div>
           </TabsContent>
-        </Tabs>
-      )}
+      </Tabs>
     </div>
   );
 }
