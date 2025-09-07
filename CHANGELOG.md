@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 - Corrige botones anidados en `Combobox`, añade soporte para limpiar con Backspace y expone la nueva propiedad `onClear`.
+- Actualiza `next.config.js` moviendo `serverComponentsExternalPackages` y `skipTrailingSlashRedirect` fuera de `experimental`.
+- Requiere conexiones SSL agregando `sslmode=require` al `DATABASE_URL` en ejemplos y configuración de Docker para evitar errores `pg_hba.conf`.
+- Restaura la ruta de interacciones de contenido añadiendo paréntesis y llaves faltantes.
 - Maneja paginación faltante en hooks de feed para evitar errores de `hasMore`.
 - Evita errores de `id` indefinido en `UnifiedPostList` filtrando elementos inválidos.
 

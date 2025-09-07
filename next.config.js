@@ -13,11 +13,9 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
-    // Skip static generation for problematic pages
-    skipTrailingSlashRedirect: true,
-  },
+  serverExternalPackages: ['@prisma/client', 'prisma'],
+  // Skip static generation for problematic pages
+  skipTrailingSlashRedirect: true,
   images: {
     domains: ['ui-avatars.com'],
   },

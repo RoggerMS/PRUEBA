@@ -8,8 +8,10 @@ Crea un archivo `.env.local` con:
 NEXTAUTH_URL=http://localhost:3000
 AUTH_TRUST_HOST=true
 NEXTAUTH_SECRET=some-long-random-string
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/trae?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/trae?schema=public&sslmode=require"
 ```
+
+Si tu base de datos local no soporta SSL, cambia `sslmode=require` por `sslmode=disable`.
 
 ## Pasos
 
