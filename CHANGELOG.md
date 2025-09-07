@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Corrige botones anidados en `Combobox`, añade soporte para limpiar con Backspace y expone la nueva propiedad `onClear`.
+- Maneja paginación faltante en hooks de feed para evitar errores de `hasMore`.
 
 - Elimina la vista previa en el editor de perfil y permite modificar el banner desde la parte superior del modal.
 - Reconstruye el modal de edición de perfil con pestañas, vista previa en vivo y botón de cierre único.

@@ -71,7 +71,7 @@ export function useUnifiedFeed(params: UnifiedFeedParams = {}) {
       return response.json()
     },
     getNextPageParam: (lastPage) => {
-      return lastPage.pagination.hasMore
+      return lastPage?.pagination?.hasMore
         ? lastPage.pagination.page + 1
         : undefined
     },
