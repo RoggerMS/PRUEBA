@@ -17,8 +17,6 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { toast } from "sonner";
 import {
   Twitter,
@@ -87,9 +85,12 @@ const universities = [
 
 export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     avatar: user.avatar || "",
     avatarFile: null as File | null,
+    coverImage: user.coverImage || "",
+    coverImageFile: null as File | null,
     name: user.name || "",
     bio: user.bio || "",
     location: user.location || "",
@@ -113,6 +114,8 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
       setForm({
         avatar: user.avatar || "",
         avatarFile: null,
+        coverImage: user.coverImage || "",
+        coverImageFile: null,
         name: user.name || "",
         bio: user.bio || "",
         location: user.location || "",
@@ -146,6 +149,15 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
     }
   };
 
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleChange("coverImageFile", file);
+      const url = URL.createObjectURL(file);
+      handleChange("coverImage", url);
+    }
+  };
+
   const handleWebsite = (value: string) => {
     handleChange("website", value);
     if (value) {
@@ -164,46 +176,6 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
   const careerOptions = selectedUniversity
     ? selectedUniversity.careers.map((c) => ({ value: c, label: c }))
     : [];
-
-  const previewProfile: UserProfile = {
-    id: user.id || "0",
-    name: form.name,
-    username: user.username || "",
-    email: user.email || "",
-    avatar: form.avatar || user.avatar,
-    coverImage: user.coverImage,
-    bio: form.bio,
-    location: form.location,
-    website: form.website,
-    university: form.university,
-    career: form.career,
-    joinDate: user.joinDate || new Date().toISOString(),
-    phone: user.phone,
-    semester: user.semester || 1,
-    stats: user.stats || {
-      followers: 0,
-      following: 0,
-      posts: 0,
-      notesShared: 0,
-      questionsAnswered: 0,
-      reputation: 0,
-      level: 1,
-      achievements: 0,
-    },
-    socialLinks: {
-      twitter: form.twitter,
-      linkedin: form.linkedin,
-      github: form.github,
-      instagram: form.instagram,
-    },
-    privacySettings: {
-      showEmail: form.showEmail,
-      showActivity: form.showActivity,
-      allowMessages: form.allowMessages,
-    },
-    isFollowing: user.isFollowing ?? false,
-    isOwnProfile: true,
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,6 +198,9 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
       if (form.avatarFile) {
         payload.append("avatar", form.avatarFile);
       }
+      if (form.coverImageFile) {
+        payload.append("coverImage", form.coverImageFile);
+      }
 
       const response = await fetch("/api/profile", {
         method: "PUT",
@@ -235,7 +210,29 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
       if (!response.ok) {
         throw new Error(data?.message || `Error ${response.status}`);
       }
-      onSave(data?.user || previewProfile);
+      const updatedProfile: Partial<UserProfile> = {
+        ...user,
+        name: form.name,
+        bio: form.bio,
+        location: form.location,
+        website: form.website,
+        university: form.university,
+        career: form.career,
+        avatar: form.avatar || user.avatar,
+        coverImage: form.coverImage || user.coverImage,
+        socialLinks: {
+          twitter: form.twitter,
+          linkedin: form.linkedin,
+          github: form.github,
+          instagram: form.instagram,
+        },
+        privacySettings: {
+          showEmail: form.showEmail,
+          showActivity: form.showActivity,
+          allowMessages: form.allowMessages,
+        },
+      };
+      onSave(data?.user || updatedProfile);
       toast.success("Perfil actualizado");
       onOpenChange(false);
       setIsDirty(false);
@@ -248,19 +245,42 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl" aria-describedby="profile-editor-desc">
-        <DialogHeader>
-          <DialogTitle>Editar Perfil</DialogTitle>
-          <DialogDescription id="profile-editor-desc">
-            Actualiza tu información básica, social y privacidad.
-          </DialogDescription>
-        </DialogHeader>
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4"
+    <DialogContent className="max-w-6xl" aria-describedby="profile-editor-desc">
+      <div className="relative h-32 sm:h-40 md:h-48 w-full mb-4 rounded-md overflow-hidden">
+        {form.coverImage ? (
+          <img
+            src={form.coverImage}
+            alt="Banner"
+            className="object-cover w-full h-full"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted" />
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="absolute bottom-2 right-2"
+          onClick={() => bannerInputRef.current?.click()}
         >
-          <div className="lg:col-span-2 space-y-6">
-            <Tabs defaultValue="basic" className="space-y-4">
+          Cambiar banner
+        </Button>
+        <input
+          ref={bannerInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleCoverChange}
+        />
+      </div>
+      <DialogHeader>
+        <DialogTitle>Editar Perfil</DialogTitle>
+        <DialogDescription id="profile-editor-desc">
+          Actualiza tu información básica, social y privacidad.
+        </DialogDescription>
+      </DialogHeader>
+      <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+        <Tabs defaultValue="basic" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="basic">Básico</TabsTrigger>
                 <TabsTrigger value="social">Social</TabsTrigger>
@@ -442,16 +462,7 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
                 </div>
               </TabsContent>
             </Tabs>
-          </div>
-          <div className="lg:col-span-1">
-            <ScrollArea className="h-full">
-              <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-                Vista Previa
-              </h3>
-              <ProfileHeader user={previewProfile} />
-            </ScrollArea>
-          </div>
-          <DialogFooter className="lg:col-span-3 mt-6">
+        <DialogFooter className="mt-6">
             <Button
               variant="outline"
               type="button"
