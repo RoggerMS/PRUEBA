@@ -67,7 +67,7 @@ export function useFeed(params: FeedParams = {}) {
       return response.json() as Promise<FeedResponse>;
     },
     getNextPageParam: (lastPage) => {
-      return lastPage.pagination.hasMore
+      return lastPage?.pagination?.hasMore
         ? lastPage.pagination.page + 1
         : undefined;
     },
