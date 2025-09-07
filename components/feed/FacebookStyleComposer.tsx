@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Avatar } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,7 +25,8 @@ import {
   Video,
   GraduationCap,
   FileIcon,
-  Trash2
+  Trash2,
+  Upload
 } from 'lucide-react';
 import { useCreatePost } from '@/hooks/useFeed';
 import { useComposer, useComposerActions } from '@/store/feedStore';
@@ -57,6 +60,13 @@ export function FacebookStyleComposer() {
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
+  
+  // Note-specific state
+  const [noteTitle, setNoteTitle] = useState('');
+  const [noteSubject, setNoteSubject] = useState('');
+  const [noteCareer, setNoteCareer] = useState('');
+  const [noteFile, setNoteFile] = useState<File | null>(null);
+  const noteFileInputRef = useRef<HTMLInputElement>(null);
 
   // Extract hashtags from text
   const extractHashtags = useCallback((text: string): string[] => {
@@ -130,6 +140,26 @@ export function FacebookStyleComposer() {
     }
   }, [addComposerMedia]);
 
+  // Handle note file selection
+  const handleNoteFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const isValidSize = file.size <= 50 * 1024 * 1024; // 50MB limit
+    
+    if (!isValidSize) {
+      toast.error(`${file.name} es demasiado grande (máximo 50MB)`);
+      return;
+    }
+    
+    setNoteFile(file);
+    
+    // Reset file input
+    if (event.target) {
+      event.target.value = '';
+    }
+  }, []);
+
   // Get visibility icon and label
   const getVisibilityConfig = (visibility: VisibilityLevel) => {
     switch (visibility) {
@@ -148,28 +178,78 @@ export function FacebookStyleComposer() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!composer.text.trim() && composer.media.length === 0) {
-      toast.error('Agrega contenido o media para publicar');
-      return;
+    
+    if (composer.activeTab === 'note') {
+      // Validate note fields
+      if (!noteTitle.trim()) {
+        toast.error('El título es requerido para los apuntes');
+        return;
+      }
+      if (!composer.text.trim()) {
+        toast.error('La descripción es requerida para los apuntes');
+        return;
+      }
+    } else {
+      // Validate post fields
+      if (!composer.text.trim() && composer.media.length === 0) {
+        toast.error('Agrega contenido o media para publicar');
+        return;
+      }
     }
 
     setComposerSubmitting(true);
 
     try {
-      await createPost.mutateAsync({
-        text: composer.text.trim(),
-        kind: composer.activeTab,
-        visibility: composer.visibility,
-        hashtags: composer.hashtags,
-        media: composer.media
-      });
+      if (composer.activeTab === 'note') {
+        // Create note using notes API
+        const formData = new FormData();
+        formData.append('title', noteTitle.trim());
+        formData.append('description', composer.text.trim());
+        formData.append('visibility', composer.visibility.toUpperCase());
+        
+        if (noteSubject.trim()) {
+          formData.append('subject', noteSubject.trim());
+        }
+        if (noteCareer.trim()) {
+          formData.append('career', noteCareer.trim());
+        }
+        if (noteFile) {
+          formData.append('file', noteFile);
+        }
+
+        const response = await fetch('/api/notes', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create note');
+        }
+
+        toast.success('Apunte publicado exitosamente');
+      } else {
+        // Create regular post
+        await createPost.mutateAsync({
+          text: composer.text.trim(),
+          kind: composer.activeTab,
+          visibility: composer.visibility,
+          hashtags: composer.hashtags,
+          media: composer.media
+        });
+        
+        toast.success('Post publicado exitosamente');
+      }
       
+      // Reset all form state
       resetComposer();
       setMentions([]);
-      toast.success('Post publicado exitosamente');
+      setNoteTitle('');
+      setNoteSubject('');
+      setNoteCareer('');
+      setNoteFile(null);
     } catch (error) {
-      console.error('Error creating post:', error);
-      toast.error('Error al publicar el post');
+      console.error('Error creating content:', error);
+      toast.error(`Error al publicar el ${composer.activeTab === 'note' ? 'apunte' : 'post'}`);
     } finally {
       setComposerSubmitting(false);
     }
@@ -260,6 +340,15 @@ export function FacebookStyleComposer() {
         multiple
         className="hidden"
         onChange={handleFileSelect}
+      />
+      
+      {/* Hidden note file input */}
+      <input
+        ref={noteFileInputRef}
+        type="file"
+        accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx"
+        onChange={handleNoteFileSelect}
+        className="hidden"
       />
 
       {/* Modal de creación */}
@@ -378,6 +467,77 @@ export function FacebookStyleComposer() {
                 </div>
               </div>
             </div>
+
+            {/* Note-specific fields */}
+            {composer.activeTab === 'note' && (
+              <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <Label htmlFor="note-title" className="text-sm font-medium">Título del apunte *</Label>
+                  <Input
+                    id="note-title"
+                    placeholder="Ej: Introducción a React Hooks"
+                    value={noteTitle}
+                    onChange={(e) => setNoteTitle(e.target.value)}
+                    className="mt-1"
+                    maxLength={100}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="note-subject" className="text-sm font-medium">Materia</Label>
+                    <Input
+                      id="note-subject"
+                      placeholder="Ej: Programación Web"
+                      value={noteSubject}
+                      onChange={(e) => setNoteSubject(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="note-career" className="text-sm font-medium">Carrera</Label>
+                    <Input
+                      id="note-career"
+                      placeholder="Ej: Ingeniería de Sistemas"
+                      value={noteCareer}
+                      onChange={(e) => setNoteCareer(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">Archivo adjunto</Label>
+                  <div className="mt-1 flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => noteFileInputRef.current?.click()}
+                      className="flex items-center space-x-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>Subir archivo</span>
+                    </Button>
+                    {noteFile && (
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <FileIcon className="h-4 w-4" />
+                        <span>{noteFile.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setNoteFile(null)}
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Área de texto principal */}
             <div className="relative">

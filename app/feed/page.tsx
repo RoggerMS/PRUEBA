@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { FacebookStyleComposer } from '@/components/feed/FacebookStyleComposer';
-import PostList from '@/components/feed/PostList';
+import UnifiedPostList from '@/components/feed/UnifiedPostList';
 import WeeklyChallengeInline from '@/components/feed/WeeklyChallengeInline';
 import { TrendingSidebar } from '@/components/feed/TrendingSidebar';
 import { Card } from '@/components/ui/card';
@@ -85,7 +85,7 @@ export default function FeedPage() {
             )}
             <WeeklyChallengeInline />
             <Suspense fallback={<PostListSkeleton />}>
-              <PostList />
+              <UnifiedPostList />
             </Suspense>
           </section>
 
