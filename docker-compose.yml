@@ -14,6 +14,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./scripts/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - ./scripts/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
     ports:
       - "5432:5432"
     networks:
@@ -71,7 +73,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/crunevo?schema=public&sslmode=require
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/crunevo?schema=public
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=crunevo-secret-key-2024-docker
