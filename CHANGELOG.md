@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Reconstruye el modal de edición de perfil con pestañas, vista previa en vivo y botón de cierre único.
 - Permite acceder a perfiles de usuario mediante rutas `/@usuario` y reemplaza prefijos `/u/`.
 - Evita errores de `toString` en `ProfileFeed` al manejar valores indefinidos en `formatNumber`.
 - Normalize profile feed response to a posts array to prevent `filteredItems.map` runtime errors in `ProfileFeed`.
