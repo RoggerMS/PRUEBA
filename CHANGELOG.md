@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Elimina la vista previa en el editor de perfil y permite modificar el banner desde la parte superior del modal.
 - Reconstruye el modal de edición de perfil con pestañas, vista previa en vivo y botón de cierre único.
 - Permite acceder a perfiles de usuario mediante rutas `/@usuario` y reemplaza prefijos `/u/`.
 - Actualiza menús y barras de navegación para enlazar a perfiles usando `/@usuario`.
