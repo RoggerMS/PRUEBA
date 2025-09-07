@@ -35,6 +35,7 @@ interface ComboboxProps {
   clearable?: boolean;
   emptyMessage?: string;
   onSearch?: (query: string) => void;
+  onClear?: () => void;
   "aria-label"?: string;
 }
 
@@ -52,6 +53,7 @@ export function Combobox({
   clearable = false,
   emptyMessage = "No se encontraron resultados.",
   onSearch,
+  onClear,
   "aria-label": ariaLabel,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
@@ -95,38 +97,59 @@ export function Combobox({
     }
   }, [disabled, multiple, selectedValues, maxSelected, onValueChange]);
 
-  const handleClear = React.useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onValueChange?.(multiple ? [] : "");
-  }, [multiple, onValueChange]);
+  const handleClear = React.useCallback(
+    (e?: React.SyntheticEvent) => {
+      e?.stopPropagation();
+      onValueChange?.(multiple ? [] : "");
+      onClear?.();
+    },
+    [multiple, onValueChange, onClear]
+  );
 
-  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
-    if (disabled) return;
-    
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev < filteredOptions.length - 1 ? prev + 1 : 0
-        );
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev > 0 ? prev - 1 : filteredOptions.length - 1
-        );
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
-          handleSelect(filteredOptions[highlightedIndex].value);
-        }
-        break;
-      case "Escape":
-        setOpen(false);
-        break;
-    }
-  }, [disabled, filteredOptions, highlightedIndex, handleSelect]);
+  const handleKeyDown = React.useCallback(
+    (e: React.KeyboardEvent) => {
+      if (disabled) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setHighlightedIndex(prev =>
+            prev < filteredOptions.length - 1 ? prev + 1 : 0
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setHighlightedIndex(prev =>
+            prev > 0 ? prev - 1 : filteredOptions.length - 1
+          );
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
+            handleSelect(filteredOptions[highlightedIndex].value);
+          }
+          break;
+        case "Escape":
+          setOpen(false);
+          break;
+        case "Backspace":
+          if (clearable && selectedValues.length > 0) {
+            e.preventDefault();
+            handleClear();
+          }
+          break;
+      }
+    },
+    [
+      disabled,
+      filteredOptions,
+      highlightedIndex,
+      handleSelect,
+      clearable,
+      selectedValues,
+      handleClear,
+    ]
+  );
 
   const getDisplayValue = () => {
     if (selectedValues.length === 0) return placeholder;
@@ -189,14 +212,20 @@ export function Combobox({
             )}
             
             {clearable && selectedValues.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-4 w-4 p-0 hover:bg-red-100"
+              <span
+                role="button"
+                tabIndex={0}
+                aria-label="Limpiar selección"
+                className="inline-flex items-center justify-center h-4 w-4 p-0 rounded hover:bg-red-100"
                 onClick={handleClear}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    handleClear(e);
+                  }
+                }}
               >
                 <X className="h-3 w-3" />
-              </Button>
+              </span>
             )}
             
             <ChevronDown className={cn(
