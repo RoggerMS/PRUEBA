@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: ParamP): Promise<Metadata> {
         images: user.image ? [user.image] : []
       },
       alternates: {
-        canonical: `/u/${user.username}`
+        canonical: `/@${user.username}`
       }
     };
   } catch (error) {
@@ -79,7 +79,7 @@ export default async function ProfilePage({ params }: ParamP) {
   }
 
   if (user.username !== username) {
-    redirect(`/u/${user.username}`);
+    redirect(`/@${user.username}`);
   }
 
   const isOwnProfile = session?.user?.id === user.id;

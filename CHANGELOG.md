@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Replace user profile paths from `/u/{username}` to `/@{username}` and redirect old URLs.
 - Evita errores de `toString` en `ProfileFeed` al manejar valores indefinidos en `formatNumber`.
 - Normalize profile feed response to a posts array to prevent `filteredItems.map` runtime errors in `ProfileFeed`.
 - Keep profile data in sync in the edit dialog by updating local state and resetting form values on open.

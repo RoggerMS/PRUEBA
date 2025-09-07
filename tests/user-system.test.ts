@@ -100,7 +100,7 @@ test('getUserByUsername matches case-insensitively', async () => {
 
 test('GET /ROGGER redirects to canonical lowercase', async () => {
   prismaMock.findFirst.mockResolvedValue({ id: '1', username: 'rogger' })
-  await expect(ProfilePage({ params: { username: 'ROGGER' } })).rejects.toThrow('REDIRECT:/u/rogger')
+  await expect(ProfilePage({ params: { username: 'ROGGER' } })).rejects.toThrow('REDIRECT:/@rogger')
 })
 
 test('GET /api/users/[id] returns profile for uppercase username', async () => {
