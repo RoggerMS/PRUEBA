@@ -16,7 +16,8 @@ export async function generateMetadata({ params }: ParamP): Promise<Metadata> {
   if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost')) {
     return {
       title: `@${username} - CRUNEVO`,
-      description: `Perfil de ${username} en CRUNEVO`
+      description: `Perfil de ${username} en CRUNEVO`,
+      alternates: { canonical: `/@${username}` }
     };
   }
 
@@ -53,13 +54,14 @@ export async function generateMetadata({ params }: ParamP): Promise<Metadata> {
         images: user.image ? [user.image] : []
       },
       alternates: {
-        canonical: `/u/${user.username}`
+        canonical: `/@${user.username}`
       }
     };
   } catch (error) {
     return {
       title: `@${username} - CRUNEVO`,
-      description: `Perfil de ${username} en CRUNEVO`
+      description: `Perfil de ${username} en CRUNEVO`,
+      alternates: { canonical: `/@${username}` }
     };
   }
 }
@@ -79,7 +81,7 @@ export default async function ProfilePage({ params }: ParamP) {
   }
 
   if (user.username !== username) {
-    redirect(`/u/${user.username}`);
+    redirect(`/@${user.username}`);
   }
 
   const isOwnProfile = session?.user?.id === user.id;

@@ -35,7 +35,10 @@ const nextConfig = {
   },
   // Disable static optimization for problematic pages
   async rewrites() {
-    return [];
+    return [
+      { source: '/@:username', destination: '/u/:username' },
+      { source: '/@:username/:path*', destination: '/u/:username/:path*' },
+    ];
   },
 };
 
