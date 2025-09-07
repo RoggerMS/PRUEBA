@@ -52,15 +52,17 @@ export function useUnifiedFeed(params: UnifiedFeedParams = {}) {
   return useInfiniteQuery({
     queryKey: ['unified-feed', params],
     queryFn: async ({ pageParam = 1 }) => {
+      // The API is offset-based, so translate the current page into an offset.
+      // Also rename `sort` to `sortBy` to match the backend contract.
       const searchParams = new URLSearchParams({
-        page: pageParam.toString(),
+        offset: ((pageParam - 1) * 10).toString(),
         limit: '10',
         type: params.type || 'all',
-        sort: params.sort || 'recent',
+        sortBy: params.sort || 'recent',
         ...(params.subject && { subject: params.subject }),
         ...(params.career && { career: params.career }),
         ...(params.university && { university: params.university }),
-        ...(params.author && { author: params.author })
+        ...(params.author && { author: params.author }),
       })
 
       const response = await fetch(`/api/content?${searchParams}`)
@@ -68,12 +70,13 @@ export function useUnifiedFeed(params: UnifiedFeedParams = {}) {
         throw new Error('Failed to fetch unified feed')
       }
 
-      return response.json()
+      // The API wraps results in a `data` object; return only that payload so
+      // `lastPage` contains the expected `content` and `pagination` fields.
+      const data = await response.json()
+      return data.data
     },
-    getNextPageParam: (lastPage) => {
-      return lastPage.pagination.hasMore
-        ? lastPage.pagination.page + 1
-        : undefined
+    getNextPageParam: (lastPage, pages) => {
+      return lastPage.pagination.hasMore ? pages.length + 1 : undefined
     },
     initialPageParam: 1,
     staleTime: 1000 * 60 * 2, // 2 minutes
