@@ -6,31 +6,29 @@ import { ProfileView } from '@/components/profile/ProfileView';
 import { USERNAME_REGEX } from '@/lib/validation';
 import { getUserByUsername, isReservedUsername } from '@/lib/users';
 
-interface ProfilePageProps {
-  params: {
-    username: string;
-  };
-}
+type ParamP = { params: Promise<{ username: string }> };
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ParamP): Promise<Metadata> {
+  const { username } = await params;
+
   // Skip database queries during build time
   if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost')) {
     return {
-      title: `@${params.username} - CRUNEVO`,
-      description: `Perfil de ${params.username} en CRUNEVO`
+      title: `@${username} - CRUNEVO`,
+      description: `Perfil de ${username} en CRUNEVO`
     };
   }
 
   try {
-    if (!USERNAME_REGEX.test(params.username) || isReservedUsername(params.username)) {
+    if (!USERNAME_REGEX.test(username) || isReservedUsername(username)) {
       return {
         title: 'Usuario no encontrado - CRUNEVO',
         description: 'El perfil que buscas no existe.'
       };
     }
 
-    const user = await getUserByUsername(params.username);
+    const user = await getUserByUsername(username);
 
     if (!user) {
       return {
@@ -55,31 +53,33 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
         images: user.image ? [user.image] : []
       },
       alternates: {
-        canonical: `/${user.username}`
+        canonical: `/u/${user.username}`
       }
     };
   } catch (error) {
     return {
-      title: `@${params.username} - CRUNEVO`,
-      description: `Perfil de ${params.username} en CRUNEVO`
+      title: `@${username} - CRUNEVO`,
+      description: `Perfil de ${username} en CRUNEVO`
     };
   }
 }
 
-export default async function ProfilePage({ params }: ProfilePageProps) {
-  if (isReservedUsername(params.username) || !USERNAME_REGEX.test(params.username)) {
+export default async function ProfilePage({ params }: ParamP) {
+  const { username } = await params;
+
+  if (isReservedUsername(username) || !USERNAME_REGEX.test(username)) {
     notFound();
   }
 
   const session = await getServerSession(authOptions);
-  const user = await getUserByUsername(params.username);
+  const user = await getUserByUsername(username);
 
   if (!user) {
     notFound();
   }
 
-  if (user.username !== params.username) {
-    redirect(`/${user.username}`);
+  if (user.username !== username) {
+    redirect(`/u/${user.username}`);
   }
 
   const isOwnProfile = session?.user?.id === user.id;
