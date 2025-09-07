@@ -1,18 +1,61 @@
 "use client";
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { useState, useRef, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Combobox } from "@/components/ui/combobox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import {
+  Twitter,
+  Linkedin,
+  Github,
+  Instagram,
+} from "lucide-react";
 
 interface UserProfile {
+  id?: string;
   name?: string;
-  socialLinks?: { twitter?: string };
-  privacySettings?: { showEmail: boolean };
+  username?: string;
+  email?: string;
+  avatar?: string;
+  coverImage?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  university?: string;
+  career?: string;
+  socialLinks?: {
+    twitter?: string;
+    linkedin?: string;
+    github?: string;
+    instagram?: string;
+  };
+  privacySettings?: {
+    showEmail?: boolean;
+    showActivity?: boolean;
+    allowMessages?: boolean;
+  };
+  stats?: any;
+  joinDate?: string;
+  phone?: string;
+  semester?: number;
+  isFollowing?: boolean;
+  isOwnProfile?: boolean;
 }
 
 interface ProfileEditorProps {
@@ -22,44 +65,177 @@ interface ProfileEditorProps {
   onSave: (data: Partial<UserProfile>) => void;
 }
 
+const BIO_LIMIT = 500;
+
+const universities = [
+  {
+    value: "pucp",
+    label: "Pontificia Universidad Católica del Perú",
+    careers: ["Ingeniería Industrial", "Derecho", "Diseño Gráfico"],
+  },
+  {
+    value: "uni",
+    label: "Universidad Nacional de Ingeniería",
+    careers: ["Ingeniería Civil", "Ingeniería de Sistemas", "Arquitectura"],
+  },
+  {
+    value: "san-marcos",
+    label: "Universidad Nacional Mayor de San Marcos",
+    careers: ["Medicina", "Economía", "Historia"],
+  },
+];
+
 export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    name: user.name ?? "",
-    twitter: user.socialLinks?.twitter ?? "",
+    avatar: user.avatar || "",
+    avatarFile: null as File | null,
+    name: user.name || "",
+    bio: user.bio || "",
+    location: user.location || "",
+    website: user.website || "",
+    university: user.university || "",
+    career: user.career || "",
+    twitter: user.socialLinks?.twitter || "",
+    linkedin: user.socialLinks?.linkedin || "",
+    github: user.socialLinks?.github || "",
+    instagram: user.socialLinks?.instagram || "",
     showEmail: user.privacySettings?.showEmail ?? true,
+    showActivity: user.privacySettings?.showActivity ?? true,
+    allowMessages: user.privacySettings?.allowMessages ?? true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [websiteError, setWebsiteError] = useState("");
 
-  const handleChange = (field: string, value: string | boolean) => {
+  useEffect(() => {
+    if (open) {
+      setForm({
+        avatar: user.avatar || "",
+        avatarFile: null,
+        name: user.name || "",
+        bio: user.bio || "",
+        location: user.location || "",
+        website: user.website || "",
+        university: user.university || "",
+        career: user.career || "",
+        twitter: user.socialLinks?.twitter || "",
+        linkedin: user.socialLinks?.linkedin || "",
+        github: user.socialLinks?.github || "",
+        instagram: user.socialLinks?.instagram || "",
+        showEmail: user.privacySettings?.showEmail ?? true,
+        showActivity: user.privacySettings?.showActivity ?? true,
+        allowMessages: user.privacySettings?.allowMessages ?? true,
+      });
+      setIsDirty(false);
+      setWebsiteError("");
+    }
+  }, [open, user]);
+
+  const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setIsDirty(true);
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleChange("avatarFile", file);
+      const url = URL.createObjectURL(file);
+      handleChange("avatar", url);
+    }
+  };
+
+  const handleWebsite = (value: string) => {
+    handleChange("website", value);
+    if (value) {
+      try {
+        new URL(value);
+        setWebsiteError("");
+      } catch {
+        setWebsiteError("URL inválida");
+      }
+    } else {
+      setWebsiteError("");
+    }
+  };
+
+  const selectedUniversity = universities.find((u) => u.value === form.university);
+  const careerOptions = selectedUniversity
+    ? selectedUniversity.careers.map((c) => ({ value: c, label: c }))
+    : [];
+
+  const previewProfile: UserProfile = {
+    id: user.id || "0",
+    name: form.name,
+    username: user.username || "",
+    email: user.email || "",
+    avatar: form.avatar || user.avatar,
+    coverImage: user.coverImage,
+    bio: form.bio,
+    location: form.location,
+    website: form.website,
+    university: form.university,
+    career: form.career,
+    joinDate: user.joinDate || new Date().toISOString(),
+    phone: user.phone,
+    semester: user.semester || 1,
+    stats: user.stats || {
+      followers: 0,
+      following: 0,
+      posts: 0,
+      notesShared: 0,
+      questionsAnswered: 0,
+      reputation: 0,
+      level: 1,
+      achievements: 0,
+    },
+    socialLinks: {
+      twitter: form.twitter,
+      linkedin: form.linkedin,
+      github: form.github,
+      instagram: form.instagram,
+    },
+    privacySettings: {
+      showEmail: form.showEmail,
+      showActivity: form.showActivity,
+      allowMessages: form.allowMessages,
+    },
+    isFollowing: user.isFollowing ?? false,
+    isOwnProfile: true,
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const payload = {
-        name: form.name,
-        socialLinks: { twitter: form.twitter },
-        privacySettings: { showEmail: form.showEmail },
-      };
+      const payload = new FormData();
+      payload.append("name", form.name);
+      payload.append("bio", form.bio);
+      payload.append("location", form.location);
+      payload.append("website", form.website);
+      payload.append("university", form.university);
+      payload.append("career", form.career);
+      payload.append("socialLinks[twitter]", form.twitter);
+      payload.append("socialLinks[linkedin]", form.linkedin);
+      payload.append("socialLinks[github]", form.github);
+      payload.append("socialLinks[instagram]", form.instagram);
+      payload.append("privacySettings[showEmail]", String(form.showEmail));
+      payload.append("privacySettings[showActivity]", String(form.showActivity));
+      payload.append("privacySettings[allowMessages]", String(form.allowMessages));
+      if (form.avatarFile) {
+        payload.append("avatar", form.avatarFile);
+      }
+
       const response = await fetch("/api/profile", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: payload,
       });
-      let data: any = null;
-      const ct = response.headers.get("content-type") || "";
-      if (response.status !== 204 && ct.includes("application/json")) {
-        const text = await response.text();
-        data = text ? JSON.parse(text) : null;
-      }
+      const data = await response.json().catch(() => null);
       if (!response.ok) {
         throw new Error(data?.message || `Error ${response.status}`);
       }
-      onSave(data?.user ?? payload);
+      onSave(data?.user || previewProfile);
       toast.success("Perfil actualizado");
       onOpenChange(false);
       setIsDirty(false);
@@ -72,82 +248,225 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        aria-describedby="profile-editor-desc"
-        className="pointer-events-auto max-w-lg"
-      >
+      <DialogContent className="max-w-6xl" aria-describedby="profile-editor-desc">
         <DialogHeader>
           <DialogTitle>Editar Perfil</DialogTitle>
           <DialogDescription id="profile-editor-desc">
             Actualiza tu información básica, social y privacidad.
           </DialogDescription>
-          <DialogClose asChild>
-            <button
-              aria-label="Cerrar editor"
-              title="Cerrar"
-              className="absolute right-3 top-3 rounded p-2 hover:bg-muted"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </DialogClose>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <Tabs defaultValue="basic">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="basic">Básico</TabsTrigger>
-              <TabsTrigger value="social">Social</TabsTrigger>
-              <TabsTrigger value="privacy">Privacidad</TabsTrigger>
-            </TabsList>
-            <TabsContent value="basic" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  value={form.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="social" className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="twitter">Twitter</Label>
-                <Input
-                  id="twitter"
-                  value={form.twitter}
-                  onChange={(e) => handleChange("twitter", e.target.value)}
-                />
-              </div>
-            </TabsContent>
-            <TabsContent value="privacy" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showEmail">Mostrar email</Label>
-                <Switch
-                  id="showEmail"
-                  checked={form.showEmail}
-                  onCheckedChange={(v) => handleChange("showEmail", v)}
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-6 flex items-center justify-end gap-2 border-t pt-4">
-            <button
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4"
+        >
+          <div className="lg:col-span-2 space-y-6">
+            <Tabs defaultValue="basic" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="basic">Básico</TabsTrigger>
+                <TabsTrigger value="social">Social</TabsTrigger>
+                <TabsTrigger value="privacy">Privacidad</TabsTrigger>
+              </TabsList>
+              <TabsContent value="basic" className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-20 w-20">
+                    {form.avatar ? (
+                      <AvatarImage src={form.avatar} alt="Avatar" />
+                    ) : (
+                      <AvatarFallback>{form.name?.[0]}</AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Cambiar foto
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nombre Completo</Label>
+                  <Input
+                    id="name"
+                    value={form.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Biografía</Label>
+                  <Textarea
+                    id="bio"
+                    value={form.bio}
+                    onChange={(e) => handleChange("bio", e.target.value)}
+                    maxLength={BIO_LIMIT}
+                  />
+                  <div className="text-xs text-muted-foreground text-right">
+                    {form.bio.length}/{BIO_LIMIT}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="location">Ubicación</Label>
+                  <Input
+                    id="location"
+                    value={form.location}
+                    onChange={(e) => handleChange("location", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Sitio Web</Label>
+                  <Input
+                    id="website"
+                    value={form.website}
+                    onChange={(e) => handleWebsite(e.target.value)}
+                  />
+                  {websiteError && (
+                    <p className="text-xs text-destructive">{websiteError}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Universidad</Label>
+                  <Combobox
+                    value={form.university}
+                    onChange={(v) => handleChange("university", v)}
+                    options={universities.map((u) => ({ value: u.value, label: u.label }))}
+                    placeholder="Selecciona una universidad"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Carrera</Label>
+                  <Combobox
+                    value={form.career}
+                    onChange={(v) => handleChange("career", v)}
+                    options={careerOptions}
+                    placeholder={
+                      selectedUniversity
+                        ? "Selecciona una carrera"
+                        : "Selecciona una universidad primero"
+                    }
+                    className={selectedUniversity ? "" : "opacity-50 pointer-events-none"}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="social" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="twitter" className="flex items-center gap-2">
+                    <Twitter className="h-4 w-4" /> Twitter
+                  </Label>
+                  <Input
+                    id="twitter"
+                    value={form.twitter}
+                    onChange={(e) => handleChange("twitter", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="linkedin" className="flex items-center gap-2">
+                    <Linkedin className="h-4 w-4" /> LinkedIn
+                  </Label>
+                  <Input
+                    id="linkedin"
+                    value={form.linkedin}
+                    onChange={(e) => handleChange("linkedin", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="github" className="flex items-center gap-2">
+                    <Github className="h-4 w-4" /> GitHub
+                  </Label>
+                  <Input
+                    id="github"
+                    value={form.github}
+                    onChange={(e) => handleChange("github", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="instagram" className="flex items-center gap-2">
+                    <Instagram className="h-4 w-4" /> Instagram
+                  </Label>
+                  <Input
+                    id="instagram"
+                    value={form.instagram}
+                    onChange={(e) => handleChange("instagram", e.target.value)}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="privacy" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="showEmail">Mostrar email en el perfil público</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Permite que otros usuarios vean tu email.
+                    </p>
+                  </div>
+                  <Switch
+                    id="showEmail"
+                    checked={form.showEmail}
+                    onCheckedChange={(v) => handleChange("showEmail", v)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="showActivity">Mostrar mi actividad reciente</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Muestra tus acciones recientes en tu perfil.
+                    </p>
+                  </div>
+                  <Switch
+                    id="showActivity"
+                    checked={form.showActivity}
+                    onCheckedChange={(v) => handleChange("showActivity", v)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="allowMessages">
+                      Permitir que otros usuarios me envíen mensajes directos
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Otros podrán contactarte mediante mensajes.
+                    </p>
+                  </div>
+                  <Switch
+                    id="allowMessages"
+                    checked={form.allowMessages}
+                    onCheckedChange={(v) => handleChange("allowMessages", v)}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+          <div className="lg:col-span-1">
+            <ScrollArea className="h-full">
+              <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+                Vista Previa
+              </h3>
+              <ProfileHeader user={previewProfile} />
+            </ScrollArea>
+          </div>
+          <DialogFooter className="lg:col-span-3 mt-6">
+            <Button
+              variant="outline"
               type="button"
               onClick={() => onOpenChange(false)}
-              className="btn-secondary"
             >
               Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !isDirty}
-              className="btn-primary"
-            >
+            </Button>
+            <Button type="submit" disabled={!isDirty || isSubmitting}>
               {isSubmitting ? "Guardando…" : "Guardar cambios"}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
+
+export default ProfileEditor;
