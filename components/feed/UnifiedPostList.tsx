@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { LoaderIcon } from 'lucide-react';
 import { useUnifiedFeed } from '@/hooks/useUnifiedFeed';
+import type { UnifiedContentItem } from '@/hooks/useUnifiedFeed';
 import { UnifiedFeedCard } from './UnifiedFeedCard';
 
 export default function UnifiedPostList() {
@@ -38,7 +39,10 @@ export default function UnifiedPostList() {
     );
   }
 
-  const content = data?.pages.flatMap(page => page.content) || [];
+  // Filtra elementos inválidos para evitar errores al acceder a `id`
+  const content = (data?.pages.flatMap(page => page.content || []) || []).filter(
+    (item): item is UnifiedContentItem => Boolean(item?.id)
+  );
 
   return (
     <div className="space-y-6">
