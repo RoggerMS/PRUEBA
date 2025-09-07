@@ -71,7 +71,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/crunevo?schema=public
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/crunevo?schema=public&sslmode=require
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=crunevo-secret-key-2024-docker
