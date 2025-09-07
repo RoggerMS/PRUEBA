@@ -675,11 +675,13 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
                         />
                       </div>
                     </div>
-              </TabsContent>
-              <TabsContent value="social" className="space-y-6 mt-6">
-                <Card className="p-6 bg-white/60 backdrop-blur-sm border border-white/30 shadow-lg">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-4">
+                    </div>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="social" className="space-y-6 mt-6">
+                  <Card className="p-6 bg-white/60 backdrop-blur-sm border border-white/30 shadow-lg">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-4">
                       <Globe className="h-5 w-5 text-blue-600" />
                       <h3 className="text-lg font-semibold text-gray-800">Redes Sociales</h3>
                     </div>
@@ -843,11 +845,12 @@ export function ProfileEditor({ user, open, onOpenChange, onSave }: ProfileEdito
                 <Progress value={uploadProgress} className="h-2" />
               </div>
             )}
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
+            </DialogFooter>
+          </form>
+        </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
 export default ProfileEditor;
