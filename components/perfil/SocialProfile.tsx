@@ -127,7 +127,7 @@ export function SocialProfile({ user, isOwnProfile = false }: SocialProfileProps
         }}
         mode={isOwnProfile ? 'view' : 'public'}
         onEdit={() => setShowEditor(true)}
-        onViewPublic={() => router.push(`/${profileData.username}`)}
+        onViewPublic={() => router.push(`/@${profileData.username}`)}
         onBannerChange={(newBanner) => setBannerImage(newBanner)}
         onAvatarChange={(newAvatar) => setProfileImage(newAvatar)}
       />

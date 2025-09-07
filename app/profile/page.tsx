@@ -15,5 +15,5 @@ export default async function MyProfilePage() {
     redirect('/auth/signin');
   }
   // Redirect to the user's public profile instead of rendering the edit view
-  redirect(`/${session.user.username}`);
+  redirect(`/@${session.user.username}`);
 }

@@ -110,7 +110,7 @@ export function Navbar() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link
-                        href={session?.user ? `/${(session.user as any).username}` : '/auth/login'}
+                        href={session?.user ? `/@${(session.user as any).username}` : '/auth/login'}
                         className="flex items-center"
                       >
                         <User className="mr-2 h-4 w-4" />

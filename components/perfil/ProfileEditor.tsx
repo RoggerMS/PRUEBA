@@ -190,7 +190,7 @@ export default function ProfileEditor({ profile, onSave, onCancel }: ProfileEdit
   const handleViewPublic = () => {
     // Extract username from email or use a default
     const username = formData.email?.split('@')[0] || 'usuario'
-    router.push(`/${username}`)
+    router.push(`/@${username}`)
   }
 
   return (
