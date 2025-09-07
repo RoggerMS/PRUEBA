@@ -106,7 +106,11 @@ const mockUser: UserProfile = {
   isOwnProfile: true
 };
 
-const formatNumber = (num: number): string => {
+// Safely format numeric values, returning "0" when the input is undefined
+const formatNumber = (num?: number): string => {
+  if (typeof num !== 'number') {
+    return '0';
+  }
   if (num >= 1000000) {
     return (num / 1000000).toFixed(1) + 'M';
   }
@@ -358,10 +362,10 @@ export function ProfileHeader({
                 
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    Nivel {profile.stats.level}
+                    Nivel {profile.stats?.level ?? 0}
                   </Badge>
                   <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                    {profile.stats.reputation} pts
+                    {formatNumber(profile.stats?.reputation)} pts
                   </Badge>
                 </div>
               </div>
@@ -467,17 +471,17 @@ export function ProfileHeader({
         <CardContent className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats.followers)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats?.followers)}</p>
               <p className="text-sm text-gray-600">Seguidores</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats.following)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats?.following)}</p>
               <p className="text-sm text-gray-600">Siguiendo</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats.posts)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats?.posts)}</p>
               <p className="text-sm text-gray-600">Publicaciones</p>
             </div>
             
@@ -492,12 +496,12 @@ export function ProfileHeader({
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats.reputation)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatNumber(profile.stats?.reputation)}</p>
               <p className="text-sm text-gray-600">Experiencia</p>
             </div>
             
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">Nivel {profile.stats.level}</p>
+              <p className="text-2xl font-bold text-gray-900">Nivel {profile.stats?.level ?? 0}</p>
               <p className="text-sm text-gray-600">Actual</p>
             </div>
             
