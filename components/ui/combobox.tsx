@@ -132,12 +132,17 @@ export function Combobox({
         case "Escape":
           setOpen(false);
           break;
-        case "Backspace":
+        case "Backspace": {
           if (clearable && selectedValues.length > 0) {
-            e.preventDefault();
-            handleClear();
+            const isInput =
+              (e.target as HTMLElement)?.tagName === "INPUT";
+            if (!isInput || searchValue === "") {
+              e.preventDefault();
+              handleClear();
+            }
           }
           break;
+        }
       }
     },
     [
@@ -148,6 +153,7 @@ export function Combobox({
       clearable,
       selectedValues,
       handleClear,
+      searchValue,
     ]
   );
 

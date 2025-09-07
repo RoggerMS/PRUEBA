@@ -50,4 +50,29 @@ describe('Combobox clear functionality', () => {
     expect(onValueChange).toHaveBeenCalledWith('');
     expect(onClear).toHaveBeenCalled();
   });
+
+  test('does not clear when editing search input with Backspace', () => {
+    const onValueChange = jest.fn();
+    const onClear = jest.fn();
+    render(
+      <Combobox
+        options={options}
+        value="1"
+        onValueChange={onValueChange}
+        clearable
+        onClear={onClear}
+        aria-label="Seleccionar opción"
+      />
+    );
+
+    const combobox = screen.getByRole('combobox', { name: 'Seleccionar opción' });
+    fireEvent.click(combobox);
+
+    const input = screen.getByPlaceholderText('Buscar...');
+    fireEvent.change(input, { target: { value: 'a' } });
+    fireEvent.keyDown(input, { key: 'Backspace' });
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onClear).not.toHaveBeenCalled();
+  });
 });
